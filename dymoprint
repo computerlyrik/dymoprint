@@ -22,7 +22,7 @@ DEV_VENDOR     = 0x0922
 DEV_PRODUCT    = 0x1001
 DEV_NODE       = None
 DEV_NAME       = 'Dymo LabelManager PnP'
-FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
+FONT_FILENAME  = '/usr/share/fonts/TTF/Vera.ttf'
 FONT_SIZERATIO = 7./8
 VERSION        = "0.1.0 (2013-07-09)"
 
