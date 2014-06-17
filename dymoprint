@@ -16,13 +16,15 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
+config = {}
+execfile("dymoprint.conf", config) 
 
 DEV_CLASS      = 3
 DEV_VENDOR     = 0x0922
-DEV_PRODUCT    = 0x1001
+DEV_PRODUCT    = config["product_id"]
 DEV_NODE       = None
 DEV_NAME       = 'Dymo LabelManager PnP'
-FONT_FILENAME  = '/usr/share/fonts/TTF/Vera.ttf'
+FONT_FILENAME  = config["font"]
 FONT_SIZERATIO = 7./8
 VERSION        = "0.1.0 (2013-07-09)"
 
