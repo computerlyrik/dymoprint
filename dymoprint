@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # === LICENSE STATEMENT ===
 # Copyright (c) 2011 Sebastian J. Bronner <waschtl@sbronner.com>
@@ -27,9 +27,9 @@ FONT_SIZERATIO = 7./8
 VERSION        = "0.1.0 (2013-07-09)"
 
 
-import Image
-import ImageDraw
-import ImageFont
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 import array
 import fcntl
 import os
