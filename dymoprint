@@ -1,0 +1,321 @@
+#!/usr/bin/env python
+
+# === LICENSE STATEMENT ===
+# Copyright (c) 2011 Sebastian J. Bronner <waschtl@sbronner.com>
+# 
+# Copying and distribution of this file, with or without modification, are
+# permitted in any medium without royalty provided the copyright notice and
+# this notice are preserved.
+# === END LICENSE STATEMENT ===
+
+# On systems with access to sysfs under /sys, this script will use the three
+# variables DEV_CLASS, DEV_VENDOR, and DEV_PRODUCT to find the device file
+# under /dev automatically. This behavior can be overridden by setting the
+# variable DEV_NODE to the device file path. This is intended for cases, where
+# either sysfs is unavailable or unusable by this script for some reason.
+# Please beware that DEV_NODE must be set to None when not used, else you will
+# be bitten by the NameError exception.
+
+
+DEV_CLASS      = 3
+DEV_VENDOR     = 0x0922
+DEV_PRODUCT    = 0x1002
+DEV_NODE       = None
+DEV_NAME       = 'Dymo LabelManager PnP'
+FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
+FONT_SIZERATIO = 7./8
+VERSION        = "0.1.0 (2013-07-09)"
+
+
+import Image
+import ImageDraw
+import ImageFont
+import array
+import fcntl
+import os
+import re
+import struct
+import subprocess
+import sys
+import termios
+import textwrap
+
+
+class DymoLabeler:
+    """Create and work with a Dymo LabelManager PnP object.
+
+    This class contains both mid-level and high-level functions. In general,
+    the high-level functions should be used. However, special purpose usage
+    may require the mid-level functions. That is why they are provided.
+    However, they should be well understood before use. Look at the
+    high-level functions for help. Each function is marked in its docstring
+    with 'HLF' or 'MLF' in parentheses.
+    """
+
+    _ESC = 0x1b
+    _SYN = 0x16
+    _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
+
+    def __init__(self, dev):
+        """Initialize the LabelManager object. (HLF)"""
+
+        self.cmd = []
+        self.response = False
+        self.bytesPerLine_ = None
+        self.dotTab_ = 0
+        self.dev = open(dev, 'r+')
+
+    def sendCommand(self):
+        """Send the already built command to the LabelManager. (MLF)"""
+
+        if len(self.cmd) == 0:
+            return
+        cmdBin = array.array('B', self.cmd)
+        cmdBin.tofile(self.dev)
+        self.cmd = []
+        if not self.response:
+            return
+        self.response = False
+        responseBin = self.dev.read(8)
+        response = array.array('B', responseBin).tolist()
+        return response
+
+    def resetCommand(self):
+        """Remove a partially built command. (MLF)"""
+
+        self.cmd = []
+        self.response = False
+
+    def buildCommand(self, cmd):
+        """Add the next instruction to the command. (MLF)"""
+
+        self.cmd += cmd
+
+    def statusRequest(self):
+        """Set instruction to get the device's status. (MLF)"""
+
+        cmd = [self._ESC, ord('A')]
+        self.buildCommand(cmd)
+        self.response = True
+
+    def dotTab(self, value):
+        """Set the bias text height, in bytes. (MLF)"""
+
+        if value < 0 or value > self._MAX_BYTES_PER_LINE:
+            raise ValueError
+        cmd = [self._ESC, ord('B'), value]
+        self.buildCommand(cmd)
+        self.dotTab_ = value
+        self.bytesPerLine_ = None
+
+    def tapeColor(self, value):
+        """Set the tape color. (MLF)"""
+
+        if value < 0: raise ValueError
+        cmd = [self._ESC, ord('C'), value]
+        self.buildCommand(cmd)
+
+    def bytesPerLine(self, value):
+        """Set the number of bytes sent in the following lines. (MLF)"""
+
+        if value < 0 or value + self.dotTab_ > self._MAX_BYTES_PER_LINE:
+            raise ValueError
+        if value == self.bytesPerLine_:
+            return
+        cmd = [self._ESC, ord('D'), value]
+        self.buildCommand(cmd)
+        self.bytesPerLine_ = value
+
+    def cut(self):
+        """Set instruction to trigger cutting of the tape. (MLF)"""
+
+        cmd = [self._ESC, ord('E')]
+        self.buildCommand(cmd)
+
+    def line(self, value):
+        """Set next printed line. (MLF)"""
+
+        self.bytesPerLine(len(value))
+        cmd = [self._SYN] + value
+        self.buildCommand(cmd)
+
+    def chainMark(self):
+        """Set Chain Mark. (MLF)"""
+
+        self.dotTab(0)
+        self.bytesPerLine(self._MAX_BYTES_PER_LINE)
+        self.line([0x99] * self._MAX_BYTES_PER_LINE)
+
+    def skipLines(self, value):
+        """Set number of lines of white to print. (MLF)"""
+
+        if value <= 0:
+            raise ValueError
+        self.bytesPerLine(0)
+        cmd = [self._SYN] * value
+        self.buildCommand(cmd)
+
+    def initLabel(self):
+        """Set the label initialization sequence. (MLF)"""
+
+        cmd = [0x00] * 8
+        self.buildCommand(cmd)
+
+    def getStatus(self):
+        """Ask for and return the device's status. (HLF)"""
+
+        self.statusRequest()
+        response = self.sendCommand()
+        print response
+
+    def printLabel(self, lines, dotTab):
+        """Print the label described by lines. (HLF)"""
+
+        self.initLabel
+        self.tapeColor(0)
+        self.dotTab(dotTab)
+        for line in lines:
+            self.line(line)
+        self.skipLines(56)  # advance printed matter past cutter
+        self.skipLines(56)  # add symmetric margin
+        self.statusRequest()
+        response = self.sendCommand()
+        print response
+
+
+def die(message=None):
+    if message: print >> sys.stderr, message
+    sys.exit(1)
+
+
+def pprint(par, fd=sys.stdout):
+    rows, columns = struct.unpack('HH', fcntl.ioctl(sys.stderr,
+        termios.TIOCGWINSZ, struct.pack('HH', 0, 0)))
+    print >> fd, textwrap.fill(par, columns)
+
+
+def getDeviceFile(classID, vendorID, productID):
+    # find file containing the device's major and minor numbers
+    searchdir = '/sys/bus/hid/devices'
+    pattern = '^%04d:%04X:%04X.[0-9A-F]{4}$' % (classID, vendorID, productID)
+    deviceCandidates = os.listdir(searchdir)
+    foundpath = None
+    for devname in deviceCandidates:
+        if re.match(pattern, devname):
+            foundpath = os.path.join(searchdir, devname)
+            break
+    if not foundpath:
+        return
+    searchdir = os.path.join(foundpath, 'hidraw')
+    devname = os.listdir(searchdir)[0]
+    foundpath = os.path.join(searchdir, devname)
+    filepath = os.path.join(foundpath, 'dev')
+
+    # get the major and minor numbers
+    f = open(filepath, 'r')
+    devnums = [int(n) for n in f.readline().strip().split(':')]
+    f.close()
+    devnum = os.makedev(devnums[0], devnums[1])
+
+    # check if a symlink with the major and minor numbers is available
+    filepath = '/dev/char/%d:%d' % (devnums[0], devnums[1])
+    if os.path.exists(filepath):
+        return os.path.realpath(filepath)
+
+    # check if the relevant sysfs path component matches a file name in
+    # /dev, that has the proper major and minor numbers
+    filepath = os.path.join('/dev', devname)
+    if os.stat(filepath).st_rdev == devnum:
+        return filepath
+
+    # search for a device file with the proper major and minor numbers
+    for dirpath, dirnames, filenames in os.walk('/dev'):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            if os.stat(filepath).st_rdev == devnum:
+                return filepath
+
+
+def access_error(dev):
+    pprint('You do not have sufficient access to the device file %s:' % dev,
+        sys.stderr)
+    subprocess.call(['ls', '-l', dev], stdout=sys.stderr)
+    print >> sys.stderr
+    pprint('You probably want to add a rule in /etc/udev/rules.d along the '
+        'following lines:', sys.stderr)
+    print >> sys.stderr, 'SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="%04X", ATTRS{idProduct}=="%04X", GROUP="plugdev"' % (DEV_VENDOR, DEV_PRODUCT)
+    print >> sys.stderr
+    pprint('Following that, turn off your device and back on again to '
+        'activate the new permissions.', sys.stderr)
+
+
+def main():
+    # get device file name
+    if not DEV_NODE:
+        dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
+    else:
+        dev = DEV_NODE
+    if not dev:
+        die("The device '%s' could not be found on this system." % DEV_NAME)
+    
+    # create dymo labeler object
+    try:
+        lm = DymoLabeler(dev)
+    except IOError:
+        die(access_error(dev))
+    
+    # check for any text specified on the command line
+    labeltext = [arg.decode(sys.stdin.encoding) for arg in sys.argv[1:]]
+    if len(labeltext) == 0: die("No label text was specified.")
+    
+    # create an empty label image
+    labelheight = lm._MAX_BYTES_PER_LINE * 8
+    lineheight = float(labelheight) / len(labeltext)
+    fontsize = int(round(lineheight * FONT_SIZERATIO))
+    font = ImageFont.truetype(FONT_FILENAME, fontsize)
+    labelwidth = max(font.getsize(line)[0] for line in labeltext)
+    labelbitmap = Image.new('1', (labelwidth, labelheight))
+    
+    # write the text into the empty image
+    labeldraw = ImageDraw.Draw(labelbitmap)
+    for i, line in enumerate(labeltext):
+        lineposition = int(round(i * lineheight))
+        labeldraw.text((0, lineposition), line, font=font, fill=255)
+    del labeldraw
+    
+    # convert the image to the proper matrix for the dymo labeler object
+    labelrotated = labelbitmap.transpose(Image.ROTATE_270)
+    labelstream = labelrotated.tostring()
+    labelstreamrowlength = labelheight/8 + (1 if labelheight%8 != 0 else 0)
+    if len(labelstream)/labelstreamrowlength != labelwidth:
+        die('An internal problem was encountered while processing the label '
+            'bitmap!')
+    labelrows = [labelstream[i:i+labelstreamrowlength] for i in
+        range(0, len(labelstream), labelstreamrowlength)]
+    labelmatrix = [array.array('B', labelrow).tolist() for labelrow in
+        labelrows]
+    
+    # optimize the matrix for the dymo label printer
+    dottab = 0
+    while max(line[0] for line in labelmatrix) == 0:
+        labelmatrix = [line[1:] for line in labelmatrix]
+        dottab += 1
+    for line in labelmatrix:
+        while len(line) > 0 and line[-1] == 0:
+            del line[-1]
+    
+    # print the label
+    lm.printLabel(labelmatrix, dottab)
+
+
+if __name__ == '__main__':
+    main()
+
+
+# TODO
+# * support multiple ProductIDs (1001, 1002)
+# * put everything in classes that would need to be used by a GUI
+# * allow selection of font with command line options
+# * allow font size specification with command line option (points, pixels?)
+# * provide an option to show a preview of what the label will look like
+# * read and write a .dymoprint file containing user preferences
