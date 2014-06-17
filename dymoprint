@@ -19,7 +19,7 @@
 
 DEV_CLASS      = 3
 DEV_VENDOR     = 0x0922
-DEV_PRODUCT    = 0x1002
+DEV_PRODUCT    = 0x1001
 DEV_NODE       = None
 DEV_NAME       = 'Dymo LabelManager PnP'
 FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
