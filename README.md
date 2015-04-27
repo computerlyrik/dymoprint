@@ -24,9 +24,3 @@ and restart services with
 
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
-# DYMO LabelManager PNP
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1001", \
-RUN+="/usr/sbin/usb_modeswitch -c /etc/usb_modeswitch.d/dymo-labelmanager-pnp.conf"
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1002", MODE="0660", GROUP="plugdev"
-#
-#SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1001", GROUP="plugdev"
