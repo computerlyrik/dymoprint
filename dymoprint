@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # === LICENSE STATEMENT ===
 # Copyright (c) 2011 Sebastian J. Bronner <waschtl@sbronner.com>
@@ -7,7 +7,9 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
-
+# modified: HappyCodingRobot
+#   - added frames, different font styles and command-line parsing with argparse-lib ..
+#
 # On systems with access to sysfs under /sys, this script will use the three
 # variables DEV_CLASS, DEV_VENDOR, and DEV_PRODUCT to find the device file
 # under /dev automatically. This behavior can be overridden by setting the
@@ -16,22 +18,25 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
-config = {}
-execfile("dymoprint.conf", config) 
 
-DEV_CLASS      = 3
-DEV_VENDOR     = 0x0922
-DEV_PRODUCT    = config["product_id"]
-DEV_NODE       = None
-DEV_NAME       = 'Dymo LabelManager PnP'
-FONT_FILENAME  = config["font"]
-FONT_SIZERATIO = 7./8
-VERSION        = "0.1.0 (2013-07-09)"
+DEV_CLASS       = 3
+DEV_VENDOR      = 0x0922
+DEV_PRODUCT     = 0x1002
+#DEV_PRODUCT     = 0x1001
+DEV_NODE        = None
+DEV_NAME        = 'Dymo LabelManager PnP'
+#FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
+FONT_FILENAME_R = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf'	# regular font
+FONT_FILENAME_B = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf'	# bold font
+FONT_FILENAME_I = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-RI.ttf'	# italic font
+FONT_FILENAME_C = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf'	# narrow/condensed font
+FONT_SIZERATIO  = 7./8
+VERSION         = "0.2.1 (2014-09-24)"
 
 
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+import Image
+import ImageDraw
+import ImageFont
 import array
 import fcntl
 import os
@@ -41,6 +46,7 @@ import subprocess
 import sys
 import termios
 import textwrap
+import argparse
 
 
 class DymoLabeler:
@@ -267,22 +273,57 @@ def main():
         die(access_error(dev))
     
     # check for any text specified on the command line
-    labeltext = [arg.decode(sys.stdin.encoding) for arg in sys.argv[1:]]
-    if len(labeltext) == 0: die("No label text was specified.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line')
+    parser.add_argument('-f',action="count",help='Draw frame around Text, more arguments for thicker frame')
+    parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
+    parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
+    parser.add_argument('-v',action='store_true',help='Preview label, do not print')
+    #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
+    args = parser.parse_args()
+    labeltext = args.text
+    
+    # select font style and offset from parameter
+    if args.s == 'r':
+        FONT_FILENAME = FONT_FILENAME_R
+    elif args.s == 'b':
+        FONT_FILENAME = FONT_FILENAME_B
+    elif args.s == 'i':
+        FONT_FILENAME = FONT_FILENAME_I
+    elif args.s == 'n':
+        FONT_FILENAME = FONT_FILENAME_C
+    else:
+        FONT_FILENAME = FONT_FILENAME_R
+    
+    if args.u <> None:
+        if os.path.isfile(args.u):
+            FONT_FILENAME = args.u
+        else:
+            die("Error: file '%s' not found." % args.u)
+
+    if args.f == None:
+        fontoffset = 0
+    else:
+        fontoffset = min(args.f, 3)
     
     # create an empty label image
     labelheight = lm._MAX_BYTES_PER_LINE * 8
     lineheight = float(labelheight) / len(labeltext)
     fontsize = int(round(lineheight * FONT_SIZERATIO))
     font = ImageFont.truetype(FONT_FILENAME, fontsize)
-    labelwidth = max(font.getsize(line)[0] for line in labeltext)
+    labelwidth = max(font.getsize(line)[0] for line in labeltext) + (fontoffset*2)
     labelbitmap = Image.new('1', (labelwidth, labelheight))
+    labeldraw = ImageDraw.Draw(labelbitmap)
+    
+    # draw frame into empty image
+    if args.f <> None:
+        labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
+        labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
     
     # write the text into the empty image
-    labeldraw = ImageDraw.Draw(labelbitmap)
     for i, line in enumerate(labeltext):
         lineposition = int(round(i * lineheight))
-        labeldraw.text((0, lineposition), line, font=font, fill=255)
+        labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
     del labeldraw
     
     # convert the image to the proper matrix for the dymo labeler object
@@ -306,18 +347,28 @@ def main():
         while len(line) > 0 and line[-1] == 0:
             del line[-1]
     
-    # print the label
-    lm.printLabel(labelmatrix, dottab)
-
+    # print or show the label
+    if args.v == True:
+        print('Demo mode: showing label..')
+        # fix size, adding print borders
+        labelimage = Image.new('1', (56+labelwidth+56, labelheight))
+        labelimage.paste(labelbitmap, (56,0))
+        labelimage.show()
+    else:
+        print('Printing label..')
+        lm.printLabel(labelmatrix, dottab)
+    
 
 if __name__ == '__main__':
     main()
 
 
 # TODO
-# * support multiple ProductIDs (1001, 1002)
-# * put everything in classes that would need to be used by a GUI
-# * allow selection of font with command line options
-# * allow font size specification with command line option (points, pixels?)
-# * provide an option to show a preview of what the label will look like
-# * read and write a .dymoprint file containing user preferences
+# ? support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
+# o put everything in classes that would need to be used by a GUI
+# x allow selection of font with command line options
+# o allow font size specification with command line option (points, pixels?)
+# x provide an option to show a preview of what the label will look like
+# o read and write a .dymoprint file containing user preferences
+# o print graphics and barcodes
+# x plot frame around label
