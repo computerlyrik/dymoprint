@@ -26,17 +26,20 @@ DEV_PRODUCT     = 0x1002
 DEV_NODE        = None
 DEV_NAME        = 'Dymo LabelManager PnP'
 #FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
-FONT_FILENAME_R = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf'	# regular font
-FONT_FILENAME_B = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf'	# bold font
-FONT_FILENAME_I = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-RI.ttf'	# italic font
-FONT_FILENAME_C = '/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf'	# narrow/condensed font
+FONT_CONFIG = {'regular':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf',     # regular font
+               'bold':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf',        # bold font
+               'italic':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-RI.ttf',       # italic font
+               'narrow':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf'    # narrow/condensed
+               }
 FONT_SIZERATIO  = 7./8
-VERSION         = "0.2.1 (2014-09-24)"
+#CONFIG_FILE     = '.dymoprint'
+CONFIG_FILE     = 'dymoprint.ini'
+VERSION         = "0.3.0 (2015-05-01)"
 
 
-import Image
-import ImageDraw
-import ImageFont
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 import array
 import fcntl
 import os
@@ -47,6 +50,7 @@ import sys
 import termios
 import textwrap
 import argparse
+from ConfigParser import SafeConfigParser
 
 
 class DymoLabeler:
@@ -257,6 +261,32 @@ def access_error(dev):
         'activate the new permissions.', sys.stderr)
 
 
+def read_config(conf_file):
+    global FONT_CONFIG
+    conf = SafeConfigParser(FONT_CONFIG)
+    if not conf.read(conf_file):
+        print('# Config file "%s" not found: writing new config file.\n' %conf_file)
+        write_config(conf_file)
+    else:
+        # reading FONTS section
+        if not 'FONTS' in conf.sections():
+            die('! config file "%s" not valid. Please change or remove.' %conf_file)
+        for key in FONT_CONFIG.keys():
+            FONT_CONFIG[key] = conf.get('FONTS',key)
+        # more sections later ..
+
+
+def write_config(conf_file):
+    config=SafeConfigParser()
+    # adding sections and keys
+    config.add_section('FONTS')
+    for key in FONT_CONFIG.keys():
+        config.set('FONTS', key, FONT_CONFIG[key])
+    # writing config file
+    with open(conf_file, 'wb') as configfile:
+        config.write(configfile)
+
+
 def main():
     # get device file name
     if not DEV_NODE:
@@ -272,6 +302,9 @@ def main():
     except IOError:
         die(access_error(dev))
     
+    # read config file
+    read_config(CONFIG_FILE)
+    
     # check for any text specified on the command line
     parser = argparse.ArgumentParser()
     parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line')
@@ -285,15 +318,15 @@ def main():
     
     # select font style and offset from parameter
     if args.s == 'r':
-        FONT_FILENAME = FONT_FILENAME_R
+        FONT_FILENAME = FONT_CONFIG['regular']
     elif args.s == 'b':
-        FONT_FILENAME = FONT_FILENAME_B
+        FONT_FILENAME = FONT_CONFIG['bold']
     elif args.s == 'i':
-        FONT_FILENAME = FONT_FILENAME_I
+        FONT_FILENAME = FONT_CONFIG['italic']
     elif args.s == 'n':
-        FONT_FILENAME = FONT_FILENAME_C
+        FONT_FILENAME = FONT_CONFIG['narrow']
     else:
-        FONT_FILENAME = FONT_FILENAME_R
+        FONT_FILENAME = FONT_CONFIG['regular']
     
     if args.u <> None:
         if os.path.isfile(args.u):
@@ -356,7 +389,7 @@ def main():
         labelimage.show()
     else:
         print('Printing label..')
-        lm.printLabel(labelmatrix, dottab)
+###        lm.printLabel(labelmatrix, dottab)
     
 
 if __name__ == '__main__':
@@ -366,9 +399,10 @@ if __name__ == '__main__':
 # TODO
 # ? support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
 # o put everything in classes that would need to be used by a GUI
+# x for more options use command line parser framework
 # x allow selection of font with command line options
 # o allow font size specification with command line option (points, pixels?)
 # x provide an option to show a preview of what the label will look like
-# o read and write a .dymoprint file containing user preferences
+# x read and write a .dymoprint file containing user preferences
 # o print graphics and barcodes
 # x plot frame around label
