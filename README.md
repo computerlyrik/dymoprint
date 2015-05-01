@@ -33,6 +33,7 @@ and restart services with:
 - ~~allow selection of font with command line options~~
 - allow font size specification with command line option (points, pixels?)
 - ~~provide an option to show a preview of what the label will look like~~
-- read and write a .dymoprint file containing user preferences
+- ~~read and write a .dymoprint file containing user preferences~~
 - print graphics and barcodes
 - ~~plot frame around label~~
+- vertical print
