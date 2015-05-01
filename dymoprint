@@ -35,7 +35,7 @@ FONT_CONFIG = {'regular':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.
 FONT_SIZERATIO  = 7./8
 #CONFIG_FILE     = '.dymoprint'
 CONFIG_FILE     = 'dymoprint.ini'
-VERSION         = "0.3.0 (2015-05-01)"
+VERSION         = "0.3.1 (2015-05-01)"
 
 
 from PIL import Image
@@ -304,7 +304,8 @@ def main():
         die(access_error(dev))
     
     # read config file
-    read_config(CONFIG_FILE)
+    conf_path = os.path.dirname(sys.argv[0])
+    read_config(conf_path+'/'+CONFIG_FILE)
     
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
