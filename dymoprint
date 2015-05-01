@@ -19,6 +19,7 @@
 # be bitten by the NameError exception.
 
 
+DESCRIPTION = 'Linux Software to print with LabelManager PnP from Dymo\n written in Python'
 DEV_CLASS       = 3
 DEV_VENDOR      = 0x0922
 DEV_PRODUCT     = 0x1002
@@ -306,7 +307,7 @@ def main():
     read_config(CONFIG_FILE)
     
     # check for any text specified on the command line
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
     parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line')
     parser.add_argument('-f',action="count",help='Draw frame around Text, more arguments for thicker frame')
     parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
