@@ -26,6 +26,11 @@ and restart services with:
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
 
+### Additional libraries used:
+*(todo..)*
+- PIL/PILLOW
+- [pyqrcode](https://github.com/mnooner256/pyqrcode) (used v1.0)
+
 ### ToDo
 - (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
 - put everything in classes that would need to be used by a GUI
