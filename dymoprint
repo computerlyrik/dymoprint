@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # === LICENSE STATEMENT ===
 # Copyright (c) 2011 Sebastian J. Bronner <waschtl@sbronner.com>
-# 
+#
 # Copying and distribution of this file, with or without modification, are
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
@@ -311,17 +311,17 @@ def main():
         dev = DEV_NODE
     if not dev:
         die("The device '%s' could not be found on this system." % DEV_NAME)
-    
+
     # create dymo labeler object
     try:
         lm = DymoLabeler(dev)
     except IOError:
         die(access_error(dev))
-    
+
     # read config file
     conf_path = os.path.dirname(sys.argv[0])
     read_config(conf_path+'/'+CONFIG_FILE)
-    
+
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
     parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line')
@@ -333,7 +333,7 @@ def main():
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     args = parser.parse_args()
     labeltext = args.text
-    
+
     # select font style and offset from parameter
     if args.s == 'r':
         FONT_FILENAME = FONT_CONFIG['regular']
@@ -345,7 +345,7 @@ def main():
         FONT_FILENAME = FONT_CONFIG['narrow']
     else:
         FONT_FILENAME = FONT_CONFIG['regular']
-    
+
     if args.u <> None:
         if os.path.isfile(args.u):
             FONT_FILENAME = args.u
@@ -359,7 +359,7 @@ def main():
             fontoffset = 0
         else:
             fontoffset = min(args.f, 3)
-    
+
         # create an empty label image
         labelheight = lm._MAX_BYTES_PER_LINE * 8
         lineheight = float(labelheight) / len(labeltext)
@@ -368,25 +368,25 @@ def main():
         labelwidth = max(font.getsize(line)[0] for line in labeltext) + (fontoffset*2)
         labelbitmap = Image.new('1', (labelwidth, labelheight))
         labeldraw = ImageDraw.Draw(labelbitmap)
-    
+
         # draw frame into empty image
         if args.f <> None:
             labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
             labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
-    
+
         # write the text into the empty image
         for i, line in enumerate(labeltext):
             lineposition = int(round(i * lineheight))
             labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
         del labeldraw
-    
+
     elif USE_QR == False:
         die("Error: %s" % e)
     # create QR object from first string
     else:
         code = QRCode(labeltext[0],error='M')
         qr_text = code.text().split()
-        
+
         # create an empty label image
         labelheight = lm._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
@@ -394,7 +394,7 @@ def main():
         qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
         labelbitmap = Image.new('1', (labelwidth, labelheight))
         labeldraw = ImageDraw.Draw(labelbitmap)
-        
+
         # write the qr-code into the empty image
         for i,line in enumerate(qr_text):
             for j in range(len(line)):
@@ -402,10 +402,10 @@ def main():
                     pix=scaling((j*qr_scale,i*qr_scale+qr_offset),qr_scale)
                     labeldraw.point(pix,255)
         del labeldraw
-    
+
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
-    labelstream = labelrotated.tostring()
+    labelstream = labelrotated.tobytes()
     labelstreamrowlength = labelheight/8 + (1 if labelheight%8 != 0 else 0)
     if len(labelstream)/labelstreamrowlength != labelwidth:
         die('An internal problem was encountered while processing the label '
@@ -414,7 +414,7 @@ def main():
         range(0, len(labelstream), labelstreamrowlength)]
     labelmatrix = [array.array('B', labelrow).tolist() for labelrow in
         labelrows]
-    
+
     # optimize the matrix for the dymo label printer
     dottab = 0
     while max(line[0] for line in labelmatrix) == 0:
@@ -423,7 +423,7 @@ def main():
     for line in labelmatrix:
         while len(line) > 0 and line[-1] == 0:
             del line[-1]
-    
+
     # print or show the label
     if args.v == True:
         print('Demo mode: showing label..')
@@ -434,7 +434,7 @@ def main():
     else:
         print('Printing label..')
         lm.printLabel(labelmatrix, dottab)
-    
+
 
 if __name__ == '__main__':
     main()
