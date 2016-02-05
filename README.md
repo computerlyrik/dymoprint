@@ -29,12 +29,14 @@ and restart services with:
 ### Font management
 
 Fonts are managed via **dymoprint.ini**
+
 You may choose any TTF Font you like
+
 You may edit the file to point to your favorite font.
 
 For my Arch-Linux System, fonts are located at e.g.
 
-```/usr/share/fonts/TTF/DejaVuSerif.ttf```
+	/usr/share/fonts/TTF/DejaVuSerif.ttf
 
 It is also possible to Download a font from
 http://font.ubuntu.com/ and use it.
