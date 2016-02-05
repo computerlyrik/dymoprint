@@ -26,6 +26,19 @@ and restart services with:
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
 
+### Font management
+
+Fonts are managed via **dymoprint.ini**
+You may choose any TTF Font you like
+You may edit the file to point to your favorite font.
+
+For my Arch-Linux System, fonts are located at e.g.
+
+```/usr/share/fonts/TTF/DejaVuSerif.ttf```
+
+It is also possible to Download a font from
+http://font.ubuntu.com/ and use it.
+
 ### Additional libraries used:
 *(todo..)*
 - PIL/PILLOW
