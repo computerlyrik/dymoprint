@@ -35,7 +35,7 @@ FONT_CONFIG = {'regular':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.
 FONT_SIZERATIO  = 7./8
 #CONFIG_FILE     = '.dymoprint'
 CONFIG_FILE     = 'dymoprint.ini'
-VERSION         = "0.3.3 (2015-06-06)"
+VERSION         = "0.3.4 (2016-03-14)"
 USE_QR          = True
 
 from PIL import Image
@@ -303,6 +303,12 @@ def scaling(pix,sc):
     return m
 
 
+''' decoding text parameter depending on system encoding '''
+def commandline_arg(bytestring):
+    unicode_string = bytestring.decode(sys.getfilesystemencoding())
+    return unicode_string
+
+
 def main():
     # get device file name
     if not DEV_NODE:
@@ -324,7 +330,7 @@ def main():
 
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
-    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line')
+    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=commandline_arg)
     parser.add_argument('-f',action="count",help='Draw frame around the text, more arguments for thicker frame')
     parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
     parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
@@ -333,7 +339,6 @@ def main():
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     args = parser.parse_args()
     labeltext = args.text
-
     # select font style and offset from parameter
     if args.s == 'r':
         FONT_FILENAME = FONT_CONFIG['regular']
