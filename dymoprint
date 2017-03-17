@@ -544,9 +544,9 @@ def main():
     if args.v == True:
         print('Demo mode: showing label..')
         # fix size, adding print borders
-        labelimage = Image.new('1', (56+labelwidth+56, labelheight))
+        labelimage = Image.new('L', (56+labelwidth+56, labelheight))
         labelimage.paste(labelbitmap, (56,0))
-        labelimage.show()
+        ImageOps.invert(labelimage).show()
     else:
         print('Printing label..')
         lm.printLabel(labelmatrix, dottab)
