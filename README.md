@@ -45,6 +45,7 @@ http://font.ubuntu.com/ and use it.
 *(todo..)*
 - PIL/PILLOW
 - [pyqrcode](https://github.com/mnooner256/pyqrcode) (used v1.0)
+- [pyBarcode](https://bitbucket.org/whitie/python-barcode) (used v0.7)
 
 ### ToDo
 - (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
@@ -54,6 +55,7 @@ http://font.ubuntu.com/ and use it.
 - allow font size specification with command line option (points, pixels?)
 - ~~provide an option to show a preview of what the label will look like~~
 - ~~read and write a .dymoprint file containing user preferences~~
-- print graphics and barcodes
+- ~~print barcodes~~
+- print graphics
 - ~~plot frame around label~~
 - vertical print
