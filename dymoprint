@@ -37,10 +37,12 @@ FONT_SIZERATIO  = 7./8
 CONFIG_FILE     = 'dymoprint.ini'
 VERSION         = "0.3.4 (2016-03-14)"
 USE_QR          = True
+USE_BARCODE     = True
 
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from PIL import ImageOps
 import array
 import fcntl
 import os
@@ -54,8 +56,12 @@ import argparse
 from ConfigParser import SafeConfigParser
 try:
     from pyqrcode import QRCode
-except Exception, e:
+except Exception, e_qrcode:
     USE_QR = False
+try:
+    import barcode
+except Exception, e_barcode:
+    USE_BARCODE = False
 
 
 class DymoLabeler:
@@ -200,6 +206,99 @@ class DymoLabeler:
         print response
 
 
+if USE_BARCODE:
+    def mm2px(mm, dpi=25.4):
+        return (mm * dpi) / 25.4
+
+    class ImageWriter(barcode.writer.BaseWriter):
+
+        def __init__(self):
+            barcode.writer.BaseWriter.__init__(self, self._init,
+                    self._paint_module, None, self._finish)
+            self.format = 'PNG'
+            self.dpi = 25.4
+            self._image = None
+            self._draw = None
+
+        def calculate_size(self, modules_per_line, number_of_lines, dpi=25.4):
+            width = 2 * self.quiet_zone + modules_per_line * self.module_width
+            height = self.module_height * number_of_lines
+            return int(mm2px(width, dpi)), int(mm2px(height, dpi))
+
+        def render(self, code):
+            """Renders the barcode to whatever the inheriting writer provides,
+            using the registered callbacks.
+
+            :parameters:
+                code : List
+                    List of strings matching the writer spec
+                    (only contain 0 or 1).
+            """
+            if self._callbacks['initialize'] is not None:
+                self._callbacks['initialize'](code)
+            ypos = 0
+            for cc, line in enumerate(code):
+                """
+                Pack line to list give better gfx result, otherwise in can
+                result in aliasing gaps
+                '11010111' -> [2, -1, 1, -1, 3]
+                """
+                line += ' '
+                c = 1
+                mlist = []
+                for i in range(0, len(line) - 1):
+                    if line[i] == line[i+1]:
+                        c += 1
+                    else:
+                        if line[i] == "1":
+                            mlist.append(c)
+                        else:
+                            mlist.append(-c)
+                        c = 1
+                # Left quiet zone is x startposition
+                xpos = self.quiet_zone
+                bxs = xpos  # x start of barcode
+                for mod in mlist:
+                    if mod < 1:
+                        color = self.background
+                    else:
+                        color = self.foreground
+                    # remove painting for background colored tiles?
+                    self._callbacks['paint_module'](
+                        xpos, ypos, self.module_width * abs(mod), color
+                    )
+                    xpos += self.module_width * abs(mod)
+                bxe = xpos
+                # Add right quiet zone to every line, except last line,
+                # quiet zone already provided with background,
+                # should it be removed complety?
+                if (cc + 1) != len(code):
+                    self._callbacks['paint_module'](
+                        xpos, ypos, self.quiet_zone, self.background
+                    )
+                ypos += self.module_height
+            return self._callbacks['finish']()
+
+        def _init(self, code):
+            size = self.calculate_size(len(code[0]), len(code), self.dpi)
+            self._image = Image.new('1', size, self.background)
+            self._draw = ImageDraw.Draw(self._image)
+
+        def _paint_module(self, xpos, ypos, width, color):
+            size = [(mm2px(xpos, self.dpi), mm2px(ypos, self.dpi)),
+                    (mm2px(xpos + width, self.dpi),
+                        mm2px(ypos + self.module_height, self.dpi))]
+            self._draw.rectangle(size, outline=color, fill=color)
+
+        def _finish(self):
+            return self._image
+
+        def save(self, filename, output):
+            filename = '{0}.{1}'.format(filename, self.format.lower())
+            output.save(filename, self.format.upper())
+            return filename
+
+
 def die(message=None):
     if message: print >> sys.stderr, message
     sys.exit(1)
@@ -336,6 +435,7 @@ def main():
     parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
     parser.add_argument('-v',action='store_true',help='Preview label, do not print')
     parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
+    parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     args = parser.parse_args()
     labeltext = args.text
@@ -357,9 +457,43 @@ def main():
         else:
             die("Error: file '%s' not found." % args.u)
 
-    # check if qrcode or text should be printed, use frames only on text
-    if args.qr == False:
+    # check if barcode, qrcode or text should be printed, use frames only on text
+    if args.qr:
+        if USE_QR == False:
+            die("Error: %s" % e_qrcode)
+        # create QR object from first string
+        code = QRCode(labeltext[0],error='M')
+        qr_text = code.text().split()
 
+        # create an empty label image
+        labelheight = lm._MAX_BYTES_PER_LINE * 8
+        labelwidth = labelheight
+        qr_scale = labelheight / len(qr_text)
+        qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
+        labelbitmap = Image.new('1', (labelwidth, labelheight))
+        labeldraw = ImageDraw.Draw(labelbitmap)
+
+        # write the qr-code into the empty image
+        for i,line in enumerate(qr_text):
+            for j in range(len(line)):
+                if line[j]=='1':
+                    pix=scaling((j*qr_scale,i*qr_scale+qr_offset),qr_scale)
+                    labeldraw.point(pix,255)
+        del labeldraw
+    elif args.c:
+        if USE_BARCODE == False:
+            die("Error: %s" % e_barcode)
+        code = barcode.get(args.c, ' '.join(labeltext), writer=ImageWriter())
+        labelbitmap = code.render({
+            'font_size': 0,
+            'module_height': lm._MAX_BYTES_PER_LINE * 8,
+            'module_width': 2,
+            'background': 'black',
+            'foreground': 'white',
+            })
+        #labelbitmap.show()
+        labelwidth, labelheight = labelbitmap.size
+    else:
         if args.f == None:
             fontoffset = 0
         else:
@@ -383,29 +517,6 @@ def main():
         for i, line in enumerate(labeltext):
             lineposition = int(round(i * lineheight))
             labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
-        del labeldraw
-
-    elif USE_QR == False:
-        die("Error: %s" % e)
-    # create QR object from first string
-    else:
-        code = QRCode(labeltext[0],error='M')
-        qr_text = code.text().split()
-
-        # create an empty label image
-        labelheight = lm._MAX_BYTES_PER_LINE * 8
-        labelwidth = labelheight
-        qr_scale = labelheight / len(qr_text)
-        qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
-        labelbitmap = Image.new('1', (labelwidth, labelheight))
-        labeldraw = ImageDraw.Draw(labelbitmap)
-
-        # write the qr-code into the empty image
-        for i,line in enumerate(qr_text):
-            for j in range(len(line)):
-                if line[j]=='1':
-                    pix=scaling((j*qr_scale,i*qr_scale+qr_offset),qr_scale)
-                    labeldraw.point(pix,255)
         del labeldraw
 
     # convert the image to the proper matrix for the dymo labeler object
@@ -433,9 +544,9 @@ def main():
     if args.v == True:
         print('Demo mode: showing label..')
         # fix size, adding print borders
-        labelimage = Image.new('1', (56+labelwidth+56, labelheight))
+        labelimage = Image.new('L', (56+labelwidth+56, labelheight))
         labelimage.paste(labelbitmap, (56,0))
-        labelimage.show()
+        ImageOps.invert(labelimage).show()
     else:
         print('Printing label..')
         lm.printLabel(labelmatrix, dottab)
