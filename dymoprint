@@ -219,10 +219,11 @@ if USE_BARCODE:
             self.dpi = 25.4
             self._image = None
             self._draw = None
+            self.vertical_margin = 0
 
         def calculate_size(self, modules_per_line, number_of_lines, dpi=25.4):
             width = 2 * self.quiet_zone + modules_per_line * self.module_width
-            height = self.module_height * number_of_lines
+            height = self.vertical_margin * 2 + self.module_height * number_of_lines
             return int(mm2px(width, dpi)), int(mm2px(height, dpi))
 
         def render(self, code):
@@ -236,7 +237,7 @@ if USE_BARCODE:
             """
             if self._callbacks['initialize'] is not None:
                 self._callbacks['initialize'](code)
-            ypos = 0
+            ypos = self.vertical_margin
             for cc, line in enumerate(code):
                 """
                 Pack line to list give better gfx result, otherwise in can
@@ -486,7 +487,8 @@ def main():
         code = barcode.get(args.c, ' '.join(labeltext), writer=ImageWriter())
         labelbitmap = code.render({
             'font_size': 0,
-            'module_height': lm._MAX_BYTES_PER_LINE * 8,
+            'vertical_margin': 8,
+            'module_height': (lm._MAX_BYTES_PER_LINE * 8) - 16,
             'module_width': 2,
             'background': 'black',
             'foreground': 'white',
