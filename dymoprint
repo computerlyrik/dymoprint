@@ -87,6 +87,7 @@ class DymoLabeler:
         self.bytesPerLine_ = None
         self.dotTab_ = 0
         self.dev = open(dev, 'r+')
+        self.maxLines = 200
 
     def sendCommand(self):
         """Send the already built command to the LabelManager. (MLF)"""
@@ -191,16 +192,34 @@ class DymoLabeler:
         response = self.sendCommand()
         print response
 
-    def printLabel(self, lines, dotTab):
+    def printLabel(self, lines, margin=56*2):
+        """Print the label described by lines. (Automatically split label if 
+           larger than maxLines)"""
+
+        while len(lines) > self.maxLines + 1:
+            self.rawPrintLabel(lines[0:self.maxLines], margin=0)
+            del lines[0:self.maxLines]
+        self.rawPrintLabel(lines, margin=margin)
+
+    def rawPrintLabel(self, lines, margin=56*2):
         """Print the label described by lines. (HLF)"""
+
+        # optimize the matrix for the dymo label printer
+        dottab = 0
+        while [] not in lines and max(line[0] for line in lines) == 0:
+            lines = [line[1:] for line in lines]
+            dottab += 1
+        for line in lines:
+            while len(line) > 0 and line[-1] == 0:
+                del line[-1]
 
         self.initLabel
         self.tapeColor(0)
-        self.dotTab(dotTab)
+        self.dotTab(dottab)
         for line in lines:
             self.line(line)
-        self.skipLines(56)  # advance printed matter past cutter
-        self.skipLines(56)  # add symmetric margin
+        if margin > 0:
+            self.skipLines(margin)
         self.statusRequest()
         response = self.sendCommand()
         print response
@@ -437,6 +456,7 @@ def main():
     parser.add_argument('-v',action='store_true',help='Preview label, do not print')
     parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
     parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
+    parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     args = parser.parse_args()
     labeltext = args.text
@@ -533,15 +553,6 @@ def main():
     labelmatrix = [array.array('B', labelrow).tolist() for labelrow in
         labelrows]
 
-    # optimize the matrix for the dymo label printer
-    dottab = 0
-    while max(line[0] for line in labelmatrix) == 0:
-        labelmatrix = [line[1:] for line in labelmatrix]
-        dottab += 1
-    for line in labelmatrix:
-        while len(line) > 0 and line[-1] == 0:
-            del line[-1]
-
     # print or show the label
     if args.v == True:
         print('Demo mode: showing label..')
@@ -551,7 +562,10 @@ def main():
         ImageOps.invert(labelimage).show()
     else:
         print('Printing label..')
-        lm.printLabel(labelmatrix, dottab)
+        if args.m is not None:
+            lm.printLabel(labelmatrix, margin=args.m)
+        else:
+            lm.printLabel(labelmatrix)
 
 
 if __name__ == '__main__':
