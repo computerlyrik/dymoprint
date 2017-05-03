@@ -427,8 +427,22 @@ def commandline_arg(bytestring):
     unicode_string = bytestring.decode(sys.getfilesystemencoding())
     return unicode_string
 
+def parse_args():
+    # check for any text specified on the command line
+    parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
+    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=commandline_arg)
+    parser.add_argument('-f',action="count",help='Draw frame around the text, more arguments for thicker frame')
+    parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
+    parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
+    parser.add_argument('-v',action='store_true',help='Preview label, do not print')
+    parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
+    parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
+    parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
+    #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
+    parser.add_argument('-pdb',action='store_true',help='Run pdb if an exception occurs')
+    return parser.parse_args()
 
-def main():
+def main(args):
     # get device file name
     if not DEV_NODE:
         dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
@@ -447,18 +461,6 @@ def main():
     conf_path = os.path.dirname(sys.argv[0])
     read_config(conf_path+'/'+CONFIG_FILE)
 
-    # check for any text specified on the command line
-    parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
-    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=commandline_arg)
-    parser.add_argument('-f',action="count",help='Draw frame around the text, more arguments for thicker frame')
-    parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
-    parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
-    parser.add_argument('-v',action='store_true',help='Preview label, do not print')
-    parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
-    parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
-    parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
-    #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
-    args = parser.parse_args()
     labeltext = args.text
     # select font style and offset from parameter
     if args.s == 'r':
@@ -569,7 +571,17 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    try:
+        main(args)
+    except:
+        if not args.pdb:
+            raise
+        import traceback
+        import pdb
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
+        pdb.post_mortem(tb)
 
 
 # TODO
