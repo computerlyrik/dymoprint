@@ -432,7 +432,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
     parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=commandline_arg)
     parser.add_argument('-f',action="count",help='Draw frame around the text, more arguments for thicker frame')
-    parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonst style (regular,bold,italic,narrow)')
+    parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonts style (regular,bold,italic,narrow)')
     parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
     parser.add_argument('-v',action='store_true',help='Preview label, do not print')
     parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
