@@ -32,10 +32,9 @@ FONT_CONFIG = {'regular':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.
                'italic':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-RI.ttf',       # italic font
                'narrow':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf'    # narrow/condensed
                }
-FONT_SIZERATIO  = 7./8
-#CONFIG_FILE     = '.dymoprint'
+FONT_SIZERATIO  = 1 #7./8
 CONFIG_FILE     = 'dymoprint.ini'
-VERSION         = "0.3.4 (2016-03-14)"
+VERSION         = "0.4.0 (2018-02-20)"
 USE_QR          = True
 USE_BARCODE     = True
 
@@ -213,7 +212,7 @@ class DymoLabeler:
             while len(line) > 0 and line[-1] == 0:
                 del line[-1]
 
-        self.initLabel
+        self.initLabel()
         self.tapeColor(0)
         self.dotTab(dottab)
         for line in lines:
@@ -341,6 +340,7 @@ def getDeviceFile(classID, vendorID, productID):
             foundpath = os.path.join(searchdir, devname)
             break
     if not foundpath:
+        print "Device path not found"
         return
     searchdir = os.path.join(foundpath, 'hidraw')
     devname = os.listdir(searchdir)[0]
@@ -370,6 +370,7 @@ def getDeviceFile(classID, vendorID, productID):
             filepath = os.path.join(dirpath, filename)
             if os.stat(filepath).st_rdev == devnum:
                 return filepath
+    print "getDeviceFile dropped through"
 
 
 def access_error(dev):
@@ -427,6 +428,7 @@ def commandline_arg(bytestring):
     unicode_string = bytestring.decode(sys.getfilesystemencoding())
     return unicode_string
 
+
 def parse_args():
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
@@ -438,9 +440,10 @@ def parse_args():
     parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
     parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
     parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
-    #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
+    parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     parser.add_argument('-pdb',action='store_true',help='Run pdb if an exception occurs')
     return parser.parse_args()
+
 
 def main(args):
     # get device file name
@@ -480,6 +483,19 @@ def main(args):
         else:
             die("Error: file '%s' not found." % args.u)
 
+    if args.t == 6:
+        print('Tape 6mm')
+        labelheight = lm._MAX_BYTES_PER_LINE * 4
+        tapeWidthOffset = 16
+    elif args.t == 9:
+        print('Tape 9mm')
+        labelheight = lm._MAX_BYTES_PER_LINE * 6
+        tapeWidthOffset = 8
+    else:
+        print('Tape 12mm (default)')
+        labelheight=lm._MAX_BYTES_PER_LINE * 8
+        tapeWidthOffset = -4
+
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr:
         if USE_QR == False:
@@ -489,7 +505,7 @@ def main(args):
         qr_text = code.text().split()
 
         # create an empty label image
-        labelheight = lm._MAX_BYTES_PER_LINE * 8
+        # labelheight = lm._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
         qr_scale = labelheight / len(qr_text)
         qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
@@ -510,7 +526,7 @@ def main(args):
         labelbitmap = code.render({
             'font_size': 0,
             'vertical_margin': 8,
-            'module_height': (lm._MAX_BYTES_PER_LINE * 8) - 16,
+            'module_height': (labelheight) - 16,
             'module_width': 2,
             'background': 'black',
             'foreground': 'white',
@@ -524,12 +540,12 @@ def main(args):
             fontoffset = min(args.f, 3)
 
         # create an empty label image
-        labelheight = lm._MAX_BYTES_PER_LINE * 8
+        # labelheight = lm._MAX_BYTES_PER_LINE * 8
         lineheight = float(labelheight) / len(labeltext)
         fontsize = int(round(lineheight * FONT_SIZERATIO))
         font = ImageFont.truetype(FONT_FILENAME, fontsize)
         labelwidth = max(font.getsize(line)[0] for line in labeltext) + (fontoffset*2)
-        labelbitmap = Image.new('1', (labelwidth, labelheight))
+        labelbitmap = Image.new('1', (labelwidth, 64))
         labeldraw = ImageDraw.Draw(labelbitmap)
 
         # draw frame into empty image
@@ -537,16 +553,18 @@ def main(args):
             labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
             labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
 
+
+
         # write the text into the empty image
         for i, line in enumerate(labeltext):
-            lineposition = int(round(i * lineheight))
+            lineposition = int(round(i * lineheight))+ tapeWidthOffset
             labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
         del labeldraw
 
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
     labelstream = labelrotated.tobytes()
-    labelstreamrowlength = labelheight/8 + (1 if labelheight%8 != 0 else 0)
+    labelstreamrowlength = 64/8 + (1 if 64%8 != 0 else 0)
     if len(labelstream)/labelstreamrowlength != labelwidth:
         die('An internal problem was encountered while processing the label '
             'bitmap!')
@@ -559,7 +577,7 @@ def main(args):
     if args.v == True:
         print('Demo mode: showing label..')
         # fix size, adding print borders
-        labelimage = Image.new('L', (56+labelwidth+56, labelheight))
+        labelimage = Image.new('L', (56+labelwidth+56, 64))
         labelimage.paste(labelbitmap, (56,0))
         ImageOps.invert(labelimage).show()
     else:
@@ -589,8 +607,8 @@ if __name__ == '__main__':
 # o put everything in classes that would need to be used by a GUI
 # x for more options use command line parser framework
 # x allow selection of font with command line options
-# o allow font size specification with command line option (points, pixels?)
+# x (kinda) allow font size specification with command line option (points, pixels?)
 # x provide an option to show a preview of what the label will look like
 # x read and write a .dymoprint file containing user preferences
-# o print graphics and barcodes
+# x print graphics and barcodes
 # x plot frame around label
