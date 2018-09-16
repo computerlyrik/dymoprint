@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/computerlyrik/dymoprint.svg?branch=master)](https://travis-ci.org/computerlyrik/dymoprint)
+
 dymoprint
 =========
 
