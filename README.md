@@ -17,11 +17,11 @@ use **udev** and **modeswitch** configurations to work with the LabelManager PNP
 **modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
 
     sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
-
+    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/    
+    
 and restart services with:
-
-    sudo reload udev
+  
+    sudo systemctl restart udev.service
 
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
