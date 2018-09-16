@@ -9,4 +9,4 @@ python:
   - "3.7"
 install:
 script:
-  - ./dymoprint --help
+  - python dymoprint --help
