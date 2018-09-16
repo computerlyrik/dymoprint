@@ -17,11 +17,11 @@ use **udev** and **modeswitch** configurations to work with the LabelManager PNP
 **modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
 
     sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
-
+    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/    
+    
 and restart services with:
-
-    sudo reload udev
+  
+    sudo systemctl restart udev.service
 
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
@@ -42,7 +42,9 @@ It is also possible to Download a font from
 http://font.ubuntu.com/ and use it.
 
 ### Additional libraries used:
-*(todo..)*
+
+**See also requirements.txt**
+
 - PIL/PILLOW
 - [pyqrcode](https://github.com/mnooner256/pyqrcode) (used v1.0)
 - [pyBarcode](https://bitbucket.org/whitie/python-barcode) (used v0.7)
