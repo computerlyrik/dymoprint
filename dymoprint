@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # === LICENSE STATEMENT ===
 # Copyright (c) 2011 Sebastian J. Bronner <waschtl@sbronner.com>
@@ -18,6 +18,42 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
+from __future__ import print_function
+from __future__ import division
+
+import array
+import fcntl
+import os
+import re
+import struct
+import subprocess
+import sys
+import termios
+import textwrap
+import argparse
+import math
+
+try:
+    from configparser import SafeConfigParser
+except ImportError:  # Python 2
+    from ConfigParser import SafeConfigParser
+
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+from PIL import ImageOps
+
+try:
+    from pyqrcode import QRCode
+    USE_QR = True
+except ImportError:
+    USE_QR = False
+try:
+    import barcode
+    USE_BARCODE = True
+except ImportError:
+    USE_BARCODE = False
+
 
 DESCRIPTION = 'Linux Software to print with LabelManager PnP from Dymo\n written in Python'
 DEV_CLASS       = 3
@@ -36,32 +72,6 @@ FONT_SIZERATIO  = 7./8
 #CONFIG_FILE     = '.dymoprint'
 CONFIG_FILE     = 'dymoprint.ini'
 VERSION         = "0.3.4 (2016-03-14)"
-USE_QR          = True
-USE_BARCODE     = True
-
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-from PIL import ImageOps
-import array
-import fcntl
-import os
-import re
-import struct
-import subprocess
-import sys
-import termios
-import textwrap
-import argparse
-from ConfigParser import SafeConfigParser
-try:
-    from pyqrcode import QRCode
-except Exception, e_qrcode:
-    USE_QR = False
-try:
-    import barcode
-except Exception, e_barcode:
-    USE_BARCODE = False
 
 
 class DymoLabeler:
@@ -86,7 +96,7 @@ class DymoLabeler:
         self.response = False
         self.bytesPerLine_ = None
         self.dotTab_ = 0
-        self.dev = open(dev, 'r+')
+        self.dev = open(dev, 'rb+')
         self.maxLines = 200
 
     def sendCommand(self):
@@ -190,7 +200,7 @@ class DymoLabeler:
 
         self.statusRequest()
         response = self.sendCommand()
-        print response
+        print(response)
 
     def printLabel(self, lines, margin=56*2):
         """Print the label described by lines. (Automatically split label if 
@@ -222,7 +232,7 @@ class DymoLabeler:
             self.skipLines(margin)
         self.statusRequest()
         response = self.sendCommand()
-        print response
+        print(response)
 
 
 if USE_BARCODE:
@@ -320,14 +330,15 @@ if USE_BARCODE:
 
 
 def die(message=None):
-    if message: print >> sys.stderr, message
+    if message:
+        print(message, file=sys.stderr)
     sys.exit(1)
 
 
 def pprint(par, fd=sys.stdout):
     rows, columns = struct.unpack('HH', fcntl.ioctl(sys.stderr,
         termios.TIOCGWINSZ, struct.pack('HH', 0, 0)))
-    print >> fd, textwrap.fill(par, columns)
+    print(textwrap.fill(par, columns), file=fd)
 
 
 def getDeviceFile(classID, vendorID, productID):
@@ -376,11 +387,11 @@ def access_error(dev):
     pprint('You do not have sufficient access to the device file %s:' % dev,
         sys.stderr)
     subprocess.call(['ls', '-l', dev], stdout=sys.stderr)
-    print >> sys.stderr
+    print(file=sys.stderr)
     pprint('You probably want to add a rule in /etc/udev/rules.d along the '
         'following lines:', sys.stderr)
-    print >> sys.stderr, 'SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="%04X", ATTRS{idProduct}=="%04X", GROUP="plugdev"' % (DEV_VENDOR, DEV_PRODUCT)
-    print >> sys.stderr
+    print('SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="%04X", ATTRS{idProduct}=="%04X", GROUP="plugdev"' % (DEV_VENDOR, DEV_PRODUCT), file=sys.stderr)
+    print(file=sys.stderr)
     pprint('Following that, turn off your device and back on again to '
         'activate the new permissions.', sys.stderr)
 
@@ -390,7 +401,7 @@ def read_config(conf_file):
     global FONT_CONFIG
     conf = SafeConfigParser(FONT_CONFIG)
     if not conf.read(conf_file):
-        print('# Config file "%s" not found: writing new config file.\n' %conf_file)
+        print('# Config file "%s" not found: writing new config file.\n' % conf_file)
         write_config(conf_file)
     else:
         # reading FONTS section
@@ -409,7 +420,7 @@ def write_config(conf_file):
     for key in FONT_CONFIG.keys():
         config.set('FONTS', key, FONT_CONFIG[key])
     # writing config file
-    with open(conf_file, 'wb') as configfile:
+    with open(conf_file, 'w') as configfile:
         config.write(configfile)
 
 
@@ -423,14 +434,17 @@ def scaling(pix,sc):
 
 
 ''' decoding text parameter depending on system encoding '''
-def commandline_arg(bytestring):
-    unicode_string = bytestring.decode(sys.getfilesystemencoding())
-    return unicode_string
+def to_unicode(argument_string):
+    try:
+        unicode  # this passes on Python 2, where we need to decode, but not on Python 3
+        return argument_string.decode(sys.getfilesystemencoding())
+    except NameError:
+        return argument_string
 
 def parse_args():
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(description=DESCRIPTION+' \n Version: '+VERSION)
-    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=commandline_arg)
+    parser.add_argument('text',nargs='+',help='Text Parameter, each parameter gives a new line',type=to_unicode)
     parser.add_argument('-f',action="count",help='Draw frame around the text, more arguments for thicker frame')
     parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonts style (regular,bold,italic,narrow)')
     parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
@@ -474,7 +488,7 @@ def main(args):
     else:
         FONT_FILENAME = FONT_CONFIG['regular']
 
-    if args.u <> None:
+    if args.u is not None:
         if os.path.isfile(args.u):
             FONT_FILENAME = args.u
         else:
@@ -533,7 +547,7 @@ def main(args):
         labeldraw = ImageDraw.Draw(labelbitmap)
 
         # draw frame into empty image
-        if args.f <> None:
+        if args.f is not None:
             labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
             labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
 
@@ -546,7 +560,7 @@ def main(args):
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
     labelstream = labelrotated.tobytes()
-    labelstreamrowlength = labelheight/8 + (1 if labelheight%8 != 0 else 0)
+    labelstreamrowlength = int(math.ceil(labelheight/8))
     if len(labelstream)/labelstreamrowlength != labelwidth:
         die('An internal problem was encountered while processing the label '
             'bitmap!')
