@@ -503,7 +503,7 @@ def main(args):
     if args.qr:
         # create QR object from first string
         code = QRCode(labeltext.pop(0), error='M')
-        qr_text = code.text().split()
+        qr_text = code.text(quiet_zone=1).split()
 
         # create an empty label image
         labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
