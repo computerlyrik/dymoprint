@@ -456,28 +456,15 @@ def parse_args():
     parser.add_argument('-s',choices=['r','b','i','n'],default='r',help='Set fonts style (regular,bold,italic,narrow)')
     parser.add_argument('-u',nargs='?',help='Set user font, overrides "-s" parameter')
     parser.add_argument('-v',action='store_true',help='Preview label, do not print')
-    parser.add_argument('-qr',action='store_true',help='Printing the text parameter as QR-code')
-    parser.add_argument('-c',choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],default=False,help='Printing the text parameter as barcode')
+    parser.add_argument('-qr',action='store_true',help='Printing the first text parameter as QR-code')
+    parser.add_argument('-c', choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],
+                        default=False, help='Printing the first text parameter as barcode')
     parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     parser.add_argument('-pdb',action='store_true',help='Run pdb if an exception occurs')
     return parser.parse_args()
 
 def main(args):
-    # get device file name
-    if not DEV_NODE:
-        dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
-    else:
-        dev = DEV_NODE
-    if not dev:
-        die("The device '%s' could not be found on this system." % DEV_NAME)
-
-    # create dymo labeler object
-    try:
-        lm = DymoLabeler(dev)
-    except IOError:
-        die(access_error(dev))
-
     # read config file
     conf_path = os.path.dirname(os.path.realpath(__file__))
     read_config(os.path.join(conf_path, CONFIG_FILE))
@@ -519,7 +506,7 @@ def main(args):
         qr_text = code.text().split()
 
         # create an empty label image
-        labelheight = lm._MAX_BYTES_PER_LINE * 8
+        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
         qr_scale = labelheight // len(qr_text)
         qr_offset = (labelheight - len(qr_text)*qr_scale) // 2
@@ -539,7 +526,7 @@ def main(args):
         codebitmap = code.render({
             'font_size': 0,
             'vertical_margin': 8,
-            'module_height': (lm._MAX_BYTES_PER_LINE * 8) - 16,
+            'module_height': (DymoLabeler._MAX_BYTES_PER_LINE * 8) - 16,
             'module_width': 2,
             'background': 'black',
             'foreground': 'white',
@@ -554,7 +541,7 @@ def main(args):
             fontoffset = min(args.f, 3)
 
         # create an empty label image
-        labelheight = lm._MAX_BYTES_PER_LINE * 8
+        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         lineheight = float(labelheight) / len(labeltext)
         fontsize = int(round(lineheight * FONT_SIZERATIO))
         font = ImageFont.truetype(FONT_FILENAME, fontsize)
@@ -602,6 +589,21 @@ def main(args):
         labelimage.paste(labelbitmap, (56,0))
         ImageOps.invert(labelimage).show()
     else:
+        # get device file name
+        if not DEV_NODE:
+            dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
+        else:
+            dev = DEV_NODE
+
+        if not dev:
+            die("The device '%s' could not be found on this system." % DEV_NAME)
+
+        # create dymo labeler object
+        try:
+            lm = DymoLabeler(dev)
+        except IOError:
+            die(access_error(dev))
+
         print('Printing label..')
         if args.m is not None:
             lm.printLabel(labelmatrix, margin=args.m)
