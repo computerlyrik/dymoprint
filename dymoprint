@@ -576,7 +576,7 @@ def main(args):
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
     labelstream = labelrotated.tobytes()
     labelstreamrowlength = int(math.ceil(labelbitmap.height/8))
-    if len(labelstream)/labelstreamrowlength != labelbitmap.width:
+    if len(labelstream)//labelstreamrowlength != labelbitmap.width:
         die('An internal problem was encountered while processing the label '
             'bitmap!')
     labelrows = [labelstream[i:i+labelstreamrowlength] for i in
