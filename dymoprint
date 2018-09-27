@@ -511,6 +511,9 @@ def main(args):
         qr_scale = labelheight // len(qr_text)
         qr_offset = (labelheight - len(qr_text)*qr_scale) // 2
 
+        if not qr_scale:
+            die("Error: too much information to store in the QR code, points are smaller than the device resolution")
+
         codebitmap = Image.new('1', (labelwidth, labelheight))
 
         with draw_image(codebitmap) as labeldraw:
