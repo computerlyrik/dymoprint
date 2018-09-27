@@ -32,6 +32,7 @@ import termios
 import textwrap
 import argparse
 import math
+import contextlib
 
 try:
     from configparser import SafeConfigParser
@@ -427,12 +428,8 @@ def write_config(conf_file):
 
 
 ''' scaling pixel up, input: (x,y),scale-factor '''
-def scaling(pix,sc):
-    m=[]
-    for i in range(sc):
-        for j in range(sc):
-            m.append( (pix[0]+i,pix[1]+j) )
-    return m
+def scaling(pix, sc):
+    return [(pix[0]+i, pix[1]+j) for i in range(sc) for j in range(sc)]
 
 
 ''' decoding text parameter depending on system encoding '''
@@ -442,6 +439,14 @@ def to_unicode(argument_string):
         return argument_string.decode(sys.getfilesystemencoding())
     except NameError:
         return argument_string
+
+@contextlib.contextmanager
+def draw_image(bitmap):
+    drawobj = ImageDraw.Draw(bitmap)
+    try:
+        yield drawobj
+    finally:
+        del drawobj
 
 def parse_args():
     # check for any text specified on the command line
@@ -497,33 +502,41 @@ def main(args):
             die("Error: file '%s' not found." % args.u)
 
     # check if barcode, qrcode or text should be printed, use frames only on text
+    if args.qr and not USE_QR:
+        die("Error: %s" % e_qrcode)
+
+    if args.c and not USE_BARCODE:
+        die("Error: %s" % e_barcode)
+
+    if args.c and args.qr:
+        die("Error: can not print both QR and Barcode on the same label (yet)")
+
+    codebitmap = None
+
     if args.qr:
-        if USE_QR == False:
-            die("Error: %s" % e_qrcode)
         # create QR object from first string
-        code = QRCode(labeltext[0],error='M')
+        code = QRCode(labeltext.pop(0), error='M')
         qr_text = code.text().split()
 
         # create an empty label image
         labelheight = lm._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
         qr_scale = labelheight // len(qr_text)
-        qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
-        labelbitmap = Image.new('1', (labelwidth, labelheight))
-        labeldraw = ImageDraw.Draw(labelbitmap)
+        qr_offset = (labelheight - len(qr_text)*qr_scale) // 2
 
-        # write the qr-code into the empty image
-        for i,line in enumerate(qr_text):
-            for j in range(len(line)):
-                if line[j]=='1':
-                    pix=scaling((j*qr_scale,i*qr_scale+qr_offset),qr_scale)
-                    labeldraw.point(pix,255)
-        del labeldraw
+        codebitmap = Image.new('1', (labelwidth, labelheight))
+
+        with draw_image(codebitmap) as labeldraw:
+            # write the qr-code into the empty image
+            for i, line in enumerate(qr_text):
+                for j in range(len(line)):
+                    if line[j] == '1':
+                        pix = scaling((j*qr_scale, i*qr_scale+qr_offset), qr_scale)
+                        labeldraw.point(pix, 255)
+
     elif args.c:
-        if USE_BARCODE == False:
-            die("Error: %s" % e_barcode)
-        code = barcode.get(args.c, ' '.join(labeltext), writer=ImageWriter())
-        labelbitmap = code.render({
+        code = barcode.get(args.c, labeltext.pop(0), writer=ImageWriter())
+        codebitmap = code.render({
             'font_size': 0,
             'vertical_margin': 8,
             'module_height': (lm._MAX_BYTES_PER_LINE * 8) - 16,
@@ -531,9 +544,10 @@ def main(args):
             'background': 'black',
             'foreground': 'white',
             })
-        #labelbitmap.show()
-        labelwidth, labelheight = labelbitmap.size
-    else:
+
+    textbitmap = None
+
+    if labeltext:
         if args.f == None:
             fontoffset = 0
         else:
@@ -545,25 +559,34 @@ def main(args):
         fontsize = int(round(lineheight * FONT_SIZERATIO))
         font = ImageFont.truetype(FONT_FILENAME, fontsize)
         labelwidth = max(font.getsize(line)[0] for line in labeltext) + (fontoffset*2)
-        labelbitmap = Image.new('1', (labelwidth, labelheight))
-        labeldraw = ImageDraw.Draw(labelbitmap)
+        textbitmap = Image.new('1', (labelwidth, labelheight))
+        with draw_image(textbitmap) as labeldraw:
 
-        # draw frame into empty image
-        if args.f is not None:
-            labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
-            labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
+            # draw frame into empty image
+            if args.f is not None:
+                labeldraw.rectangle(((0,0),(labelwidth-1,labelheight-1)),fill=255)
+                labeldraw.rectangle(((fontoffset,fontoffset),(labelwidth-(fontoffset+1),labelheight-(fontoffset+1))),fill=0)
 
-        # write the text into the empty image
-        for i, line in enumerate(labeltext):
-            lineposition = int(round(i * lineheight))
-            labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
-        del labeldraw
+            # write the text into the empty image
+            for i, line in enumerate(labeltext):
+                lineposition = int(round(i * lineheight))
+                labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
+
+    if codebitmap and textbitmap:
+        padding = 4
+        labelbitmap = Image.new('1', (codebitmap.width + textbitmap.width + padding, codebitmap.height))
+        labelbitmap.paste(codebitmap, box=(0,0))
+        labelbitmap.paste(textbitmap, box=(codebitmap.width + padding, 0))
+    elif codebitmap:
+        labelbitmap = codebitmap
+    else:
+        labelbitmap = textbitmap
 
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
     labelstream = labelrotated.tobytes()
-    labelstreamrowlength = int(math.ceil(labelheight/8))
-    if len(labelstream)/labelstreamrowlength != labelwidth:
+    labelstreamrowlength = int(math.ceil(labelbitmap.height/8))
+    if len(labelstream)/labelstreamrowlength != labelbitmap.width:
         die('An internal problem was encountered while processing the label '
             'bitmap!')
     labelrows = [labelstream[i:i+labelstreamrowlength] for i in
@@ -575,7 +598,7 @@ def main(args):
     if args.v == True:
         print('Demo mode: showing label..')
         # fix size, adding print borders
-        labelimage = Image.new('L', (56+labelwidth+56, labelheight))
+        labelimage = Image.new('L', (56+labelbitmap.width+56, labelbitmap.height))
         labelimage.paste(labelbitmap, (56,0))
         ImageOps.invert(labelimage).show()
     else:
