@@ -457,6 +457,7 @@ def parse_args():
     parser.add_argument('-qr',action='store_true',help='Printing the first text parameter as QR-code')
     parser.add_argument('-c', choices=['code39','code128','ean','ean13','ean8','gs1','gtin','isbn','isbn10','isbn13','issn','jan','pzn','upc','upca'],
                         default=False, help='Printing the first text parameter as barcode')
+    parser.add_argument('-p', '--picture', help="Print the specified picture")
     parser.add_argument('-m',type=int,help='Override margin (default is 56*2)')
     #parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
     parser.add_argument('-pdb',action='store_true',help='Run pdb if an exception occurs')
@@ -496,7 +497,7 @@ def main(args):
     if args.c and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
 
-    codebitmap = None
+    bitmaps = []
 
     if args.qr:
         # create QR object from first string
@@ -522,6 +523,8 @@ def main(args):
                         pix = scaling((j*qr_scale, i*qr_scale+qr_offset), qr_scale)
                         labeldraw.point(pix, 255)
 
+        bitmaps.append(codebitmap)
+
     elif args.c:
         code = barcode.get(args.c, labeltext.pop(0), writer=ImageWriter())
         codebitmap = code.render({
@@ -533,7 +536,7 @@ def main(args):
             'foreground': 'white',
             })
 
-    textbitmap = None
+        bitmaps.append(codebitmap)
 
     if labeltext:
         if args.f == None:
@@ -560,15 +563,25 @@ def main(args):
                 lineposition = int(round(i * lineheight))
                 labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
 
-    if codebitmap and textbitmap:
+        bitmaps.append(textbitmap)
+
+    if args.picture:
+        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
+        with Image.open(args.picture) as img:
+            if img.height > labelheight:
+                ratio = labelheight / img.height
+                img.thumbnail((int(math.ceil(img.width*ratio)), labelheight), Image.ANTIALIAS)
+            bitmaps.append(ImageOps.invert(img).convert('1'))
+
+    if len(bitmaps) > 1:
         padding = 4
-        labelbitmap = Image.new('1', (codebitmap.width + textbitmap.width + padding, codebitmap.height))
-        labelbitmap.paste(codebitmap, box=(0,0))
-        labelbitmap.paste(textbitmap, box=(codebitmap.width + padding, 0))
-    elif codebitmap:
-        labelbitmap = codebitmap
+        labelbitmap = Image.new('1', (sum(b.width for b in bitmaps) + padding*(len(bitmaps) - 1), bitmaps[0].height))
+        offset = 0
+        for bitmap in bitmaps:
+            labelbitmap.paste(bitmap, box=(offset, 0))
+            offset += bitmap.width + padding
     else:
-        labelbitmap = textbitmap
+        labelbitmap = bitmaps[0]
 
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
