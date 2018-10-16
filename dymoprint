@@ -472,8 +472,8 @@ def main(args):
         die(access_error(dev))
 
     # read config file
-    conf_path = os.path.dirname(sys.argv[0])
-    read_config(conf_path+'/'+CONFIG_FILE)
+    conf_path = os.path.dirname(os.path.realpath(__file__))
+    read_config(os.path.join(conf_path, CONFIG_FILE))
 
     labeltext = args.text
     # select font style and offset from parameter
@@ -505,7 +505,7 @@ def main(args):
         # create an empty label image
         labelheight = lm._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
-        qr_scale = labelheight / len(qr_text)
+        qr_scale = labelheight // len(qr_text)
         qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
         labelbitmap = Image.new('1', (labelwidth, labelheight))
         labeldraw = ImageDraw.Draw(labelbitmap)
