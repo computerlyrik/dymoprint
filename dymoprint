@@ -472,8 +472,8 @@ def main(args):
         die(access_error(dev))
 
     # read config file
-    conf_path = os.path.dirname(sys.argv[0])
-    read_config(conf_path+'/'+CONFIG_FILE)
+    conf_path = os.path.dirname(os.path.realpath(__file__))
+    read_config(os.path.join(conf_path, CONFIG_FILE))
 
     labeltext = args.text
     # select font style and offset from parameter
