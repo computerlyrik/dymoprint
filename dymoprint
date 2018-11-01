@@ -505,7 +505,7 @@ def main(args):
         # create an empty label image
         labelheight = lm._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
-        qr_scale = labelheight / len(qr_text)
+        qr_scale = labelheight // len(qr_text)
         qr_offset = (labelheight - len(qr_text)*qr_scale) / 2
         labelbitmap = Image.new('1', (labelwidth, labelheight))
         labeldraw = ImageDraw.Draw(labelbitmap)
