@@ -46,12 +46,14 @@ from PIL import ImageOps
 try:
     from pyqrcode import QRCode
     USE_QR = True
-except ImportError:
+except ImportError as error:
+    e_qrcode = error
     USE_QR = False
 try:
     import barcode
     USE_BARCODE = True
-except ImportError:
+except ImportError as error:
+    e_barcode = error
     USE_BARCODE = False
 
 
