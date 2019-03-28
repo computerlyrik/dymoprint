@@ -1,4 +1,4 @@
 Pillow==5.2.0
 PyQRCode==1.2.1
-# pyBarcode==0.7
-python-barcode==0.9.0
+pyBarcode==0.8b1; python_version=='2.7'
+python-barcode==0.9.0; python_version > '3.0'
