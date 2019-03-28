@@ -8,9 +8,13 @@ Linux Software to print with LabelManager PnP from Dymo
 
 cloned for development from https://sbronner.com/dymoprint.html
 
-Changes:
 
-- *some..*
+# Installation
+## Dependent packages
+
+```
+pip install -r requirements.txt
+```
 
 
 ### For ubuntu based distributions:
@@ -42,14 +46,6 @@ For my Arch-Linux System, fonts are located at e.g.
 
 It is also possible to Download a font from
 http://font.ubuntu.com/ and use it.
-
-### Additional libraries used:
-
-**See also requirements.txt**
-
-- PIL/PILLOW
-- [pyqrcode](https://github.com/mnooner256/pyqrcode) (used v1.0)
-- [pyBarcode](https://bitbucket.org/whitie/python-barcode) (used v0.7)
 
 ### ToDo
 - (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
