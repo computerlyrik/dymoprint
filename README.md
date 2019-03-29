@@ -53,7 +53,11 @@ http://font.ubuntu.com/ and use it.
 ## Development 
 Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
 ```
-./dymoprint Test && ./dymoprint -qr Test && ./dymoprint -c code128 Test
+./dymoprint Tst && \
+./dymoprint -qr Tst && \
+./dymoprint -c code128 Tst && \
+./dymoprint -qr qrencoded "qr_txt" && \
+./dymoprint -c code128 Test "bc_txt"
 ```
 
 
