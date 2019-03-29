@@ -9,15 +9,18 @@ Linux Software to print with LabelManager PnP from Dymo
 cloned for development from https://sbronner.com/dymoprint.html
 
 
-# Installation
-## Dependent packages
+## Installation & Configuration
+### Dependent packages
 
 ```
 pip install -r requirements.txt
 ```
+or in userspace
+```
+pip install --user -r requirements.txt
+```
 
-
-### For ubuntu based distributions:
+#### For ubuntu based distributions:
 (should also work for debian, but not tested yet)
 use **udev** and **modeswitch** configurations to work with the LabelManager PNP.
 **modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
@@ -46,6 +49,13 @@ For my Arch-Linux System, fonts are located at e.g.
 
 It is also possible to Download a font from
 http://font.ubuntu.com/ and use it.
+
+## Development 
+Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
+```
+./dymoprint Test && ./dymoprint -qr Test && ./dymoprint -c code128 Test
+```
+
 
 ### ToDo
 - (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
