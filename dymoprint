@@ -391,12 +391,11 @@ def access_error(dev):
         sys.stderr)
     subprocess.call(['ls', '-l', dev], stdout=sys.stderr)
     print(file=sys.stderr)
-    pprint('You probably want to add a rule in /etc/udev/rules.d along the '
-        'following lines:', sys.stderr)
-    print('SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="%04X", ATTRS{idProduct}=="%04X", GROUP="plugdev"' % (DEV_VENDOR, DEV_PRODUCT), file=sys.stderr)
-    print(file=sys.stderr)
-    pprint('Following that, turn off your device and back on again to '
-        'activate the new permissions.', sys.stderr)
+    filename = "91-dymo-labelmanager-pnp.rules"
+    pprint('You probably want to add a rule like one of the following in /etc/udev/rules.d/' + filename, sys.stderr)
+    with open(filename, 'r') as fin:
+      print(fin.read(), file=sys.stderr)
+    pprint('Following that, restart udev and re-plug your device. See README.md for details', sys.stderr)
 
 
 ''' reading config file, input: 'filename' '''
