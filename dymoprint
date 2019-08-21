@@ -35,7 +35,7 @@ import math
 import contextlib
 
 try:
-    from configparser import SafeConfigParser
+    from configparser import ConfigParser as SafeConfigParser
 except ImportError:  # Python 2
     from ConfigParser import SafeConfigParser
 
