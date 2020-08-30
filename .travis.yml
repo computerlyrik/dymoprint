@@ -8,9 +8,10 @@ python:
   - "3.7"
   - "3.8-dev"
 script:
-  - python dymoprint --help
-  - python dymoprint -v Tst
-  - python dymoprint -v -qr Tst
-  - python dymoprint -v -c code128 Tst
-  - python dymoprint -v -qr qrencoded "qr_txt"
-  - python dymoprint -v -c code128 Test "bc_txt"
+  - pip install .
+  - dymoprint --help
+  - dymoprint -v Tst
+  - dymoprint -v -qr Tst
+  - dymoprint -v -c code128 Tst
+  - dymoprint -v -qr qrencoded "qr_txt"
+  - dymoprint -v -c code128 Test "bc_txt"

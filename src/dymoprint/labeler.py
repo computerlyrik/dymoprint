@@ -5,6 +5,10 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
+from __future__ import division, print_function
+
+import array
+
 
 class DymoLabeler:
     """Create and work with a Dymo LabelManager PnP object.

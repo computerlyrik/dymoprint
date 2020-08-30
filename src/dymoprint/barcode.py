@@ -6,6 +6,13 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 
+from __future__ import division, print_function
+
+from PIL import Image, ImageDraw
+
+from .constants import USE_BARCODE, barcode
+
+
 if USE_BARCODE:
     def mm2px(mm, dpi=25.4):
         return (mm * dpi) / 25.4

@@ -16,7 +16,14 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
-if __name__ == '__main__':
+from __future__ import division, print_function
+
+import sys
+
+from .command_line import main, parse_args
+
+
+def main_with_debug():
     args = parse_args()
     try:
         main(args)
@@ -28,3 +35,6 @@ if __name__ == '__main__':
         type, value, tb = sys.exc_info()
         traceback.print_exc()
         pdb.post_mortem(tb)
+
+if __name__ == '__main__':
+    main_with_debug()
