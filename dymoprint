@@ -1,3 +1,7 @@
+#
+# src/dymoprint/imports.py
+#
+
 #!/usr/bin/env python
 
 # === LICENSE STATEMENT ===
@@ -44,6 +48,10 @@ from PIL import ImageDraw
 from PIL import ImageFont
 from PIL import ImageOps
 
+#
+# src/dymoprint/constants.py
+#
+
 try:
     from pyqrcode import QRCode
     USE_QR = True
@@ -76,6 +84,9 @@ FONT_SIZERATIO  = 7./8
 CONFIG_FILE     = 'dymoprint.ini'
 VERSION         = "0.3.4 (2016-03-14)"
 
+#
+# src/dymoprint/labeler.py
+#
 
 class DymoLabeler:
     """Create and work with a Dymo LabelManager PnP object.
@@ -237,6 +248,9 @@ class DymoLabeler:
         response = self.sendCommand()
         print(response)
 
+#
+# src/dymoprint/barcode.py
+#
 
 if USE_BARCODE:
     def mm2px(mm, dpi=25.4):
@@ -331,6 +345,9 @@ if USE_BARCODE:
             output.save(filename, self.format.upper())
             return filename
 
+#
+# src/dymoprint/utils.py
+#
 
 def die(message=None):
     if message:
@@ -446,6 +463,10 @@ def draw_image(bitmap):
         yield drawobj
     finally:
         del drawobj
+
+#
+# src/dymoprint/command_line.py
+#
 
 def parse_args():
     # check for any text specified on the command line
@@ -625,6 +646,9 @@ def main(args):
         else:
             lm.printLabel(labelmatrix)
 
+#
+# src/dymoprint/__main__.py
+#
 
 if __name__ == '__main__':
     args = parse_args()
@@ -639,6 +663,9 @@ if __name__ == '__main__':
         traceback.print_exc()
         pdb.post_mortem(tb)
 
+#
+# TODO.md
+#
 
 # TODO
 # ? support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
