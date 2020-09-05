@@ -17,13 +17,13 @@ from PIL import Image, ImageFont, ImageOps
 
 from . import DymoLabeler
 from .barcode import ImageWriter
-from .constants import (CONFIG_FILE, DESCRIPTION, DEV_CLASS, DEV_NAME,
-                        DEV_NODE, DEV_PRODUCT, DEV_VENDOR, FONT_CONFIG,
+from .constants import (DESCRIPTION, DEV_CLASS, DEV_NAME,
+                        DEV_NODE, DEV_PRODUCT, DEV_VENDOR,
                         FONT_SIZERATIO, USE_BARCODE, USE_QR, VERSION, QRCode,
                         barcode, e_barcode, e_qrcode)
-from .utils import (access_error, die, draw_image, getDeviceFile, read_config,
+from .utils import (access_error, die, draw_image, getDeviceFile,
                     scaling, to_unicode)
-
+from .font_config import font_filename
 
 def parse_args():
     # check for any text specified on the command line
@@ -44,22 +44,10 @@ def parse_args():
 
 def main(args):
     # read config file
-    conf_path = os.path.dirname(os.path.realpath(__file__))
-    read_config(os.path.join(conf_path, CONFIG_FILE))
-
+    FONT_FILENAME = font_filename(args.s)
+ 
     labeltext = args.text
-    # select font style and offset from parameter
-    if args.s == 'r':
-        FONT_FILENAME = FONT_CONFIG['regular']
-    elif args.s == 'b':
-        FONT_FILENAME = FONT_CONFIG['bold']
-    elif args.s == 'i':
-        FONT_FILENAME = FONT_CONFIG['italic']
-    elif args.s == 'n':
-        FONT_FILENAME = FONT_CONFIG['narrow']
-    else:
-        FONT_FILENAME = FONT_CONFIG['regular']
-
+ 
     if args.u is not None:
         if os.path.isfile(args.u):
             FONT_FILENAME = args.u

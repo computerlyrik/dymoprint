@@ -20,15 +20,6 @@ import textwrap
 
 from PIL import ImageDraw
 
-from .constants import FONT_CONFIG
-
-try:
-    from configparser import SafeConfigParser
-except ImportError:  # Python 2
-    from ConfigParser import SafeConfigParser
-
-
-
 def die(message=None):
     if message:
         print(message, file=sys.stderr)
@@ -93,34 +84,6 @@ def access_error(dev):
     with open(filename, 'r') as fin:
       print(fin.read(), file=sys.stderr)
     pprint('Following that, restart udev and re-plug your device. See README.md for details', sys.stderr)
-
-
-''' reading config file, input: 'filename' '''
-def read_config(conf_file):
-    global FONT_CONFIG
-    conf = SafeConfigParser(FONT_CONFIG)
-    if not conf.read(conf_file):
-        print('# Config file "%s" not found: writing new config file.\n' % conf_file)
-        write_config(conf_file)
-    else:
-        # reading FONTS section
-        if not 'FONTS' in conf.sections():
-            die('! config file "%s" not valid. Please change or remove.' %conf_file)
-        for key in FONT_CONFIG.keys():
-            FONT_CONFIG[key] = conf.get('FONTS',key)
-        # more sections later ..
-
-
-''' writing config file, input: 'filename' '''
-def write_config(conf_file):
-    config=SafeConfigParser()
-    # adding sections and keys
-    config.add_section('FONTS')
-    for key in FONT_CONFIG.keys():
-        config.set('FONTS', key, FONT_CONFIG[key])
-    # writing config file
-    with open(conf_file, 'w') as configfile:
-        config.write(configfile)
 
 
 ''' scaling pixel up, input: (x,y),scale-factor '''

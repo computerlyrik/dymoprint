@@ -1,5 +1,7 @@
 dist: xenial
 language: python
+install:
+  - pip install .
 python:
   - "2.7"
   - "3.4"
@@ -8,7 +10,6 @@ python:
   - "3.7"
   - "3.8-dev"
 script:
-  - pip install .
   - dymoprint --help
   - dymoprint -v Tst
   - dymoprint -v -qr Tst

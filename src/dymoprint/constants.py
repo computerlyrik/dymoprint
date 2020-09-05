@@ -32,13 +32,15 @@ DEV_PRODUCT     = 0x1002
 #DEV_PRODUCT     = 0x1001
 DEV_NODE        = None
 DEV_NAME        = 'Dymo LabelManager PnP'
-#FONT_FILENAME  = '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf'
-FONT_CONFIG = {'regular':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf',     # regular font
-               'bold':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf',        # bold font
-               'italic':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-RI.ttf',       # italic font
-               'narrow':'/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf'    # narrow/condensed
-               }
+
 FONT_SIZERATIO  = 7./8
-#CONFIG_FILE     = '.dymoprint'
-CONFIG_FILE     = 'dymoprint.ini'
-VERSION         = "0.3.4 (2016-03-14)"
+VERSION         = "1.0.2"
+
+DEFAULT_FONT_STYLE = "regular"
+
+FLAG_TO_STYLE = {
+    "r": "regular",
+    "b": "bold",
+    "i": "italic",
+    "n": "narrow",
+}

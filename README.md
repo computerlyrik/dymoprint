@@ -20,13 +20,19 @@ cloned for development from https://sbronner.com/dymoprint.html
 ## Installation & Configuration
 ### Dependent packages
 
+From this directory,
+
+```bash
+pip install .
 ```
-pip install -r requirements.txt
+
+or for development,
+
+```bash
+pip install --editable .
 ```
-or in userspace
-```
-pip install --user -r requirements.txt
-```
+
+Add the `--user` flag to install in userspace.
 
 #### For ubuntu based distributions:
 (should also work for debian, but not tested yet)
@@ -40,7 +46,10 @@ and restart services with:
   
     sudo systemctl restart udev.service
 
+Finally, physically disconnect and reconnect the LabelManager PnP.
+
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
+
 
 #### For arch based distributions:
 (should also work for manjaro, but not tested yet)
@@ -68,12 +77,15 @@ you might need to change the permissions of the hid device (dymoprint will tell 
 
     sudo chown your_user:users /dev/hidraw0 
 
+Finally, physically disconnect and reconnect the LabelManager PnP.
+
 ([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
 
 ### Font management
 
-Fonts are managed via **dymoprint.ini**
+Fonts are managed via **dymoprint.ini**. This should be placed in your
+config folder (normally `~/.config`). An example file is provided here.
 
 You may choose any TTF Font you like
 
