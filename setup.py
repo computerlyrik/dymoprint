@@ -1,18 +1,20 @@
-import pathlib
+import io
+import os
 
 from setuptools import find_packages, setup
 
 from src.dymoprint.constants import VERSION
 
-PROJECT_ROOT = pathlib.Path(__file__).parent
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-README_TEXT = (PROJECT_ROOT / "README.md").read_text()
+with io.open(os.path.join(PROJECT_ROOT, "README.md"), encoding="utf-8") as f:
+    long_description = "\n" + f.read()
 
 setup(
     name="dymoprint",
     version=VERSION,
     description="Linux Software to print with LabelManager PnP from Dymo",
-    long_description=README_TEXT,
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/computerlyrik/dymoprint",
     author="Sebastian J. Bronner",
