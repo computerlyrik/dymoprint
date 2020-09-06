@@ -16,11 +16,10 @@ import os
 from PIL import Image, ImageFont, ImageOps
 
 from . import DymoLabeler
-from .barcode import ImageWriter
+from .barcode_writer import BarcodeImageWriter, USE_BARCODE, e_barcode, barcode as barcode_module
 from .constants import (DESCRIPTION, DEV_CLASS, DEV_NAME,
                         DEV_NODE, DEV_PRODUCT, DEV_VENDOR,
-                        FONT_SIZERATIO, USE_BARCODE, USE_QR, VERSION, QRCode,
-                        barcode, e_barcode, e_qrcode)
+                        FONT_SIZERATIO, USE_QR, VERSION, QRCode)
 from .utils import (access_error, die, draw_image, getDeviceFile,
                     scaling, to_unicode)
 from .font_config import font_filename
@@ -93,7 +92,7 @@ def main(args):
         bitmaps.append(codebitmap)
 
     elif args.c:
-        code = barcode.get(args.c, labeltext.pop(0), writer=ImageWriter())
+        code = barcode_module.get(args.c, labeltext.pop(0), writer=BarcodeImageWriter())
         codebitmap = code.render({
             'font_size': 0,
             'vertical_margin': 8,

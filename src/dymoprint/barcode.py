@@ -10,17 +10,27 @@ from __future__ import division, print_function
 
 from PIL import Image, ImageDraw
 
-from .constants import USE_BARCODE, barcode
+try:
+    from barcode.writer import BaseWriter
+    import barcode
+    USE_BARCODE = True
+    e_barcode = None
+except ImportError as error:
+    e_barcode = error
+    USE_BARCODE = False
+    barcode = None
 
 
-if USE_BARCODE:
-    def mm2px(mm, dpi=25.4):
-        return (mm * dpi) / 25.4
+def mm2px(mm, dpi=25.4):
+    return (mm * dpi) / 25.4
 
-    class ImageWriter(barcode.writer.BaseWriter):
+if not USE_BARCODE:
+    BarcodeImageWriter = None
+else:
+    class BarcodeImageWriter(BaseWriter):
 
         def __init__(self):
-            barcode.writer.BaseWriter.__init__(self, self._init,
+            BaseWriter.__init__(self, self._init,
                     self._paint_module, None, self._finish)
             self.format = 'PNG'
             self.dpi = 25.4

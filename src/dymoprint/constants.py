@@ -15,14 +15,6 @@ except ImportError as error:
     e_qrcode = error
     USE_QR = False
     QRCode = None
-try:
-    import barcode
-    USE_BARCODE = True
-    e_barcode = None
-except ImportError as error:
-    e_barcode = error
-    USE_BARCODE = False
-    barcode = None
 
 
 DESCRIPTION = 'Linux Software to print with LabelManager PnP from Dymo\n written in Python'
