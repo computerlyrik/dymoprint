@@ -19,6 +19,8 @@ setup(
     url="https://github.com/computerlyrik/dymoprint",
     author="Sebastian J. Bronner",
     author_email="waschtl@sbronner.com",
+    maintainter="Ben Mares",
+    maintainer_email="services-dymoprint@tensorial.com",
     license="Apache License 2.0",
     python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
     install_requires=[
@@ -41,4 +43,15 @@ setup(
     package_data={
         "dymoprint_fonts": ["*"],
     },
+    classifiers=[
+        "Operating System :: POSIX :: Linux",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Printing",
+    ]
 )
