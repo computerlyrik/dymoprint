@@ -19,7 +19,7 @@ from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter, USE_BARCODE, e_barcode, barcode as barcode_module
 from .constants import (DESCRIPTION, DEV_CLASS, DEV_NAME,
                         DEV_NODE, DEV_PRODUCT, DEV_VENDOR,
-                        FONT_SIZERATIO, USE_QR, VERSION, QRCode)
+                        FONT_SIZERATIO, USE_QR, VERSION, QRCode, e_qrcode)
 from .utils import (access_error, die, draw_image, getDeviceFile,
                     scaling, to_unicode)
 from .font_config import font_filename

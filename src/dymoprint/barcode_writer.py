@@ -12,10 +12,10 @@ from PIL import Image, ImageDraw
 
 try:
     from barcode.writer import BaseWriter
-    import barcode
     USE_BARCODE = True
     e_barcode = None
 except ImportError as error:
+    BaseWriter = object
     e_barcode = error
     USE_BARCODE = False
     barcode = None
