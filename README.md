@@ -10,7 +10,7 @@ cloned for development from https://sbronner.com/dymoprint.html
 
 ## Features
 
-* Works on python 2.7 and 3.5 to 3.8 dev
+* Works on python 2.7 and 3.5 to 3.8
 * Supports text printing
 * Supports qr code printing
 * Supports barcode printing
