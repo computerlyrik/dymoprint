@@ -9,6 +9,7 @@ from __future__ import division, print_function
 
 try:
     from pyqrcode import QRCode
+
     USE_QR = True
     e_qrcode = None
 except ImportError as error:
@@ -17,16 +18,18 @@ except ImportError as error:
     QRCode = None
 
 
-DESCRIPTION = 'Linux Software to print with LabelManager PnP from Dymo\n written in Python'
-DEV_CLASS       = 3
-DEV_VENDOR      = 0x0922
-DEV_PRODUCT     = 0x1002
-#DEV_PRODUCT     = 0x1001
-DEV_NODE        = None
-DEV_NAME        = 'Dymo LabelManager PnP'
+DESCRIPTION = (
+    "Linux Software to print with LabelManager PnP from Dymo\nwritten in Python"
+)
+DEV_CLASS = 3
+DEV_VENDOR = 0x0922
+DEV_PRODUCT = 0x1002
+# DEV_PRODUCT     = 0x1001
+DEV_NODE = None
+DEV_NAME = "Dymo LabelManager PnP"
 
-FONT_SIZERATIO  = 7./8
-VERSION         = "1.2.0"
+FONT_SIZERATIO = 7 / 8
+VERSION = "1.2.0"
 
 DEFAULT_FONT_STYLE = "regular"
 

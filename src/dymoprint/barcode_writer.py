@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw
 
 try:
     import barcode
+
     USE_BARCODE = True
     e_barcode = None
 except ImportError as error:
@@ -24,16 +25,18 @@ except ImportError as error:
 def mm2px(mm, dpi=25.4):
     return (mm * dpi) / 25.4
 
+
 if not USE_BARCODE:
     # We import BarcodeImageWriter elsewhere, so it cannot be left undefined.
     BarcodeImageWriter = None
 else:
-    class BarcodeImageWriter(barcode.writer.BaseWriter):
 
+    class BarcodeImageWriter(barcode.writer.BaseWriter):
         def __init__(self):
-            barcode.writer.BaseWriter.__init__(self, self._init,
-                    self._paint_module, None, self._finish)
-            self.format = 'PNG'
+            barcode.writer.BaseWriter.__init__(
+                self, self._init, self._paint_module, None, self._finish
+            )
+            self.format = "PNG"
             self.dpi = 25.4
             self._image = None
             self._draw = None
@@ -53,8 +56,8 @@ else:
                     List of strings matching the writer spec
                     (only contain 0 or 1).
             """
-            if self._callbacks['initialize'] is not None:
-                self._callbacks['initialize'](code)
+            if self._callbacks["initialize"] is not None:
+                self._callbacks["initialize"](code)
             ypos = self.vertical_margin
             for cc, line in enumerate(code):
                 """
@@ -62,11 +65,11 @@ else:
                 result in aliasing gaps
                 '11010111' -> [2, -1, 1, -1, 3]
                 """
-                line += ' '
+                line += " "
                 c = 1
                 mlist = []
                 for i in range(0, len(line) - 1):
-                    if line[i] == line[i+1]:
+                    if line[i] == line[i + 1]:
                         c += 1
                     else:
                         if line[i] == "1":
@@ -83,7 +86,7 @@ else:
                     else:
                         color = self.foreground
                     # remove painting for background colored tiles?
-                    self._callbacks['paint_module'](
+                    self._callbacks["paint_module"](
                         xpos, ypos, self.module_width * abs(mod), color
                     )
                     xpos += self.module_width * abs(mod)
@@ -92,27 +95,31 @@ else:
                 # quiet zone already provided with background,
                 # should it be removed complety?
                 if (cc + 1) != len(code):
-                    self._callbacks['paint_module'](
+                    self._callbacks["paint_module"](
                         xpos, ypos, self.quiet_zone, self.background
                     )
                 ypos += self.module_height
-            return self._callbacks['finish']()
+            return self._callbacks["finish"]()
 
         def _init(self, code):
             size = self.calculate_size(len(code[0]), len(code), self.dpi)
-            self._image = Image.new('1', size, self.background)
+            self._image = Image.new("1", size, self.background)
             self._draw = ImageDraw.Draw(self._image)
 
         def _paint_module(self, xpos, ypos, width, color):
-            size = [(mm2px(xpos, self.dpi), mm2px(ypos, self.dpi)),
-                    (mm2px(xpos + width, self.dpi),
-                        mm2px(ypos + self.module_height, self.dpi))]
+            size = [
+                (mm2px(xpos, self.dpi), mm2px(ypos, self.dpi)),
+                (
+                    mm2px(xpos + width, self.dpi),
+                    mm2px(ypos + self.module_height, self.dpi),
+                ),
+            ]
             self._draw.rectangle(size, outline=color, fill=color)
 
         def _finish(self):
             return self._image
 
         def save(self, filename, output):
-            filename = '{0}.{1}'.format(filename, self.format.lower())
+            filename = "{0}.{1}".format(filename, self.format.lower())
             output.save(filename, self.format.upper())
             return filename

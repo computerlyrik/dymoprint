@@ -1,13 +1,12 @@
-from appdirs import user_config_dir
 import os
 
-from .constants import DEFAULT_FONT_STYLE, FLAG_TO_STYLE
+from appdirs import user_config_dir
+
 import dymoprint_fonts
 
-try:
-    from configparser import SafeConfigParser
-except ImportError:  # Python 2
-    from ConfigParser import SafeConfigParser
+from .constants import DEFAULT_FONT_STYLE, FLAG_TO_STYLE
+
+from configparser import SafeConfigParser
 
 
 def font_filename(flag):

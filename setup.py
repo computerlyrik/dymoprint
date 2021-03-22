@@ -38,7 +38,7 @@ setup(
         "": "src",
         "dymoprint_fonts": "data/fonts",
     },
-    packages = ["dymoprint", "dymoprint_fonts"],
+    packages=["dymoprint", "dymoprint_fonts"],
     package_data={
         "dymoprint_fonts": ["*"],
     },
@@ -49,5 +49,5 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Topic :: Printing",
-    ]
+    ],
 )

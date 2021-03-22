@@ -21,7 +21,7 @@ class DymoLabeler:
     with 'HLF' or 'MLF' in parentheses.
     """
 
-    _ESC = 0x1b
+    _ESC = 0x1B
     _SYN = 0x16
     _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
 
@@ -32,7 +32,7 @@ class DymoLabeler:
         self.response = False
         self.bytesPerLine_ = None
         self.dotTab_ = 0
-        self.dev = open(dev, 'rb+')
+        self.dev = open(dev, "rb+")
         self.maxLines = 200
 
     def sendCommand(self):
@@ -40,14 +40,14 @@ class DymoLabeler:
 
         if len(self.cmd) == 0:
             return
-        cmdBin = array.array('B', self.cmd)
+        cmdBin = array.array("B", self.cmd)
         cmdBin.tofile(self.dev)
         self.cmd = []
         if not self.response:
             return
         self.response = False
         responseBin = self.dev.read(8)
-        response = array.array('B', responseBin).tolist()
+        response = array.array("B", responseBin).tolist()
         return response
 
     def resetCommand(self):
@@ -64,7 +64,7 @@ class DymoLabeler:
     def statusRequest(self):
         """Set instruction to get the device's status. (MLF)"""
 
-        cmd = [self._ESC, ord('A')]
+        cmd = [self._ESC, ord("A")]
         self.buildCommand(cmd)
         self.response = True
 
@@ -73,7 +73,7 @@ class DymoLabeler:
 
         if value < 0 or value > self._MAX_BYTES_PER_LINE:
             raise ValueError
-        cmd = [self._ESC, ord('B'), value]
+        cmd = [self._ESC, ord("B"), value]
         self.buildCommand(cmd)
         self.dotTab_ = value
         self.bytesPerLine_ = None
@@ -81,8 +81,9 @@ class DymoLabeler:
     def tapeColor(self, value):
         """Set the tape color. (MLF)"""
 
-        if value < 0: raise ValueError
-        cmd = [self._ESC, ord('C'), value]
+        if value < 0:
+            raise ValueError
+        cmd = [self._ESC, ord("C"), value]
         self.buildCommand(cmd)
 
     def bytesPerLine(self, value):
@@ -92,14 +93,14 @@ class DymoLabeler:
             raise ValueError
         if value == self.bytesPerLine_:
             return
-        cmd = [self._ESC, ord('D'), value]
+        cmd = [self._ESC, ord("D"), value]
         self.buildCommand(cmd)
         self.bytesPerLine_ = value
 
     def cut(self):
         """Set instruction to trigger cutting of the tape. (MLF)"""
 
-        cmd = [self._ESC, ord('E')]
+        cmd = [self._ESC, ord("E")]
         self.buildCommand(cmd)
 
     def line(self, value):
@@ -138,16 +139,16 @@ class DymoLabeler:
         response = self.sendCommand()
         print(response)
 
-    def printLabel(self, lines, margin=56*2):
-        """Print the label described by lines. (Automatically split label if 
-           larger than maxLines)"""
+    def printLabel(self, lines, margin=56 * 2):
+        """Print the label described by lines. (Automatically split label if
+        larger than maxLines)"""
 
         while len(lines) > self.maxLines + 1:
-            self.rawPrintLabel(lines[0:self.maxLines], margin=0)
-            del lines[0:self.maxLines]
+            self.rawPrintLabel(lines[0 : self.maxLines], margin=0)
+            del lines[0 : self.maxLines]
         self.rawPrintLabel(lines, margin=margin)
 
-    def rawPrintLabel(self, lines, margin=56*2):
+    def rawPrintLabel(self, lines, margin=56 * 2):
         """Print the label described by lines. (HLF)"""
 
         # optimize the matrix for the dymo label printer

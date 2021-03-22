@@ -42,10 +42,10 @@ use **udev** and **modeswitch** configurations to work with the LabelManager PNP
 **modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
 
     sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/    
-    
+    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
+
 and restart services with:
-  
+
     sudo systemctl restart udev.service
 
 Finally, physically disconnect and reconnect the LabelManager PnP.
@@ -69,15 +69,15 @@ if the **/etc/usb_modeswitch.d/** folder was not created at installation do:
 now copy the udev and usb_modswitch configs:
 
     sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/    
-    
+    sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
+
 and restart services with:
-  
+
     sudo udevadm control --reload
 
 you might need to change the permissions of the hid device (dymoprint will tell if it is the case):
 
-    sudo chown your_user:users /dev/hidraw0 
+    sudo chown your_user:users /dev/hidraw0
 
 Finally, physically disconnect and reconnect the LabelManager PnP.
 
@@ -127,7 +127,7 @@ Any picture with JPEG standard may be printed. Beware it will be downsized to ta
 
 Take care of the trailing "" - you may enter text here which gets printed in front of the image
 
-## Development 
+## Development
 Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
 ```
 dymoprint Tst && \

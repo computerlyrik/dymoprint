@@ -30,11 +30,13 @@ def main_with_debug():
     except:
         if not args.pdb:
             raise
-        import traceback
         import pdb
+        import traceback
+
         type, value, tb = sys.exc_info()
         traceback.print_exc()
         pdb.post_mortem(tb)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main_with_debug()
