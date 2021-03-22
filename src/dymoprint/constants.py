@@ -26,7 +26,7 @@ DEV_NODE        = None
 DEV_NAME        = 'Dymo LabelManager PnP'
 
 FONT_SIZERATIO  = 7./8
-VERSION         = "1.1.0"
+VERSION         = "1.1.1"
 
 DEFAULT_FONT_STYLE = "regular"
 
