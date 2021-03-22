@@ -22,21 +22,19 @@ Linux Software to print with LabelManager PnP from Dymo
 * Supports combined barcode / qrcode and text printing
 
 ## Installation & Configuration
-### Dependent packages
 
-From this directory,
 
 ```bash
-pip install .
+pip3 install dymoprint
 ```
 
-or for development,
+(Add the `--user` flag to install in userspace.)
+
+or for development, fork and clone this repository, and from this directory, run
 
 ```bash
 pip install --editable .
 ```
-
-Add the `--user` flag to install in userspace.
 
 #### For ubuntu based distributions:
 (should also work for debian, but not tested yet)
@@ -104,39 +102,39 @@ http://font.ubuntu.com/ and use it.
 
 ## Modes
 ### Print text
-```./dymoprint MyText```
+```dymoprint MyText```
 
 Multilines will be generated on whitespace
 
-```./dymoprint MyLine MySecondLine # Will print two Lines```
+```dymoprint MyLine MySecondLine # Will print two Lines```
 
 If you want whitespaces just enclose in " "
 
-```./dymoprint "prints a single line"```
+```dymoprint "prints a single line"```
 
 ### Print QRCodes and Barcodes
-```./dymoprint --help```
+```dymoprint --help```
 
 ### Print Codes and Text
 just add a text after your qr or barcode text
 
-```./dymoprint -qr "QR Content" "Cleartext printed"```
+```dymoprint -qr "QR Content" "Cleartext printed"```
 
 ### Picture printing
 Any picture with JPEG standard may be printed. Beware it will be downsized to tape.
 
-```./dymoprint -p mypic.jpg ""```
+```dymoprint -p mypic.jpg ""```
 
 Take care of the trailing "" - you may enter text here which gets printed in front of the image
 
 ## Development 
 Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
 ```
-./dymoprint Tst && \
-./dymoprint -qr Tst && \
-./dymoprint -c code128 Tst && \
-./dymoprint -qr qrencoded "qr_txt" && \
-./dymoprint -c code128 Test "bc_txt"
+dymoprint Tst && \
+dymoprint -qr Tst && \
+dymoprint -c code128 Tst && \
+dymoprint -qr qrencoded "qr_txt" && \
+dymoprint -c code128 Test "bc_txt"
 ```
 
 

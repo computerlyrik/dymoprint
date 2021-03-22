@@ -1,13 +1,11 @@
-dist: xenial
+dist: focal
 language: python
 install:
   - pip install .
 python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9"
 script:
   - dymoprint --help
   - dymoprint -v Tst

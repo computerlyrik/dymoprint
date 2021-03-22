@@ -22,13 +22,12 @@ setup(
     maintainer="Ben Mares",
     maintainer_email="services-dymoprint@tensorial.com",
     license="Apache License 2.0",
-    python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
+    python_requires=">=3.7,<4",
     install_requires=[
         "appdirs",
-        "Pillow==6.2.2",
-        "PyQRCode==1.2.1",
-        "pyBarcode==0.8b1; python_version=='2.7'",
-        "python-barcode==0.9.0; python_version > '3.0'",
+        "Pillow>=8.1.2,<9",
+        "PyQRCode>=1.2.1,<2",
+        "python-barcode>=0.13.1<1",
     ],
     entry_points={
         "console_scripts": [
@@ -46,12 +45,9 @@ setup(
     classifiers=[
         "Operating System :: POSIX :: Linux",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Printing",
     ]
 )
