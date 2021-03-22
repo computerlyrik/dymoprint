@@ -16,9 +16,10 @@ repos:
     args: ['--fix=lf']
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.7.0
+  rev: 5.8.0
   hooks:
   - id: isort
+    args: ["--profile", "black", "--filter-files"]
 
 - repo: https://github.com/psf/black
   rev: 20.8b1

@@ -101,17 +101,6 @@ def scaling(pix, sc):
     return [(pix[0] + i, pix[1] + j) for i in range(sc) for j in range(sc)]
 
 
-""" decoding text parameter depending on system encoding """
-
-
-def to_unicode(argument_string):
-    try:
-        unicode  # this passes on Python 2, where we need to decode, but not on Python 3
-        return argument_string.decode(sys.getfilesystemencoding())
-    except NameError:
-        return argument_string
-
-
 @contextlib.contextmanager
 def draw_image(bitmap):
     drawobj = ImageDraw.Draw(bitmap)

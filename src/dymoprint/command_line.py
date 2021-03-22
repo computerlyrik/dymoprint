@@ -13,8 +13,8 @@ import array
 import math
 import os
 
-from PIL import Image, ImageFont, ImageOps
 import barcode as barcode_module
+from PIL import Image, ImageFont, ImageOps
 
 from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
@@ -32,7 +32,7 @@ from .constants import (
     e_qrcode,
 )
 from .font_config import font_filename
-from .utils import access_error, die, draw_image, getDeviceFile, scaling, to_unicode
+from .utils import access_error, die, draw_image, getDeviceFile, scaling
 
 
 def parse_args():
@@ -44,7 +44,7 @@ def parse_args():
         "text",
         nargs="+",
         help="Text Parameter, each parameter gives a new line",
-        type=to_unicode,
+        type=str,
     )
     parser.add_argument(
         "-f",
