@@ -16,7 +16,7 @@ setup(
     description="Linux Software to print with LabelManager PnP from Dymo",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/computerlyrik/dymoprint",
+    url="https://github.com/maresb/dymoprint",
     author="Sebastian J. Bronner",
     author_email="waschtl@sbronner.com",
     maintainer="Ben Mares",

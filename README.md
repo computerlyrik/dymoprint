@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/computerlyrik/dymoprint.svg?branch=master)](https://travis-ci.org/computerlyrik/dymoprint)
+[![Build Status](https://travis-ci.org/maresb/dymoprint.svg?branch=master)](https://travis-ci.org/maresb/dymoprint)
 
 dymoprint
 =========
@@ -6,7 +6,11 @@ dymoprint
 Linux Software to print with LabelManager PnP from Dymo
 
 
-cloned for development from https://sbronner.com/dymoprint.html
+* First version from Sebastian Bronner: https://sbronner.com/dymoprint.html
+* Cloned by computerlyrik to: https://github.com/computerlyrik/dymoprint
+* Forked by Ben Mares on 2020-10-05 to: https://github.com/maresb/dymoprint
+* [Pull request](https://github.com/computerlyrik/dymoprint/pull/35) sent to computerlyrik on 2020-10-05 with update and offering PyPI ownership.
+* After no response, assumed that computerlyrik's fork is abandoned, continuing development from fork on 2021-03-22.
 
 ## Features
 
