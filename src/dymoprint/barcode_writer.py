@@ -6,8 +6,6 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 
-from __future__ import division, print_function
-
 from typing import Optional
 
 from barcode.writer import BaseWriter

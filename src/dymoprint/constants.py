@@ -14,8 +14,6 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
-from __future__ import division, print_function
-
 try:
     from pyqrcode import QRCode
 

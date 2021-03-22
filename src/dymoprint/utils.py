@@ -6,8 +6,6 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 
-from __future__ import division, print_function
-
 import contextlib
 import fcntl
 import os
