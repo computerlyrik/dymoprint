@@ -14,11 +14,10 @@ import math
 import os
 
 from PIL import Image, ImageFont, ImageOps
+import barcode as barcode_module
 
 from . import DymoLabeler
-from .barcode_writer import USE_BARCODE, BarcodeImageWriter
-from .barcode_writer import barcode as barcode_module
-from .barcode_writer import e_barcode
+from .barcode_writer import BarcodeImageWriter
 from .constants import (
     DESCRIPTION,
     DEV_CLASS,
@@ -109,9 +108,6 @@ def main(args):
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
         die("Error: %s" % e_qrcode)
-
-    if args.c and not USE_BARCODE:
-        die("Error: %s" % e_barcode)
 
     if args.c and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
