@@ -16,10 +16,9 @@ import os
 import barcode as barcode_module
 from PIL import Image, ImageFont, ImageOps
 
-from . import DymoLabeler
+from . import DymoLabeler, __version__
 from .barcode_writer import BarcodeImageWriter
 from .constants import (
-    DESCRIPTION,
     DEV_CLASS,
     DEV_NAME,
     DEV_NODE,
@@ -31,14 +30,16 @@ from .constants import (
     e_qrcode,
 )
 from .font_config import font_filename
-from .utils import access_error, die, draw_image, get_version, getDeviceFile, scaling
+from .metadata import our_metadata
+from .utils import access_error, die, draw_image, getDeviceFile, scaling
 
 
 def parse_args():
 
     # check for any text specified on the command line
-    parser = argparse.ArgumentParser(
-        description=DESCRIPTION + " \n Version: " + get_version()
+    parser = argparse.ArgumentParser(description=our_metadata["Summary"])
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
         "text",

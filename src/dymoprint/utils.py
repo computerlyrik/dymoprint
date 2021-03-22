@@ -17,7 +17,6 @@ import subprocess
 import sys
 import termios
 import textwrap
-from importlib.metadata import PackageNotFoundError, version
 
 from PIL import ImageDraw
 
@@ -110,11 +109,3 @@ def draw_image(bitmap):
         yield drawobj
     finally:
         del drawobj
-
-
-def get_version() -> str:
-    try:
-        return version("dymoprint")
-    except PackageNotFoundError:
-        # package is not installed
-        return "[package is not installed]"

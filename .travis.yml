@@ -7,6 +7,8 @@ python:
   - "3.8"
   - "3.9"
 script:
+  - pip check
+  - dymoprint --version
   - dymoprint --help
   - dymoprint -v Tst
   - dymoprint -v -qr Tst
