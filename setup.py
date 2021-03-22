@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "dymoprint = dymoprint.__main__:main_with_debug",
+            "dymoprint = dymoprint.command_line:main",
         ],
     },
     package_dir={

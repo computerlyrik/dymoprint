@@ -10,9 +10,8 @@ from __future__ import division, print_function
 
 from typing import Optional
 
-from PIL import Image, ImageDraw
-
 from barcode.writer import BaseWriter
+from PIL import Image, ImageDraw
 
 
 def mm2px(mm, dpi=25.4):
@@ -23,9 +22,7 @@ class BarcodeImageWriter(BaseWriter):
     _draw: Optional[ImageDraw.ImageDraw]
 
     def __init__(self):
-        super().__init__(
-            self._init, self._paint_module, None, self._finish
-        )
+        super().__init__(self._init, self._paint_module, None, self._finish)
         self.format = "PNG"
         self.dpi = 25.4
         self._image = None

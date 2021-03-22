@@ -87,13 +87,12 @@ def parse_args():
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument("-m", type=int, help="Override margin (default is 56*2)")
     # parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
-    parser.add_argument(
-        "-pdb", action="store_true", help="Run pdb if an exception occurs"
-    )
     return parser.parse_args()
 
 
-def main(args):
+def main():
+    args = parse_args()
+
     # read config file
     FONT_FILENAME = font_filename(args.s)
 

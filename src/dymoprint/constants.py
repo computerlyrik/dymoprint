@@ -5,6 +5,15 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
+
+# On systems with access to sysfs under /sys, this script will use the three
+# variables DEV_CLASS, DEV_VENDOR, and DEV_PRODUCT to find the device file
+# under /dev automatically. This behavior can be overridden by setting the
+# variable DEV_NODE to the device file path. This is intended for cases, where
+# either sysfs is unavailable or unusable by this script for some reason.
+# Please beware that DEV_NODE must be set to None when not used, else you will
+# be bitten by the NameError exception.
+
 from __future__ import division, print_function
 
 try:

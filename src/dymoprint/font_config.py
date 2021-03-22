@@ -1,4 +1,5 @@
 import os
+from configparser import SafeConfigParser
 
 from appdirs import user_config_dir
 
@@ -6,9 +7,6 @@ import dymoprint_fonts
 
 from .constants import DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
-from .font_config import conf_file
-
-from configparser import SafeConfigParser
 
 
 def font_filename(flag):
@@ -28,7 +26,7 @@ def font_filename(flag):
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if not "FONTS" in conf.sections():
-            die('! config file "%s" not valid. Please change or remove.' % conf_file)
+            die('! config file "%s" not valid. Please change or remove.' % CONFIG_FILE)
         for style in style_to_file.keys():
             style_to_file[style] = conf.get("FONTS", style)
 
