@@ -12,7 +12,7 @@ Linux Software to print with LabelManager PnP from Dymo
 
 ## Features
 
-* Works on python 2.7 and 3.5 to 3.8
+* Works on python 3.7 and up
 * Supports text printing
 * Supports qr code printing
 * Supports barcode printing
