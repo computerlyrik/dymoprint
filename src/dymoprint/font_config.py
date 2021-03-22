@@ -1,5 +1,5 @@
 import os
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 
 from appdirs import user_config_dir
 
@@ -21,7 +21,7 @@ def font_filename(flag):
         "narrow": os.path.join(DEFAULT_FONT_DIR, "Carlito-BoldItalic.ttf"),
     }
 
-    conf = SafeConfigParser(style_to_file)
+    conf = ConfigParser(style_to_file)
     CONFIG_FILE = os.path.join(user_config_dir(), "dymoprint.ini")
     if conf.read(CONFIG_FILE):
         # reading FONTS section
