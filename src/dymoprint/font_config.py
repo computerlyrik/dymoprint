@@ -5,6 +5,8 @@ from appdirs import user_config_dir
 import dymoprint_fonts
 
 from .constants import DEFAULT_FONT_STYLE, FLAG_TO_STYLE
+from .utils import die
+from .font_config import conf_file
 
 from configparser import SafeConfigParser
 

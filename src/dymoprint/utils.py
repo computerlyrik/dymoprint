@@ -115,6 +115,7 @@ def to_unicode(argument_string):
 @contextlib.contextmanager
 def draw_image(bitmap):
     drawobj = ImageDraw.Draw(bitmap)
+    assert isinstance(drawobj, ImageDraw.ImageDraw)
     try:
         yield drawobj
     finally:
