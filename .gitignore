@@ -24,12 +24,7 @@ nosetests.xml
 *.org
 
 /.vscode/
-/venv/
-/venv2/
-/venv3/
-/venv4/
-/venv5/
-/venv2.7/
+/venv*/
 
 # Temporary and binary files
 *~

@@ -27,18 +27,18 @@ from .constants import (
     DEV_VENDOR,
     FONT_SIZERATIO,
     USE_QR,
-    VERSION,
     QRCode,
     e_qrcode,
 )
 from .font_config import font_filename
-from .utils import access_error, die, draw_image, getDeviceFile, scaling
+from .utils import access_error, die, draw_image, get_version, getDeviceFile, scaling
 
 
 def parse_args():
+
     # check for any text specified on the command line
     parser = argparse.ArgumentParser(
-        description=DESCRIPTION + " \n Version: " + VERSION
+        description=DESCRIPTION + " \n Version: " + get_version()
     )
     parser.add_argument(
         "text",
