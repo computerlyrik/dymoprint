@@ -1,17 +1,11 @@
+sudo: false
 dist: focal
 language: python
 install:
-  - pip install .
+  - pip install tox-travis
 python:
   - "3.7"
   - "3.8"
   - "3.9"
 script:
-  - pip check
-  - dymoprint --version
-  - dymoprint --help
-  - dymoprint -v Tst
-  - dymoprint -v -qr Tst
-  - dymoprint -v -c code128 Tst
-  - dymoprint -v -qr qrencoded "qr_txt"
-  - dymoprint -v -c code128 Test "bc_txt"
+  - tox

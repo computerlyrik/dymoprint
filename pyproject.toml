@@ -15,30 +15,17 @@ legacy_tox_ini = """
 envlist = default
 
 [testenv]
-isolated_build = True
-wheel = True
-# setenv =
-#     TOXINIDIR = {toxinidir}
-# passenv =
-#     HOME
-#     USER
-#     USERNAME
-#     COVERAGE
-#     PIP_CACHE
-#     PIP_TRUSTED_HOST
-#     PRE_COMMIT_HOME
-#     REQUESTS_CA_BUNDLE
-#     CURL_CA_BUNDLE
 commands =
   pip check
   pip freeze
   dymoprint --version
   dymoprint --help
-  dymoprint -v Tst
-  dymoprint -v -qr Tst
-  dymoprint -v -c code128 Tst
-  dymoprint -v -qr qrencoded "qr_txt"
-  dymoprint -v -c code128 Test "bc_txt"
+  dymoprint --preview "single line"
+  dymoprint --preview multiple lines
+  dymoprint --preview -qr "qr text"
+  dymoprint --preview -c code128 "bc txt"
+  dymoprint --preview -qr "qr text" qr caption
+  dymoprint --preview -c code128 "bc txt" barcode caption
 
 [testenv:{clean,build}]
 description =
