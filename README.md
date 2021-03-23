@@ -1,5 +1,8 @@
 # dymoprint
 
+[![Build Status](https://travis-ci.org/maresb/dymoprint.svg?branch=master)](https://travis-ci.org/maresb/dymoprint)
+[![PyPI version](https://img.shields.io/pypi/v/dymoprint.svg)](https://pypi.org/project/dymoprint/)
+
 Linux Software to print with LabelManager PnP from Dymo
 
 * First version from Sebastian Bronner: <https://sbronner.com/dymoprint.html>
@@ -7,8 +10,6 @@ Linux Software to print with LabelManager PnP from Dymo
 * Forked by Ben Mares on 2020-10-05 to: <https://github.com/maresb/dymoprint>
 * [Pull request](https://github.com/computerlyrik/dymoprint/pull/35) sent to computerlyrik on 2020-10-05 with update and offering PyPI ownership.
 * After no response, assumed that computerlyrik's fork is abandoned, continuing development from fork on 2021-03-22.
-
-[![Build Status](https://travis-ci.org/maresb/dymoprint.svg?branch=master)](https://travis-ci.org/maresb/dymoprint)
 
 ## Features
 
