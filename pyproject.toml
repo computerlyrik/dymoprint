@@ -8,3 +8,66 @@ version_scheme = "no-guess-dev"
 
 [tool.isort]
 profile = "black"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = default
+
+[testenv]
+isolated_build = True
+wheel = True
+# setenv =
+#     TOXINIDIR = {toxinidir}
+# passenv =
+#     HOME
+#     USER
+#     USERNAME
+#     COVERAGE
+#     PIP_CACHE
+#     PIP_TRUSTED_HOST
+#     PRE_COMMIT_HOME
+#     REQUESTS_CA_BUNDLE
+#     CURL_CA_BUNDLE
+commands =
+  pip check
+  pip freeze
+  dymoprint --version
+  dymoprint --help
+  dymoprint -v Tst
+  dymoprint -v -qr Tst
+  dymoprint -v -c code128 Tst
+  dymoprint -v -qr qrencoded "qr_txt"
+  dymoprint -v -c code128 Test "bc_txt"
+
+[testenv:{clean,build}]
+description =
+    Build (or clean) the package in isolation according to instructions in:
+    https://setuptools.readthedocs.io/en/latest/build_meta.html#how-to-use-it
+    https://github.com/pypa/pep517/issues/91
+    https://github.com/pypa/build
+# NOTE: build is still experimental, please refer to the links for updates/issues
+skip_install = True
+changedir = {toxinidir}
+deps =
+    build: build[virtualenv]
+commands =
+    clean: python -c 'from shutil import rmtree; rmtree("build", True); rmtree("dist", True)'
+    build: python -m build .
+
+[testenv:publish]
+description =
+    Publish the package you have been developing to a package index server.
+    By default, it uses testpypi. If you really want to publish your package
+    to be publicly accessible in PyPI, use the `-- --repository pypi` option.
+skip_install = True
+changedir = {toxinidir}
+passenv =
+    TWINE_USERNAME
+    TWINE_PASSWORD
+    TWINE_REPOSITORY
+deps = twine
+commands =
+    python -m twine check dist/*
+    python -m twine upload {posargs:--repository testpypi} dist/*
+"""
