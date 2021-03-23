@@ -29,6 +29,7 @@ from .constants import (
 )
 from .font_config import font_filename
 from .metadata import our_metadata
+from .unicode_blocks import image_to_unicode
 from .utils import access_error, die, draw_image, getDeviceFile, scaling
 
 
@@ -57,7 +58,22 @@ def parse_args():
         help="Set fonts style (regular,bold,italic,narrow)",
     )
     parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
-    parser.add_argument("-v", action="store_true", help="Preview label, do not print")
+    parser.add_argument(
+        "-n",
+        "--preview",
+        action="store_true",
+        help="Unicode preview of label, do not send to printer",
+    )
+    parser.add_argument(
+        "--preview-inverted",
+        action="store_true",
+        help="Unicode preview of label, colors inverted, do not send to printer",
+    )
+    parser.add_argument(
+        "--imagemagick",
+        action="store_true",
+        help="Preview label with Imagemagick, do not send to printer",
+    )
     parser.add_argument(
         "-qr", action="store_true", help="Printing the first text parameter as QR-code"
     )
@@ -231,12 +247,15 @@ def main():
     labelmatrix = [array.array("B", labelrow).tolist() for labelrow in labelrows]
 
     # print or show the label
-    if args.v == True:
+    if args.preview or args.preview_inverted or args.imagemagick:
         print("Demo mode: showing label..")
         # fix size, adding print borders
         labelimage = Image.new("L", (56 + labelbitmap.width + 56, labelbitmap.height))
         labelimage.paste(labelbitmap, (56, 0))
-        ImageOps.invert(labelimage).show()
+        if args.preview or args.preview_inverted:
+            print(image_to_unicode(labelrotated, invert=args.preview_inverted))
+        if args.imagemagick:
+            ImageOps.invert(labelimage).show()
     else:
         # get device file name
         if not DEV_NODE:
