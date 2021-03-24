@@ -1,6 +1,6 @@
 # dymoprint
 
-[![Build Status](https://travis-ci.org/maresb/dymoprint.svg?branch=master)](https://travis-ci.org/maresb/dymoprint)
+[![GitHub Actions (Tests)](https://github.com/maresb/dymoprint/workflows/Tests/badge.svg)](https://github.com/maresb/dymoprint)
 [![PyPI version](https://img.shields.io/pypi/v/dymoprint.svg)](https://pypi.org/project/dymoprint/)
 
 Linux Software to print with LabelManager PnP from Dymo
