@@ -29,7 +29,6 @@ dict_unicode_inverted = {
 
 def image_to_unicode(im: Image, invert: bool = False) -> str:
     char_for = dict_unicode_inverted if invert else dict_unicode
-    print(f"{invert=}, {char_for=}")
     width = im.width
     height = im.height + (im.height % 2)
     padded_im = pad(image=im, size=(width, height))
