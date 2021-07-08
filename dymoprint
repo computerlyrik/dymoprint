@@ -18,6 +18,9 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
+# install PIL:
+# sudo apt-get install python-setuptools
+# sudo pip install pillow
 
 DESCRIPTION = 'Linux Software to print with LabelManager PnP from Dymo\n written in Python'
 DEV_CLASS       = 3
@@ -486,7 +489,7 @@ def main(args):
     if args.t == 6:
         print('Tape 6mm')
         labelheight = lm._MAX_BYTES_PER_LINE * 4
-        tapeWidthOffset = 16
+        tapeWidthOffset = 15
     elif args.t == 9:
         print('Tape 9mm')
         labelheight = lm._MAX_BYTES_PER_LINE * 6
@@ -494,7 +497,7 @@ def main(args):
     else:
         print('Tape 12mm (default)')
         labelheight=lm._MAX_BYTES_PER_LINE * 8
-        tapeWidthOffset = -4
+        tapeWidthOffset = -8
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr:
