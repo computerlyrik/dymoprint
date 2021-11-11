@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# See configuration details in https://github.com/pypa/setuptools_scm
+version_scheme = "no-guess-dev"
+
+[tool.isort]
+profile = "black"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist =
+  py37
+  py38
+  py39
+
+[gh-actions]
+python =
+    3.7: py37
+    3.8: py38
+    3.9: py39
+
+[testenv]
+commands =
+  pip check
+  pip freeze
+  dymoprint --version
+  dymoprint --help
+  dymoprint --preview "single line"
+  dymoprint --preview multiple lines
+  dymoprint --preview -qr "qr text"
+  dymoprint --preview -c code128 "bc txt"
+  dymoprint --preview -qr "qr text" qr caption
+  dymoprint --preview -c code128 "bc txt" barcode caption
+
+[testenv:{clean,build}]
+description =
+    Build (or clean) the package in isolation according to instructions in:
+    https://setuptools.readthedocs.io/en/latest/build_meta.html#how-to-use-it
+    https://github.com/pypa/pep517/issues/91
+    https://github.com/pypa/build
+# NOTE: build is still experimental, please refer to the links for updates/issues
+skip_install = True
+changedir = {toxinidir}
+deps =
+    build: build[virtualenv]
+commands =
+    clean: python -c 'from shutil import rmtree; rmtree("build", True); rmtree("dist", True)'
+    build: python -m build .
+
+[testenv:publish]
+description =
+    Publish the package you have been developing to a package index server.
+    By default, it uses testpypi. If you really want to publish your package
+    to be publicly accessible in PyPI, use the `-- --repository pypi` option.
+skip_install = True
+changedir = {toxinidir}
+passenv =
+    TWINE_USERNAME
+    TWINE_PASSWORD
+    TWINE_REPOSITORY
+deps = twine
+commands =
+    python -m twine check dist/*
+    python -m twine upload {posargs:--repository testpypi} dist/*
+"""

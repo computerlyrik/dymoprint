@@ -1,0 +1,9 @@
+- [ ] support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
+- [ ] put everything in classes that would need to be used by a GUI
+- [x] for more options use command line parser framework
+- [x] allow selection of font with command line options
+- [ ] allow font size specification with command line option (points, pixels?)
+- [x] provide an option to show a preview of what the label will look like
+- [x] read and write a .dymoprint file containing user preferences
+- [ ] print graphics and barcodes
+- [x] plot frame around label
