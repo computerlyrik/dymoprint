@@ -17,6 +17,10 @@ class DymoLabeler:
     However, they should be well understood before use. Look at the
     high-level functions for help. Each function is marked in its docstring
     with 'HLF' or 'MLF' in parentheses.
+
+    A partial reference of the protocol is the Technical Reference for the
+    LabelWriter 450:
+    <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
     _ESC = 0x1B
