@@ -18,24 +18,38 @@ Linux Software to print with LabelManager PnP from Dymo
 * Supports image printing
 * Supports combined barcode / qrcode and text printing
 
-## Installation & Configuration
+## Installation
+
+It is recommended to install dymoprint with [pipx](https://pypa.github.io/pipx/) so that it runs in an isolated virtual environment:
 
 ```bash
-pip3 install dymoprint
+pipx install dymoprint
 ```
 
-(Add the `--user` flag to install in userspace.)
+In case pipx is not already installed, it can be installed on Ubuntu/Debian with
 
-or for development, fork and clone this repository, and from this directory, run
+```bash
+sudo apt-get install pipx
+```
+
+or on Arch with
+
+```bash
+sudo pacman -S python-pipx
+```
+
+
+To install for development, fork and clone this repository, and from this directory, and run (ideally within a venv):
 
 ```bash
 pip install --editable .
 ```
 
+## Configuration
+
 ### For ubuntu based distributions
 
-(should also work for debian, but not tested yet)
-use **udev** and **modeswitch** configurations to work with the LabelManager PNP.
+Use **udev** and **modeswitch** configurations to work with the LabelManager PNP.
 **modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
 
 ```bash
