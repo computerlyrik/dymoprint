@@ -278,6 +278,11 @@ def main():
                 )
             )
 
+            if dev is None:
+                raise RuntimeError("Device not found")
+            else:
+                print("Device found as USB")
+
             try:
                 dev.set_configuration()
             except usb.core.USBError as e:
