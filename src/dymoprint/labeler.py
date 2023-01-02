@@ -32,7 +32,7 @@ class DymoLabeler:
     def __init__(self, devout, devin):
         """Initialize the LabelManager object. (HLF)"""
 
-        self.cmd = []
+        self.cmd: list[int] = []
         self.response = False
         self.bytesPerLine_ = None
         self.dotTab_ = 0
@@ -47,24 +47,34 @@ class DymoLabeler:
             return
 
         while len(self.cmd) > 0:
-            synCount = 0
-            pos = -1
-            while synCount < SYNWAIT:
-                try:
-                    pos += self.cmd[pos + 1 :].index(SYN) + 1
-                except ValueError:
-                    pos = len(self.cmd)
-                    break
-                synCount += 1
+            # Send a status request
             cmdBin = array.array("B", [ESC, ord("A")])
             cmdBin.tofile(self.devout)
             rspBin = self.devin.read(8)
-            rsp = array.array("B", rspBin).tolist()
+            _ = array.array("B", rspBin).tolist()
+            # Ok, we got a response. Now we can send a chunk of data
+
+            # Compute a chunk with at most SYNWAIT SYN characters
+            synCount = 0  # Number of SYN characters encountered in iteration
+            pos = -1  # Index of last SYN character encountered in iteration
+            while synCount < SYNWAIT:
+                try:
+                    # Increment pos to the index of the next SYN character
+                    pos += self.cmd[pos + 1 :].index(SYN) + 1
+                    synCount += 1
+                except ValueError:
+                    # No more SYN characters in cmd
+                    pos = len(self.cmd)
+                    break
             cmdBin = array.array("B", self.cmd[:pos])
-            cmdBin.tofile(self.devout)
+
+            # Remove the computed chunk from the command to be processed
             self.cmd = self.cmd[pos:]
 
-        self.cmd = []
+            # Send the chunk
+            cmdBin.tofile(self.devout)
+
+        self.cmd = []  # This looks redundant.
         if not self.response:
             return
         self.response = False
