@@ -6,8 +6,9 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 import array
+from typing import Optional
 
-from .constants import ESC, SYN, SYNWAIT
+from .constants import ESC, SYN
 
 
 class DymoLabeler:
@@ -29,7 +30,15 @@ class DymoLabeler:
     _SYN = 0x16
     _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
 
-    def __init__(self, devout, devin):
+    # Max number of print lines to send before waiting for a response. This helps
+    # to avoid timeouts due to differences between data transfer and
+    # printer speeds. I added this because I kept getting "IOError: [Errno
+    # 110] Connection timed out" with long labels. Using dev.default_timeout
+    # (1000) and the transfer speeds available in the descriptors somewhere, a
+    # sensible timeout can also be calculated dynamically.
+    synwait: Optional[int]
+
+    def __init__(self, devout, devin, synwait=None):
         """Initialize the LabelManager object. (HLF)"""
 
         self.cmd: list[int] = []
@@ -39,6 +48,7 @@ class DymoLabeler:
         self.maxLines = 200
         self.devout = devout
         self.devin = devin
+        self.synwait = synwait
 
     def sendCommand(self):
         """Send the already built command to the LabelManager. (MLF)"""
@@ -47,31 +57,38 @@ class DymoLabeler:
             return
 
         while len(self.cmd) > 0:
-            # Send a status request
-            cmdBin = array.array("B", [ESC, ord("A")])
-            cmdBin.tofile(self.devout)
-            rspBin = self.devin.read(8)
-            _ = array.array("B", rspBin).tolist()
-            # Ok, we got a response. Now we can send a chunk of data
+            if self.synwait is None:
+                cmd_to_send = self.cmd
+                cmd_rest = []
+            else:
+                # Send a status request
+                cmdBin = array.array("B", [ESC, ord("A")])
+                cmdBin.tofile(self.devout)
+                rspBin = self.devin.read(8)
+                _ = array.array("B", rspBin).tolist()
+                # Ok, we got a response. Now we can send a chunk of data
 
-            # Compute a chunk with at most SYNWAIT SYN characters
-            synCount = 0  # Number of SYN characters encountered in iteration
-            pos = -1  # Index of last SYN character encountered in iteration
-            while synCount < SYNWAIT:
-                try:
-                    # Increment pos to the index of the next SYN character
-                    pos += self.cmd[pos + 1 :].index(SYN) + 1
-                    synCount += 1
-                except ValueError:
-                    # No more SYN characters in cmd
-                    pos = len(self.cmd)
-                    break
-            cmdBin = array.array("B", self.cmd[:pos])
+                # Compute a chunk with at most synwait SYN characters
+                synCount = 0  # Number of SYN characters encountered in iteration
+                pos = -1  # Index of last SYN character encountered in iteration
+                while synCount < self.synwait:
+                    try:
+                        # Increment pos to the index of the next SYN character
+                        pos += self.cmd[pos + 1 :].index(SYN) + 1
+                        synCount += 1
+                    except ValueError:
+                        # No more SYN characters in cmd
+                        pos = len(self.cmd)
+                        break
+                cmd_to_send = self.cmd[:pos]
+                cmd_rest = self.cmd[pos:]
+                print(f"Sending chunk of {len(cmd_to_send)} bytes")
 
             # Remove the computed chunk from the command to be processed
-            self.cmd = self.cmd[pos:]
+            self.cmd = cmd_rest
 
             # Send the chunk
+            cmdBin = array.array("B", cmd_to_send)
             cmdBin.tofile(self.devout)
 
         self.cmd = []  # This looks redundant.
@@ -201,4 +218,4 @@ class DymoLabeler:
             self.skipLines(margin)
         self.statusRequest()
         response = self.sendCommand()
-        print(response)
+        print(f"Post-send response: {response}")

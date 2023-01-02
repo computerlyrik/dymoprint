@@ -270,7 +270,11 @@ def main():
         if dev:
             devout = open(dev, "rb+")
             devin = devout
+            # We are in the normal HID file mode, so no synwait is needed.
+            synwait = None
         else:
+            # We are in the experimental PyUSB mode, if a device can be found.
+            synwait = 64
             # Find and prepare device communication endpoints.
             dev = usb.core.find(
                 custom_match=lambda d: (
@@ -279,9 +283,9 @@ def main():
             )
 
             if dev is None:
-                raise RuntimeError("Device not found")
+                device_not_found()
             else:
-                print("Device found as USB")
+                print("Entering experimental PyUSB mode.")
 
             try:
                 dev.set_configuration()
@@ -315,11 +319,11 @@ def main():
             )
 
         if not devout or not devin:
-            die("The device '%s' could not be found on this system." % DEV_NAME)
+            device_not_found()
 
         # create dymo labeler object
         try:
-            lm = DymoLabeler(devout, devin)
+            lm = DymoLabeler(devout, devin, synwait=synwait)
         except IOError:
             die(access_error(dev))
 
@@ -328,3 +332,7 @@ def main():
             lm.printLabel(labelmatrix, margin=args.m)
         else:
             lm.printLabel(labelmatrix)
+
+
+def device_not_found():
+    die("The device '%s' could not be found on this system." % DEV_NAME)
