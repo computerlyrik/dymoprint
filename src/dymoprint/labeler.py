@@ -26,8 +26,6 @@ class DymoLabeler:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
-    _ESC = 0x1B
-    _SYN = 0x16
     _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
 
     # Max number of print lines to send before waiting for a response. This helps
@@ -113,7 +111,7 @@ class DymoLabeler:
     def statusRequest(self):
         """Set instruction to get the device's status. (MLF)"""
 
-        cmd = [self._ESC, ord("A")]
+        cmd = [ESC, ord("A")]
         self.buildCommand(cmd)
         self.response = True
 
@@ -122,7 +120,7 @@ class DymoLabeler:
 
         if value < 0 or value > self._MAX_BYTES_PER_LINE:
             raise ValueError
-        cmd = [self._ESC, ord("B"), value]
+        cmd = [ESC, ord("B"), value]
         self.buildCommand(cmd)
         self.dotTab_ = value
         self.bytesPerLine_ = None
@@ -132,7 +130,7 @@ class DymoLabeler:
 
         if value < 0:
             raise ValueError
-        cmd = [self._ESC, ord("C"), value]
+        cmd = [ESC, ord("C"), value]
         self.buildCommand(cmd)
 
     def bytesPerLine(self, value):
@@ -142,21 +140,21 @@ class DymoLabeler:
             raise ValueError
         if value == self.bytesPerLine_:
             return
-        cmd = [self._ESC, ord("D"), value]
+        cmd = [ESC, ord("D"), value]
         self.buildCommand(cmd)
         self.bytesPerLine_ = value
 
     def cut(self):
         """Set instruction to trigger cutting of the tape. (MLF)"""
 
-        cmd = [self._ESC, ord("E")]
+        cmd = [ESC, ord("E")]
         self.buildCommand(cmd)
 
     def line(self, value):
         """Set next printed line. (MLF)"""
 
         self.bytesPerLine(len(value))
-        cmd = [self._SYN] + value
+        cmd = [SYN] + value
         self.buildCommand(cmd)
 
     def chainMark(self):
@@ -172,7 +170,7 @@ class DymoLabeler:
         if value <= 0:
             raise ValueError
         self.bytesPerLine(0)
-        cmd = [self._SYN] * value
+        cmd = [SYN] * value
         self.buildCommand(cmd)
 
     def initLabel(self):
