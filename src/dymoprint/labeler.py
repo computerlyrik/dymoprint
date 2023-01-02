@@ -7,6 +7,8 @@
 # === END LICENSE STATEMENT ===
 import array
 
+from .constants import SYNWAIT, ESC, SYN
+
 
 class DymoLabeler:
     """Create and work with a Dymo LabelManager PnP object.
@@ -27,28 +29,46 @@ class DymoLabeler:
     _SYN = 0x16
     _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
 
-    def __init__(self, dev):
+    def __init__(self, devout, devin):
         """Initialize the LabelManager object. (HLF)"""
 
         self.cmd = []
         self.response = False
         self.bytesPerLine_ = None
         self.dotTab_ = 0
-        self.dev = open(dev, "rb+")
         self.maxLines = 200
+        self.devout = devout
+        self.devin = devin
 
     def sendCommand(self):
         """Send the already built command to the LabelManager. (MLF)"""
 
         if len(self.cmd) == 0:
             return
-        cmdBin = array.array("B", self.cmd)
-        cmdBin.tofile(self.dev)
+            
+        while len(self.cmd) > 0:
+            synCount = 0
+            pos = -1
+            while synCount < SYNWAIT:
+                try:
+                    pos += self.cmd[pos+1:].index(SYN) + 1
+                except ValueError:
+                    pos = len(self.cmd)
+                    break
+                synCount += 1
+            cmdBin = array.array('B', [ESC, ord('A')])
+            cmdBin.tofile(self.devout)
+            rspBin = self.devin.read(8)
+            rsp = array.array('B', rspBin).tolist()
+            cmdBin = array.array('B', self.cmd[:pos])
+            cmdBin.tofile(self.devout)
+            self.cmd = self.cmd[pos:]
+
         self.cmd = []
         if not self.response:
             return
         self.response = False
-        responseBin = self.dev.read(8)
+        responseBin = self.devin.read(8)
         response = array.array("B", responseBin).tolist()
         return response
 

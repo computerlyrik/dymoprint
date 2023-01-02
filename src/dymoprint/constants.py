@@ -35,6 +35,20 @@ DEV_PRODUCT = 0x1002
 DEV_NODE = None
 DEV_NAME = "Dymo LabelManager PnP"
 
+DEV_LM280_CLASS = 7
+DEV_LM280_PRODUCT = 0x1005
+DEV_LM280_NAME = "Dymo LabelManager 280"
+
+# Number of commands to send before waiting for a response. This helps
+# to avoid timeouts due to differences between data transfer and
+# printer speeds. I added this because I kept getting "IOError: [Errno
+# 110] Connection timed out" with long labels. Using dev.default_timeout
+# (1000) and the transfer speeds available in the descriptors somewhere, a
+# sensible timeout can also be calculated dynamically.
+SYNWAIT = 64
+ESC = 0x1b
+SYN = 0x16
+
 FONT_SIZERATIO = 7 / 8
 
 DEFAULT_FONT_STYLE = "regular"
