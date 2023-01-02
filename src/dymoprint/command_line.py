@@ -10,22 +10,22 @@ import argparse
 import array
 import math
 import os
-import usb
 
 import barcode as barcode_module
+import usb
 from PIL import Image, ImageFont, ImageOps
 
 from . import DymoLabeler, __version__
 from .barcode_writer import BarcodeImageWriter
 from .constants import (
     DEV_CLASS,
+    DEV_LM280_CLASS,
+    DEV_LM280_NAME,
+    DEV_LM280_PRODUCT,
     DEV_NAME,
     DEV_NODE,
     DEV_PRODUCT,
     DEV_VENDOR,
-    DEV_LM280_CLASS,
-    DEV_LM280_PRODUCT,
-    DEV_LM280_NAME,
     FONT_SIZERATIO,
     USE_QR,
     QRCode,
@@ -266,42 +266,64 @@ def main():
             dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
         else:
             dev = DEV_NODE
-        
+
         if dev:
             devout = open(dev, "rb+")
             devin = devout
+            # We are in the normal HID file mode, so no synwait is needed.
+            synwait = None
         else:
+            # We are in the experimental PyUSB mode, if a device can be found.
+            synwait = 64
             # Find and prepare device communication endpoints.
-            dev = usb.core.find(custom_match = lambda d: (d.idVendor == DEV_VENDOR and d.idProduct == DEV_LM280_PRODUCT))
+            dev = usb.core.find(
+                custom_match=lambda d: (
+                    d.idVendor == DEV_VENDOR and d.idProduct == DEV_LM280_PRODUCT
+                )
+            )
+
+            if dev is None:
+                device_not_found()
+            else:
+                print("Entering experimental PyUSB mode.")
 
             try:
                 dev.set_configuration()
             except usb.core.USBError as e:
                 if e.errno == 13:
-                    raise RuntimeError('Access denied')
+                    raise RuntimeError("Access denied")
                 if e.errno == 16:
                     # Resource busy
                     pass
                 else:
                     raise
 
-            intf = usb.util.find_descriptor(dev.get_active_configuration(),
-                bInterfaceClass=DEV_LM280_CLASS)
+            intf = usb.util.find_descriptor(
+                dev.get_active_configuration(), bInterfaceClass=DEV_LM280_CLASS
+            )
             if dev.is_kernel_driver_active(intf.bInterfaceNumber):
                 dev.detach_kernel_driver(intf.bInterfaceNumber)
-            devout = usb.util.find_descriptor(intf, custom_match = (lambda e:
-                usb.util.endpoint_direction(e.bEndpointAddress) ==
-                usb.util.ENDPOINT_OUT))
-            devin = usb.util.find_descriptor(intf, custom_match = (lambda e:
-                usb.util.endpoint_direction(e.bEndpointAddress) ==
-                usb.util.ENDPOINT_IN))
+            devout = usb.util.find_descriptor(
+                intf,
+                custom_match=(
+                    lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                    == usb.util.ENDPOINT_OUT
+                ),
+            )
+            devin = usb.util.find_descriptor(
+                intf,
+                custom_match=(
+                    lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                    == usb.util.ENDPOINT_IN
+                ),
+            )
 
         if not devout or not devin:
-            die("The device '%s' could not be found on this system." % DEV_NAME)
+            device_not_found()
 
         # create dymo labeler object
         try:
-            lm = DymoLabeler(devout, devin)
+            lm = DymoLabeler(devout, devin, synwait=synwait)
         except IOError:
             die(access_error(dev))
 
@@ -310,3 +332,7 @@ def main():
             lm.printLabel(labelmatrix, margin=args.m)
         else:
             lm.printLabel(labelmatrix)
+
+
+def device_not_found():
+    die("The device '%s' could not be found on this system." % DEV_NAME)
