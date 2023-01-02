@@ -7,7 +7,7 @@
 # === END LICENSE STATEMENT ===
 import array
 
-from .constants import SYNWAIT, ESC, SYN
+from .constants import ESC, SYN, SYNWAIT
 
 
 class DymoLabeler:
@@ -45,22 +45,22 @@ class DymoLabeler:
 
         if len(self.cmd) == 0:
             return
-            
+
         while len(self.cmd) > 0:
             synCount = 0
             pos = -1
             while synCount < SYNWAIT:
                 try:
-                    pos += self.cmd[pos+1:].index(SYN) + 1
+                    pos += self.cmd[pos + 1 :].index(SYN) + 1
                 except ValueError:
                     pos = len(self.cmd)
                     break
                 synCount += 1
-            cmdBin = array.array('B', [ESC, ord('A')])
+            cmdBin = array.array("B", [ESC, ord("A")])
             cmdBin.tofile(self.devout)
             rspBin = self.devin.read(8)
-            rsp = array.array('B', rspBin).tolist()
-            cmdBin = array.array('B', self.cmd[:pos])
+            rsp = array.array("B", rspBin).tolist()
+            cmdBin = array.array("B", self.cmd[:pos])
             cmdBin.tofile(self.devout)
             self.cmd = self.cmd[pos:]
 

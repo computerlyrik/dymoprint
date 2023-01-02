@@ -46,7 +46,7 @@ DEV_LM280_NAME = "Dymo LabelManager 280"
 # (1000) and the transfer speeds available in the descriptors somewhere, a
 # sensible timeout can also be calculated dynamically.
 SYNWAIT = 64
-ESC = 0x1b
+ESC = 0x1B
 SYN = 0x16
 
 FONT_SIZERATIO = 7 / 8
