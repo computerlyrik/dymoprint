@@ -61,6 +61,38 @@ def parse_args():
         default="r",
         help="Set fonts style (regular,bold,italic,narrow)",
     )
+    parser.add_argument(
+        "-t",
+        choices=[1, 2, 3, 4, 5, 6, 7, 8],
+        default=FONT_SIZERATIO * 8,
+        type=int,
+        help="Set relative textsize (1-8) where 1 is smallest and 8 is biggest",
+    )
+    parser.add_argument(
+        "-a",
+        choices=[
+            "left",
+            "center",
+            "right",
+        ],
+        default="left",
+        help="Align multiline text (left,center,right)",
+    )
+    parser.add_argument(
+        "-l",
+        type=int,
+        help="Specify minimum label length in mm"
+    )
+    parser.add_argument(
+        "-j",
+        choices=[
+            "left",
+            "center",
+            "right",
+        ],
+        default="center",
+        help="Justify content of label if minimum label length is specified (left,center,right)",
+    )
     parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
     parser.add_argument(
         "-n",
@@ -183,10 +215,12 @@ def main():
         else:
             fontoffset = min(args.f, 3)
 
+        font_sizeratio = args.t / 8
+
         # create an empty label image
         labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         lineheight = float(labelheight) / len(labeltext)
-        fontsize = int(round(lineheight * FONT_SIZERATIO))
+        fontsize = int(round(lineheight * font_sizeratio))
         font = ImageFont.truetype(FONT_FILENAME, fontsize)
         labelwidth = max(font.getsize(line)[0] for line in labeltext) + (fontoffset * 2)
         textbitmap = Image.new("1", (labelwidth, labelheight))
@@ -206,9 +240,10 @@ def main():
                 )
 
             # write the text into the empty image
-            for i, line in enumerate(labeltext):
-                lineposition = int(round(i * lineheight))
-                labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
+            multilinetext = '\n'.join(labeltext)
+            align = args.a
+
+            labeldraw.multiline_text((labelwidth / 2, labelheight / 2), multilinetext, align=align, anchor="mm", font=font, fill=255)
 
         bitmaps.append(textbitmap)
 
@@ -224,19 +259,32 @@ def main():
 
     if len(bitmaps) > 1:
         padding = 4
-        labelbitmap = Image.new(
-            "1",
-            (
-                sum(b.width for b in bitmaps) + padding * (len(bitmaps) - 1),
-                bitmaps[0].height,
-            ),
-        )
-        offset = 0
-        for bitmap in bitmaps:
-            labelbitmap.paste(bitmap, box=(offset, 0))
-            offset += bitmap.width + padding
     else:
-        labelbitmap = bitmaps[0]
+        padding = 0
+    computedlabellength = sum(b.width for b in bitmaps) + padding * (len(bitmaps) - 1)
+    if args.l is not None:
+        if args.m is not None:
+            minlabellength = (args.l * 7) - args.m
+        else:
+            minlabellength = (args.l * 7) - 56 * 2
+        labellength = max(computedlabellength, minlabellength)
+        if (args.j == "left"): offset = 0
+        if (args.j == "center"): offset = max(0, int((minlabellength - computedlabellength) / 2))
+        if (args.j == "right"): offset = max(0, int(minlabellength - computedlabellength))
+    else:
+        labellength = computedlabellength
+        offset = 0
+    labelbitmap = Image.new(
+        "1",
+        (
+            labellength,
+            bitmaps[0].height,
+        ),
+    )
+    for bitmap in bitmaps:
+        labelbitmap.paste(bitmap, box=(offset, 0))
+        offset += bitmap.width + padding
+
 
     # convert the image to the proper matrix for the dymo labeler object
     labelrotated = labelbitmap.transpose(Image.ROTATE_270)
