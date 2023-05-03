@@ -46,7 +46,33 @@ def parse_args():
         default="r",
         help="Set fonts style (regular,bold,italic,narrow)",
     )
-    parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
+    parser.add_argument(
+        "-a",
+        choices=[
+            "left",
+            "center",
+            "right",
+        ],
+        default="left",
+        help="Align multiline text (left,center,right)",
+    )
+    parser.add_argument(
+        "-l",
+        type=int,
+        help="Specify minimum label length in mm"
+    )
+    parser.add_argument(
+        "-j",
+        choices=[
+            "left",
+            "center",
+            "right",
+        ],
+        default="center",
+        help="Justify content of label if minimum label length is specified (left,center,right)",
+    )
+    parser.add_argument(
+        "-u", nargs="?", help='Set user font, overrides "-s" parameter')
     parser.add_argument(
         "-n",
         "--preview",
@@ -89,9 +115,12 @@ def parse_args():
         help="Printing the first text parameter as barcode",
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
-    parser.add_argument("-m", type=int, help="Override margin (default is 56*2)")
-    parser.add_argument("--scale", type=int, default=90,help="Scaling font factor, [0,10] [%%]")
-    parser.add_argument('-t', type=int, choices=[6, 9, 12], default=12, help='Tape size: 6,9,12 mm, default=12mm')
+    parser.add_argument("-m", type=int, default=56,
+                        help="Override margin (default is 56*2)")
+    parser.add_argument("--scale", type=int, default=90,
+                        help="Scaling font factor, [0,10] [%%]")
+    parser.add_argument(
+        '-t', type=int, choices=[6, 9, 12], default=12, help='Tape size: 6,9,12 mm, default=12mm')
     return parser.parse_args()
 
 
@@ -127,19 +156,26 @@ def main():
         bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.c))
 
     if labeltext:
-        bitmaps.append(render_engine.render_text(labeltext, FONT_FILENAME, args.f, int(args.scale) / 100.0))
+        bitmaps.append(render_engine.render_text(
+            labeltext, FONT_FILENAME, args.f, int(args.scale) / 100.0, args.a))
 
     if args.picture:
         bitmaps.append(render_engine.render_picture(args.picture))
 
-    label_bitmap = render_engine.merge_render(bitmaps)
+    margin = args.m
+    min_payload_len = max(0, (args.l * 7) - margin * 2)
+    justify = args.j
+
+    label_bitmap = render_engine.merge_render(
+        bitmaps, min_payload_len, justify)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick:
         print("Demo mode: showing label..")
         # fix size, adding print borders
-        label_image = Image.new("L", (56 + label_bitmap.width + 56, label_bitmap.height))
-        label_image.paste(label_bitmap, (56, 0))
+        label_image = Image.new(
+            "L", (margin + label_bitmap.width + margin, label_bitmap.height))
+        label_image.paste(label_bitmap, (margin, 0))
         if args.preview or args.preview_inverted:
             label_rotated = label_bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
