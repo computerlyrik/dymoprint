@@ -90,7 +90,7 @@ def parse_args():
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument("-m", type=int, help="Override margin (default is 56*2)")
-    parser.add_argument("--scale", type=int, default=90, help="Scaling font factor, [0,10] %")
+    parser.add_argument("--scale", type=int, default=90,help="Scaling font factor, [0,10] [%%]")
     parser.add_argument('-t', type=int, choices=[6, 9, 12], default=12, help='Tape size: 6,9,12 mm, default=12mm')
     return parser.parse_args()
 
