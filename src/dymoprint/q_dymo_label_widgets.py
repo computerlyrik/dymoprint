@@ -3,8 +3,8 @@ import os
 import dymoprint_fonts
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QPlainTextEdit, QLineEdit, QPushButton, \
-    QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QPlainTextEdit, QLineEdit
+from PyQt6.QtWidgets import QPushButton, QFileDialog, QMessageBox, QVBoxLayout
 
 from .font_config import parse_fonts
 
@@ -69,6 +69,10 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.font_size.setSingleStep(1)
         self.font_size.setValue(90)
         self.draw_frame = QSpinBox()
+        self.align = QComboBox()
+
+        self.align.addItems(['left', 'center', 'right'])
+
         for (name, font_path) in parse_fonts():
             self.font_style.addItem(name, font_path)
             if "Regular" in name:
@@ -88,10 +92,13 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         layout.addWidget(self.font_size)
         layout.addWidget(QLabel("Frame Width:"))
         layout.addWidget(self.draw_frame)
+        layout.addWidget(QLabel("Alignment:"))
+        layout.addWidget(self.align)
         self.label.textChanged.connect(self.content_changed)
         self.draw_frame.valueChanged.connect(self.content_changed)
         self.font_size.valueChanged.connect(self.content_changed)
         self.font_style.currentTextChanged.connect(self.content_changed)
+        self.align.currentTextChanged.connect(self.content_changed)
         self.setLayout(layout)
 
     def content_changed(self):
@@ -115,7 +122,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
             render = self.render_engine.render_text(labeltext=self.label.toPlainText().splitlines(),
                                                     font_file_name=self.font_style.currentData(),
                                                     frame_width=self.draw_frame.value(),
-                                                    font_size_ratio=self.font_size.value() / 100.0)
+                                                    font_size_ratio=self.font_size.value() / 100.0,
+                                                    align=self.align.currentText())
             return render
         except BaseException as err:
             QMessageBox.warning(

@@ -43,7 +43,7 @@ class DymoPrintWindow(QWidget):
         self.setWindowTitle("DymoPrint GUI")
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         self.setWindowIcon(QIcon(os.path.join(ICON_DIR, "gui_icon.png")))
-        self.setGeometry(200, 200, 1000, 400)
+        self.setGeometry(200, 200, 1100, 400)
         printer_icon = QIcon.fromTheme('printer')
         self.print_button.setIcon(printer_icon)
         self.print_button.setFixedSize(64, 64)
