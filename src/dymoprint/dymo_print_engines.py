@@ -211,7 +211,7 @@ class DymoRenderEngine:
 
 class DymoPrinterServer:
     @staticmethod
-    def print_label(label_bitmap, margin=56, tape_size: int = 12):
+    def print_label(label_bitmap, margin=56*2, tape_size: int = 12):
         """
         Prints a label using a Dymo labeler object.
 

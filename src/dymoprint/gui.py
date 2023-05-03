@@ -133,7 +133,7 @@ class DymoPrintWindow(QWidget):
     def print_label(self):
         try:
             self.print_server.print_label(
-                self.label_bitmap, self.margin.value())
+                self.label_bitmap, self.margin.value()*2)
         except RuntimeError as err:
             QMessageBox.warning(self, "Printing Failed!", f"{err}")
         except USBError as err:
