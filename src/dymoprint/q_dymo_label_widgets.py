@@ -1,9 +1,9 @@
 import os
 
 import dymoprint_fonts
-from PyQt5 import QtCore
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QPlainTextEdit, QLineEdit, QPushButton, \
+from PyQt6 import QtCore
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QPlainTextEdit, QLineEdit, QPushButton, \
     QFileDialog, QMessageBox
 
 from .font_config import parse_fonts
@@ -59,11 +59,12 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.render_engine = render_engine
 
         self.label = QPlainTextEdit("text")
-        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
+        self.label.setFixedHeight(
+            15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
         self.font_style = QComboBox()
         self.font_size = QSpinBox()
-        self.font_size.setMaximum(100)
+        self.font_size.setMaximum(150)
         self.font_size.setMinimum(0)
         self.font_size.setSingleStep(1)
         self.font_size.setValue(90)
@@ -76,7 +77,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         layout = QHBoxLayout()
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "txt_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(
+            QIcon(os.path.join(ICON_DIR, "txt_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -96,7 +98,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         """
         Updates the height of the label and emits the itemRenderSignal when the content of the label changes.
         """
-        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
+        self.label.setFixedHeight(
+            15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
         self.itemRenderSignal.emit()
 
@@ -115,7 +118,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
                                                     font_size_ratio=self.font_size.value() / 100.0)
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(
+                self, "TextDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -141,7 +145,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         layout = QHBoxLayout()
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "qr_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(
+            QIcon(os.path.join(ICON_DIR, "qr_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -161,7 +166,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             return render
 
         except BaseException as err:
-            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(
+                self, "QrDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -190,7 +196,8 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         layout = QHBoxLayout()
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "barcode_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(
+            QIcon(os.path.join(ICON_DIR, "barcode_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self.codding = QComboBox()
         self.codding.addItems([
@@ -227,11 +234,13 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             QPixmap: A QPixmap object representing the rendered barcode label.
         """
         try:
-            render = self.render_engine.render_barcode(self.label.text(), self.codding.currentText())
+            render = self.render_engine.render_barcode(
+                self.label.text(), self.codding.currentText())
             return render
 
         except BaseException as err:
-            QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(
+                self, "BarcodeDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -257,12 +266,14 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         layout = QHBoxLayout()
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "img_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(
+            QIcon(os.path.join(ICON_DIR, "img_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         button = QPushButton('Select file')
         file_dialog = QFileDialog()
-        button.clicked.connect(lambda: self.label.setText(file_dialog.getOpenFileName()[0]))
+        button.clicked.connect(lambda: self.label.setText(
+            os.path.abspath(file_dialog.getOpenFileName()[0])))
 
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -281,5 +292,6 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render = self.render_engine.render_picture(self.label.text())
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(
+                self, "ImageDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()

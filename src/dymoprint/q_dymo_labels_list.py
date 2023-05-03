@@ -1,9 +1,10 @@
-import PIL
-from PIL.Image import Image
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QMenu
+
+from PyQt6 import QtCore
+from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QMenu
 from .q_dymo_label_widgets import TextDymoLabelWidget, QrDymoLabelWidget, BarcodeDymoLabelWidget, \
     ImageDymoLabelWidget
+
+from PIL import Image
 
 
 class QDymoLabelList(QListWidget):
@@ -23,14 +24,14 @@ class QDymoLabelList(QListWidget):
         contextMenuEvent(self, event): Overrides the default context menu event to add or delete label widgets.
     """
 
-    renderSignal = QtCore.pyqtSignal(PIL.Image.Image, name='renderSignal')
+    renderSignal = QtCore.pyqtSignal(Image.Image, name='renderSignal')
 
     def __init__(self, render_engine, parent=None):
         super(QDymoLabelList, self).__init__(parent)
         self.render_engine = render_engine
         self.setAlternatingRowColors(True)
-        self.setDragDropMode(QAbstractItemView.InternalMove)
-        for item_widget in [TextDymoLabelWidget(self.render_engine) ]:
+        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        for item_widget in [TextDymoLabelWidget(self.render_engine)]:
             item = QListWidgetItem(self)
             item.setSizeHint(item_widget.sizeHint())
             self.addItem(item)

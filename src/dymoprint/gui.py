@@ -1,0 +1,147 @@
+import sys
+
+from PyQt6 import QtCore
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QPixmap, QIcon, QColor, QPainter
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
+from PyQt6.QtWidgets import QGraphicsDropShadowEffect, QMessageBox, QSpinBox, QToolBar, QComboBox
+from usb.core import USBError
+
+from PIL import ImageOps, Image, ImageQt
+
+from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
+from .q_dymo_labels_list import QDymoLabelList
+
+
+class DymoPrintWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.print_server = DymoPrinterServer()
+        self.render_engine = DymoRenderEngine(12)
+        self.label_bitmap = Image
+
+        self.window_layout = QVBoxLayout()
+        self.list = QDymoLabelList(self.render_engine)
+        self.label_render = QLabel()
+        self.print_button = QPushButton()
+        self.margin = QSpinBox()
+        self.tape_size = QComboBox()
+        self.foreground_color = QComboBox()
+        self.background_color = QComboBox()
+
+        self.init_elements()
+        self.init_connections()
+        self.init_layout()
+
+        self.list.render_label()
+
+    def init_elements(self):
+        self.setWindowTitle("DymoPrint GUI")
+        self.setGeometry(200, 200, 1000, 400)
+        printer_icon = QIcon.fromTheme('printer')
+        self.print_button.setIcon(printer_icon)
+        self.print_button.setFixedSize(64, 64)
+        self.print_button.setIconSize(QSize(48, 48))
+
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        self.label_render.setGraphicsEffect(shadow)
+
+        self.margin.setMinimum(20)
+        self.margin.setMaximum(1000)
+        self.margin.setValue(56)
+        self.tape_size.addItem('12', 12)
+        self.tape_size.addItem('9', 9)
+        self.tape_size.addItem('6', 6)
+
+        self.foreground_color.addItems([
+            'black',
+            'white',
+            'yellow',
+            'blue',
+            'red',
+            "green"
+        ])
+        self.background_color.addItems([
+            'white',
+            'black',
+            'yellow',
+            'blue',
+            'red',
+            "green"
+        ])
+
+    def init_connections(self):
+        self.margin.valueChanged.connect(self.list.render_label)
+        self.tape_size.currentTextChanged.connect(self.update_render_engine)
+        self.foreground_color.currentTextChanged.connect(
+            self.list.render_label)
+        self.background_color.currentTextChanged.connect(
+            self.list.render_label)
+        self.list.renderSignal.connect(self.update_label_render)
+        self.print_button.clicked.connect(self.print_label)
+
+    def init_layout(self):
+        settings_widget = QToolBar(self)
+        settings_widget.addWidget(QLabel("Margin:"))
+        settings_widget.addWidget(self.margin)
+        settings_widget.addSeparator()
+        settings_widget.addWidget(QLabel("Tape Size:"))
+        settings_widget.addWidget(self.tape_size)
+        settings_widget.addSeparator()
+        settings_widget.addWidget(QLabel("Tape Colors: "))
+        settings_widget.addWidget(self.foreground_color)
+        settings_widget.addWidget(QLabel(" on "))
+        settings_widget.addWidget(self.background_color)
+
+        render_widget = QWidget(self)
+        render_layout = QHBoxLayout(render_widget)
+        render_layout.addWidget(self.label_render)
+        render_layout.addWidget(self.print_button)
+        render_layout.setAlignment(
+            self.label_render, QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        self.window_layout.addWidget(settings_widget)
+        self.window_layout.addWidget(self.list)
+        self.window_layout.addWidget(render_widget)
+        self.setLayout(self.window_layout)
+
+    def update_render_engine(self):
+        self.render_engine = DymoRenderEngine(self.tape_size.currentData())
+        self.list.update_render_engine(self.render_engine)
+
+    def update_label_render(self, label_bitmap):
+        self.label_bitmap = label_bitmap
+        label_image = Image.new("L", (
+            self.margin.value() + self.label_bitmap.width + self.margin.value(), self.label_bitmap.height))
+        label_image.paste(self.label_bitmap, (self.margin.value(), 0))
+        label_image_inv = ImageOps.invert(label_image).copy()
+        qim = ImageQt.ImageQt(label_image_inv)
+        q_image = QPixmap.fromImage(qim)
+
+        mask = q_image.createMaskFromColor(
+            QColor("255, 255, 255"), Qt.MaskMode.MaskOutColor)
+        q_image.fill(QColor(self.background_color.currentText()))
+        p = QPainter(q_image)
+        p.setPen(QColor(self.foreground_color.currentText()))
+        p.drawPixmap(q_image.rect(), mask, mask.rect())
+        p.end()
+
+        self.label_render.setPixmap(q_image)
+        self.label_render.adjustSize()
+
+    def print_label(self):
+        try:
+            self.print_server.print_label(
+                self.label_bitmap, self.margin.value())
+        except RuntimeError as err:
+            QMessageBox.warning(self, "Printing Failed!", f"{err}")
+        except USBError as err:
+            QMessageBox.warning(self, "Printing Failed!", f"{err}")
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = DymoPrintWindow()
+    window.show()
+    sys.exit(app.exec())

@@ -170,17 +170,16 @@ class DymoRenderEngine:
                 with Image.open(picture_path) as img:
                     if img.height > label_height:
                         ratio = label_height / img.height
-                        img.thumbnail(
-                            (int(math.ceil(img.width * ratio)), label_height), Image.ANTIALIAS
-                        )
+                        img = img.resize((int(math.ceil(img.width * ratio)), label_height))
+
+                    img = img.convert("L", palette=Image.ANTIALIAS)
                     return ImageOps.invert(img).convert("1")
             else:
                 die(f"picture path:{picture_path}  doesn't exist ")
         label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
         return Image.new("1", (1, label_height))
 
-    @staticmethod
-    def merge_render(bitmaps):
+    def merge_render(self,bitmaps):
         """
         Merges multiple images into a single image.
 
@@ -203,6 +202,8 @@ class DymoRenderEngine:
             for bitmap in bitmaps:
                 label_bitmap.paste(bitmap, box=(offset, 0))
                 offset += bitmap.width + padding
+        elif len(bitmaps) == 0:
+            return self.render_empty()
         else:
             label_bitmap = bitmaps[0]
         return label_bitmap

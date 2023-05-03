@@ -17,6 +17,7 @@ Linux Software to print with LabelManager PnP from Dymo
 * Supports barcode printing
 * Supports image printing
 * Supports combined barcode / qrcode and text printing
+* GUI Application based on PyQt6 - expanded combinations
 
 ## Installation
 
@@ -158,6 +159,52 @@ Any picture with JPEG standard may be printed. Beware it will be downsized to ta
 
 Take care of the trailing "" - you may enter text here which gets printed in front of the image
 
+## GUI
+
+### Run DymoPrint GUI
+
+```dymoprint_gui```
+
+
+### Features
+* Live preview
+* margin settings
+* type size selector
+* visualization of tape color schema
+* the ability to freely arrange the content using the "Node" list
+  * Text Node:
+    * payload text - can be multi-line
+    * font selector
+    * font scaling - the percentage of line-height
+    * frame border width steering
+  * Qr Node:
+    * payload text  
+  * BarCode Node:
+    * payload text
+    * codding selector
+  * Image Node:
+    * path to file
+  
+Nodes can be freely arranged, simply drag&drop rows on the list.
+To add or delete the node from the label - right-click on the list and select the action from the context menu.
+To print - click the print button.
+
+### Example
+
+Example 1: multiple text + QR code
+
+![alt](doc/DymoPrint_example_1.png)
+
+Example 2: two images + text with frame, white on red 
+
+![alt](doc/DymoPrint_example_2.png)
+
+Example 3: barcode, text, image
+
+![alt](doc/DymoPrint_example_3.png)
+
+
+
 ## Development
 
 Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
@@ -173,10 +220,10 @@ dymoprint -c code128 Test "bc_txt"
 ### ToDo
 
 * (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
-* put everything in classes that would need to be used by a GUI
+* ~~put everything in classes that would need to be used by a GUI~~
 * ~~for more options use command line parser framework~~
 * ~~allow selection of font with command line options~~
-* allow font size specification with command line option (points, pixels?)
+* ~~allow font size specification with command line option (points, pixels?)~~
 * ~~provide an option to show a preview of what the label will look like~~
 * ~~read and write a .dymoprint file containing user preferences~~
 * ~~print barcodes~~
