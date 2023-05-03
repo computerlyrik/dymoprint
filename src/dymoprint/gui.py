@@ -30,6 +30,8 @@ class DymoPrintWindow(QWidget):
         self.tape_size = QComboBox()
         self.foreground_color = QComboBox()
         self.background_color = QComboBox()
+        self.min_label_len = QSpinBox()
+        self.justify  = QComboBox()
 
         self.init_elements()
         self.init_connections()
@@ -57,6 +59,13 @@ class DymoPrintWindow(QWidget):
         self.tape_size.addItem('12', 12)
         self.tape_size.addItem('9', 9)
         self.tape_size.addItem('6', 6)
+        self.min_label_len.setMinimum(0)
+        self.min_label_len.setMaximum(1000)
+        self.justify.addItems([
+            'center',
+            'left',
+            'right'
+        ])
 
         self.foreground_color.addItems([
             'black',
@@ -77,7 +86,9 @@ class DymoPrintWindow(QWidget):
 
     def init_connections(self):
         self.margin.valueChanged.connect(self.list.render_label)
-        self.tape_size.currentTextChanged.connect(self.update_render_engine)
+        self.tape_size.currentTextChanged.connect(self.update_params)
+        self.min_label_len.valueChanged.connect(self.update_params)
+        self.justify.currentTextChanged.connect(self.update_params)
         self.foreground_color.currentTextChanged.connect(
             self.list.render_label)
         self.background_color.currentTextChanged.connect(
@@ -92,6 +103,12 @@ class DymoPrintWindow(QWidget):
         settings_widget.addSeparator()
         settings_widget.addWidget(QLabel("Tape Size:"))
         settings_widget.addWidget(self.tape_size)
+        settings_widget.addSeparator()
+        settings_widget.addWidget(QLabel("Min Label Len [mm]:"))
+        settings_widget.addWidget(self.min_label_len)
+        settings_widget.addSeparator()
+        settings_widget.addWidget(QLabel("Justify:"))
+        settings_widget.addWidget(self.justify)
         settings_widget.addSeparator()
         settings_widget.addWidget(QLabel("Tape Colors: "))
         settings_widget.addWidget(self.foreground_color)
@@ -110,9 +127,12 @@ class DymoPrintWindow(QWidget):
         self.window_layout.addWidget(render_widget)
         self.setLayout(self.window_layout)
 
-    def update_render_engine(self):
+    def update_params(self):
         self.render_engine = DymoRenderEngine(self.tape_size.currentData())
-        self.list.update_render_engine(self.render_engine)
+        justify = self.justify.currentText()
+        min_label_mm_len: int = self.min_label_len.value()
+        min_payload_len = max(0, (min_label_mm_len * 7) - self.margin.value() * 2)
+        self.list.update_params(self.render_engine, min_payload_len, justify)
 
     def update_label_render(self, label_bitmap):
         self.label_bitmap = label_bitmap

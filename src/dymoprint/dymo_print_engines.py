@@ -219,17 +219,11 @@ class DymoRenderEngine:
 
         if min_payload_len > label_bitmap.width:
             offset = 0
-            print(f'label_bitmap.width {label_bitmap.width}')
-            print(f'min_payload_len {min_payload_len}')
-            print(f'L {offset}')
             if (justify == "center"):
                 offset = max(
                     0, int((min_payload_len - label_bitmap.width) / 2))
-                print(f'C {offset}')
             if (justify == "right"):
                 offset = max(0, int(min_payload_len - label_bitmap.width))
-                print(f'R {offset}')
-
             out_label_bitmap = Image.new(
                 "1",
                 (

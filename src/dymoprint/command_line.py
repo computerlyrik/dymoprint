@@ -59,6 +59,7 @@ def parse_args():
     parser.add_argument(
         "-l",
         type=int,
+        default=0,
         help="Specify minimum label length in mm"
     )
     parser.add_argument(
@@ -163,9 +164,9 @@ def main():
         bitmaps.append(render_engine.render_picture(args.picture))
 
     margin = args.m
-    min_payload_len = max(0, (args.l * 7) - margin * 2)
     justify = args.j
-
+    min_label_mm_len: int = args.l
+    min_payload_len = max(0, (min_label_mm_len * 7) - margin * 2)
     label_bitmap = render_engine.merge_render(
         bitmaps, min_payload_len, justify)
 
