@@ -1,4 +1,5 @@
 import sys
+import os
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QSize, Qt
@@ -11,6 +12,7 @@ from PIL import ImageOps, Image, ImageQt
 
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .q_dymo_labels_list import QDymoLabelList
+import dymoprint_fonts
 
 
 class DymoPrintWindow(QWidget):
@@ -37,6 +39,8 @@ class DymoPrintWindow(QWidget):
 
     def init_elements(self):
         self.setWindowTitle("DymoPrint GUI")
+        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
+        self.setWindowIcon(QIcon(os.path.join(ICON_DIR, "gui_icon.png")))
         self.setGeometry(200, 200, 1000, 400)
         printer_icon = QIcon.fromTheme('printer')
         self.print_button.setIcon(printer_icon)
