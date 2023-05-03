@@ -26,7 +26,10 @@ class DymoLabeler:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
-    _MAX_BYTES_PER_LINE = 8  # 64 pixels on a 12mm tape
+    @staticmethod
+    def max_bytes_per_line(tape_size=12):
+        return int(8*tape_size/12)
+
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
@@ -36,9 +39,10 @@ class DymoLabeler:
     # sensible timeout can also be calculated dynamically.
     synwait: Optional[int]
 
-    def __init__(self, devout, devin, synwait=None):
+    def __init__(self, devout, devin, synwait=None,tape_size=12):
         """Initialize the LabelManager object. (HLF)"""
 
+        self.tape_size = tape_size
         self.cmd: list[int] = []
         self.response = False
         self.bytesPerLine_ = None
@@ -118,7 +122,7 @@ class DymoLabeler:
     def dotTab(self, value):
         """Set the bias text height, in bytes. (MLF)"""
 
-        if value < 0 or value > self._MAX_BYTES_PER_LINE:
+        if value < 0 or value > self.max_bytes_per_line(self.tape_size):
             raise ValueError
         cmd = [ESC, ord("B"), value]
         self.buildCommand(cmd)
@@ -136,7 +140,7 @@ class DymoLabeler:
     def bytesPerLine(self, value):
         """Set the number of bytes sent in the following lines. (MLF)"""
 
-        if value < 0 or value + self.dotTab_ > self._MAX_BYTES_PER_LINE:
+        if value < 0 or value + self.dotTab_ > self.max_bytes_per_line(self.tape_size):
             raise ValueError
         if value == self.bytesPerLine_:
             return
@@ -161,8 +165,8 @@ class DymoLabeler:
         """Set Chain Mark. (MLF)"""
 
         self.dotTab(0)
-        self.bytesPerLine(self._MAX_BYTES_PER_LINE)
-        self.line([0x99] * self._MAX_BYTES_PER_LINE)
+        self.bytesPerLine(self.max_bytes_per_line(self.tape_size))
+        self.line([0x99] * self.max_bytes_per_line(self.tape_size))
 
     def skipLines(self, value):
         """Set number of lines of white to print. (MLF)"""
