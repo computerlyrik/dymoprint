@@ -1,3 +1,4 @@
+from __future__ import annotations
 import array
 import math
 import os
@@ -172,7 +173,7 @@ class DymoRenderEngine:
                         ratio = label_height / img.height
                         img = img.resize((int(math.ceil(img.width * ratio)), label_height))
 
-                    img = img.convert("L", palette=Image.ANTIALIAS)
+                    img = img.convert("L", palette=Image.AFFINE)
                     return ImageOps.invert(img).convert("1")
             else:
                 die(f"picture path:{picture_path}  doesn't exist ")
