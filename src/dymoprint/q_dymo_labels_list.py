@@ -88,10 +88,10 @@ class QDymoLabelList(QListWidget):
             event (QContextMenuEvent): The context menu event.
         """
         contextMenu = QMenu(self)
-        add_text = contextMenu.addAction("AddText")
-        add_qr = contextMenu.addAction("AddQR")
-        add_barcode = contextMenu.addAction("AddBarcode")
-        add_img = contextMenu.addAction("AddImage")
+        add_text = contextMenu.addAction("Add Text")
+        add_qr = contextMenu.addAction("Add QR")
+        add_barcode = contextMenu.addAction("Add Barcode")
+        add_img = contextMenu.addAction("Add Image")
         delete = contextMenu.addAction("Delete")
         menu_click = contextMenu.exec(event.globalPos())
 
