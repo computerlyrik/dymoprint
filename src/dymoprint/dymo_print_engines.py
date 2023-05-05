@@ -336,3 +336,5 @@ class DymoPrinterServer:
                 lm.printLabel(label_matrix, margin=margin)
             else:
                 lm.printLabel(label_matrix)
+
+            usb.util.dispose_resources(dev)
