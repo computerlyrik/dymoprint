@@ -15,11 +15,12 @@ import subprocess
 import sys
 import termios
 import textwrap
+from typing import NoReturn
 
 from PIL import ImageDraw
 
 
-def die(message=None):
+def die(message=None) -> NoReturn:
     if message:
         print(message, file=sys.stderr)
         raise RuntimeError(message)

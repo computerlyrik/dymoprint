@@ -275,6 +275,7 @@ class DymoPrinterServer:
             devin = devout
             # We are in the normal HID file mode, so no syn_wait is needed.
             syn_wait = None
+            in_usb_mode = False
         else:
             # We are in the experimental PyUSB mode, if a device can be found.
             syn_wait = 64
@@ -289,6 +290,7 @@ class DymoPrinterServer:
                 die("The device '%s' could not be found on this system." % DEV_NAME)
             else:
                 print("Entering experimental PyUSB mode.")
+                in_usb_mode = True
 
             try:
                 dev.set_configuration()
@@ -321,20 +323,21 @@ class DymoPrinterServer:
                 ),
             )
 
-            if not devout or not devin:
-                die("The device '%s' could not be found on this system." % DEV_NAME)
+        if not devout or not devin:
+            die("The device '%s' could not be found on this system." % DEV_NAME)
 
-            # create dymo labeler object
-            try:
-                lm = DymoLabeler(
-                    devout, devin, synwait=syn_wait, tape_size=tape_size)
-            except IOError:
-                die(access_error(dev))
+        # create dymo labeler object
+        try:
+            lm = DymoLabeler(
+                devout, devin, synwait=syn_wait, tape_size=tape_size)
+        except IOError:
+            die(access_error(dev))
 
-            print("Printing label..")
-            if margin is not None:
-                lm.printLabel(label_matrix, margin=margin)
-            else:
-                lm.printLabel(label_matrix)
+        print("Printing label..")
+        if margin is not None:
+            lm.printLabel(label_matrix, margin=margin)
+        else:
+            lm.printLabel(label_matrix)
 
+        if in_usb_mode:
             usb.util.dispose_resources(dev)
