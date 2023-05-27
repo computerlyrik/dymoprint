@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Get tags
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      run: git fetch --tags origin
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
