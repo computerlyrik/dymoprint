@@ -178,13 +178,13 @@ Take care of the trailing "" - you may enter text here which gets printed in fro
     * font scaling - the percentage of line-height
     * frame border width steering
   * Qr Node:
-    * payload text  
+    * payload text
   * BarCode Node:
     * payload text
     * codding selector
   * Image Node:
     * path to file
-  
+
 Nodes can be freely arranged, simply drag&drop rows on the list.
 To add or delete the node from the label - right-click on the list and select the action from the context menu.
 To print - click the print button.
@@ -195,7 +195,7 @@ Example 1: multiple text + QR code
 
 ![alt](doc/DymoPrint_example_1.png)
 
-Example 2: two images + text with frame, white on red 
+Example 2: two images + text with frame, white on red
 
 ![alt](doc/DymoPrint_example_2.png)
 

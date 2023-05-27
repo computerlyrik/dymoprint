@@ -1,10 +1,22 @@
 import os
 
-import dymoprint_fonts
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QPlainTextEdit, QLineEdit
-from PyQt6.QtWidgets import QPushButton, QFileDialog, QMessageBox, QVBoxLayout
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
+
+import dymoprint_fonts
 
 from .font_config import parse_fonts
 
@@ -23,7 +35,8 @@ class BaseDymoLabelWidget(QWidget):
     render_label()
         Abstract method to be implemented by subclasses for rendering the label.
     """
-    itemRenderSignal = QtCore.pyqtSignal(name='itemRenderSignal')
+
+    itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
     def content_changed(self):
         """
@@ -59,8 +72,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.render_engine = render_engine
 
         self.label = QPlainTextEdit("text")
-        self.label.setFixedHeight(
-            15 * (len(self.label.toPlainText().splitlines()) + 2))
+        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
         self.font_style = QComboBox()
         self.font_size = QSpinBox()
@@ -71,7 +83,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.draw_frame = QSpinBox()
         self.align = QComboBox()
 
-        self.align.addItems(['left', 'center', 'right'])
+        self.align.addItems(["left", "center", "right"])
 
         for (name, font_path) in parse_fonts():
             self.font_style.addItem(name, font_path)
@@ -82,7 +94,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
         item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "txt_icon.png")).pixmap(32, 32))
+            QIcon(os.path.join(ICON_DIR, "txt_icon.png")).pixmap(32, 32)
+        )
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -105,8 +118,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         """
         Updates the height of the label and emits the itemRenderSignal when the content of the label changes.
         """
-        self.label.setFixedHeight(
-            15 * (len(self.label.toPlainText().splitlines()) + 2))
+        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
         self.itemRenderSignal.emit()
 
@@ -119,15 +131,16 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
             QMessageBox.warning: If the rendering fails.
         """
         try:
-            render = self.render_engine.render_text(labeltext=self.label.toPlainText().splitlines(),
-                                                    font_file_name=self.font_style.currentData(),
-                                                    frame_width=self.draw_frame.value(),
-                                                    font_size_ratio=self.font_size.value() / 100.0,
-                                                    align=self.align.currentText())
+            render = self.render_engine.render_text(
+                labeltext=self.label.toPlainText().splitlines(),
+                font_file_name=self.font_style.currentData(),
+                frame_width=self.draw_frame.value(),
+                font_size_ratio=self.font_size.value() / 100.0,
+                align=self.align.currentText(),
+            )
             return render
         except BaseException as err:
-            QMessageBox.warning(
-                self, "TextDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -153,8 +166,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         layout = QHBoxLayout()
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "qr_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "qr_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -174,8 +186,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             return render
 
         except BaseException as err:
-            QMessageBox.warning(
-                self, "QrDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -205,26 +216,29 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
         item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "barcode_icon.png")).pixmap(32, 32))
+            QIcon(os.path.join(ICON_DIR, "barcode_icon.png")).pixmap(32, 32)
+        )
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self.codding = QComboBox()
-        self.codding.addItems([
-            "code39",
-            "code128",
-            "ean",
-            "ean13",
-            "ean8",
-            "gs1",
-            "gtin",
-            "isbn",
-            "isbn10",
-            "isbn13",
-            "issn",
-            "jan",
-            "pzn",
-            "upc",
-            "upca",
-        ])
+        self.codding.addItems(
+            [
+                "code39",
+                "code128",
+                "ean",
+                "ean13",
+                "ean8",
+                "gs1",
+                "gtin",
+                "isbn",
+                "isbn10",
+                "isbn13",
+                "issn",
+                "jan",
+                "pzn",
+                "upc",
+                "upca",
+            ]
+        )
 
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -243,12 +257,12 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         """
         try:
             render = self.render_engine.render_barcode(
-                self.label.text(), self.codding.currentText())
+                self.label.text(), self.codding.currentText()
+            )
             return render
 
         except BaseException as err:
-            QMessageBox.warning(
-                self, "BarcodeDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()
 
 
@@ -275,13 +289,17 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
         item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "img_icon.png")).pixmap(32, 32))
+            QIcon(os.path.join(ICON_DIR, "img_icon.png")).pixmap(32, 32)
+        )
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
-        button = QPushButton('Select file')
+        button = QPushButton("Select file")
         file_dialog = QFileDialog()
-        button.clicked.connect(lambda: self.label.setText(
-            os.path.abspath(file_dialog.getOpenFileName()[0])))
+        button.clicked.connect(
+            lambda: self.label.setText(
+                os.path.abspath(file_dialog.getOpenFileName()[0])
+            )
+        )
 
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -300,6 +318,5 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render = self.render_engine.render_picture(self.label.text())
             return render
         except BaseException as err:
-            QMessageBox.warning(
-                self, "ImageDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", f"{err}")
             return self.render_engine.render_empty()

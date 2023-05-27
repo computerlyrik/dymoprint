@@ -12,10 +12,7 @@ import os
 from PIL import Image, ImageOps
 
 from . import __version__
-from .constants import (
-    USE_QR,
-    e_qrcode,
-)
+from .constants import USE_QR, e_qrcode
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .font_config import font_filename
 from .metadata import our_metadata
@@ -57,10 +54,7 @@ def parse_args():
         help="Align multiline text (left,center,right)",
     )
     parser.add_argument(
-        "-l",
-        type=int,
-        default=0,
-        help="Specify minimum label length in mm"
+        "-l", type=int, default=0, help="Specify minimum label length in mm"
     )
     parser.add_argument(
         "-j",
@@ -72,8 +66,7 @@ def parse_args():
         default="center",
         help="Justify content of label if minimum label length is specified (left,center,right)",
     )
-    parser.add_argument(
-        "-u", nargs="?", help='Set user font, overrides "-s" parameter')
+    parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
     parser.add_argument(
         "-n",
         "--preview",
@@ -116,12 +109,19 @@ def parse_args():
         help="Printing the first text parameter as barcode",
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
-    parser.add_argument("-m", type=int, default=56,
-                        help="Override margin (default is 56*2)")
-    parser.add_argument("--scale", type=int, default=90,
-                        help="Scaling font factor, [0,10] [%%]")
     parser.add_argument(
-        '-t', type=int, choices=[6, 9, 12], default=12, help='Tape size: 6,9,12 mm, default=12mm')
+        "-m", type=int, default=56, help="Override margin (default is 56*2)"
+    )
+    parser.add_argument(
+        "--scale", type=int, default=90, help="Scaling font factor, [0,10] [%%]"
+    )
+    parser.add_argument(
+        "-t",
+        type=int,
+        choices=[6, 9, 12],
+        default=12,
+        help="Tape size: 6,9,12 mm, default=12mm",
+    )
     return parser.parse_args()
 
 
@@ -157,8 +157,11 @@ def main():
         bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.c))
 
     if labeltext:
-        bitmaps.append(render_engine.render_text(
-            labeltext, FONT_FILENAME, args.f, int(args.scale) / 100.0, args.a))
+        bitmaps.append(
+            render_engine.render_text(
+                labeltext, FONT_FILENAME, args.f, int(args.scale) / 100.0, args.a
+            )
+        )
 
     if args.picture:
         bitmaps.append(render_engine.render_picture(args.picture))
@@ -167,15 +170,15 @@ def main():
     justify = args.j
     min_label_mm_len: int = args.l
     min_payload_len = max(0, (min_label_mm_len * 7) - margin * 2)
-    label_bitmap = render_engine.merge_render(
-        bitmaps, min_payload_len, justify)
+    label_bitmap = render_engine.merge_render(bitmaps, min_payload_len, justify)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick:
         print("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
-            "L", (margin + label_bitmap.width + margin, label_bitmap.height))
+            "L", (margin + label_bitmap.width + margin, label_bitmap.height)
+        )
         label_image.paste(label_bitmap, (margin, 0))
         if args.preview or args.preview_inverted:
             label_rotated = label_bitmap.transpose(Image.ROTATE_270)

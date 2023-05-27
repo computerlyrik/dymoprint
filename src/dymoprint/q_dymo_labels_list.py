@@ -1,10 +1,13 @@
-
-from PyQt6 import QtCore
-from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QMenu
-from .q_dymo_label_widgets import TextDymoLabelWidget, QrDymoLabelWidget, BarcodeDymoLabelWidget, \
-    ImageDymoLabelWidget
-
 from PIL import Image
+from PyQt6 import QtCore
+from PyQt6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMenu
+
+from .q_dymo_label_widgets import (
+    BarcodeDymoLabelWidget,
+    ImageDymoLabelWidget,
+    QrDymoLabelWidget,
+    TextDymoLabelWidget,
+)
 
 
 class QDymoLabelList(QListWidget):
@@ -24,9 +27,9 @@ class QDymoLabelList(QListWidget):
         contextMenuEvent(self, event): Overrides the default context menu event to add or delete label widgets.
     """
 
-    renderSignal = QtCore.pyqtSignal(Image.Image, name='renderSignal')
+    renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
 
-    def __init__(self, render_engine, min_payload_len=0, justify='center', parent=None):
+    def __init__(self, render_engine, min_payload_len=0, justify="center", parent=None):
         super(QDymoLabelList, self).__init__(parent)
         self.min_payload_len = min_payload_len
         self.justify = justify
@@ -50,7 +53,7 @@ class QDymoLabelList(QListWidget):
         super().dropEvent(e)
         self.render_label()
 
-    def update_params(self, render_engine, min_payload_len=0, justify='center'):
+    def update_params(self, render_engine, min_payload_len=0, justify="center"):
         """
         Updates the render engine used for rendering the label.
         Args:
@@ -77,7 +80,9 @@ class QDymoLabelList(QListWidget):
             if item_widget and item:
                 item.setSizeHint(item_widget.sizeHint())
                 bitmaps.append(item_widget.render_label())
-        label_bitmap = self.render_engine.merge_render(bitmaps, self.min_payload_len, self.justify)
+        label_bitmap = self.render_engine.merge_render(
+            bitmaps, self.min_payload_len, self.justify
+        )
 
         self.renderSignal.emit(label_bitmap)
 

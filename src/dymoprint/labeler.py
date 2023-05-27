@@ -28,8 +28,7 @@ class DymoLabeler:
 
     @staticmethod
     def max_bytes_per_line(tape_size=12):
-        return int(8*tape_size/12)
-
+        return int(8 * tape_size / 12)
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
@@ -39,7 +38,7 @@ class DymoLabeler:
     # sensible timeout can also be calculated dynamically.
     synwait: Optional[int]
 
-    def __init__(self, devout, devin, synwait=None,tape_size=12):
+    def __init__(self, devout, devin, synwait=None, tape_size=12):
         """Initialize the LabelManager object. (HLF)"""
 
         self.tape_size = tape_size

@@ -29,8 +29,7 @@ def die(message=None) -> NoReturn:
 
 def pprint(par, fd=sys.stdout):
     rows, columns = struct.unpack(
-        "HH", fcntl.ioctl(sys.stderr, termios.TIOCGWINSZ,
-                          struct.pack("HH", 0, 0))
+        "HH", fcntl.ioctl(sys.stderr, termios.TIOCGWINSZ, struct.pack("HH", 0, 0))
     )
     print(textwrap.fill(par, columns), file=fd)
 
