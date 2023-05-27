@@ -15,13 +15,15 @@ import subprocess
 import sys
 import termios
 import textwrap
+from typing import NoReturn
 
 from PIL import ImageDraw
 
 
-def die(message=None):
+def die(message=None) -> NoReturn:
     if message:
         print(message, file=sys.stderr)
+        raise RuntimeError(message)
     sys.exit(1)
 
 
@@ -75,20 +77,17 @@ def getDeviceFile(classID, vendorID, productID):
 
 
 def access_error(dev):
-    pprint("You do not have sufficient access to the device file %s:" % dev, sys.stderr)
+    die("You do not have sufficient access to the device file %s:" % dev, sys.stderr)
     subprocess.call(["ls", "-l", dev], stdout=sys.stderr)
     print(file=sys.stderr)
     filename = "91-dymo-labelmanager-pnp.rules"
-    pprint(
-        "You probably want to add a rule like one of the following in /etc/udev/rules.d/"
-        + filename,
-        sys.stderr,
+    die(
+        f"You probably want to add a rule like one of the following in /etc/udev/rules.d/{filename}"
     )
     with open(filename, "r") as fin:
         print(fin.read(), file=sys.stderr)
-    pprint(
+    die(
         "Following that, restart udev and re-plug your device. See README.md for details",
-        sys.stderr,
     )
 
 
