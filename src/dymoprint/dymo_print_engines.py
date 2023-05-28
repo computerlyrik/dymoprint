@@ -3,6 +3,8 @@ from __future__ import annotations
 import array
 import math
 import os
+from pathlib import Path
+from typing import NoReturn
 
 import barcode as barcode_module
 import usb
@@ -12,16 +14,85 @@ from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
 from .constants import (
     DEFAULT_MARGIN,
-    DEV_CLASS,
-    DEV_LM280_CLASS,
-    DEV_LM280_PRODUCT,
-    DEV_NAME,
-    DEV_NODE,
-    DEV_PRODUCT,
     DEV_VENDOR,
+    HID_INTERFACE_CLASS,
+    PRINTER_INTERFACE_CLASS,
+    SUPPORTED_PRODUCTS,
+    UNCONFIRMED_MESSAGE,
     QRCode,
 )
-from .utils import access_error, die, draw_image, getDeviceFile, scaling
+from .utils import die, draw_image, scaling
+
+
+def device_info(dev: usb.core.Device) -> str:
+    try:
+        dev.manufacturer
+    except ValueError:
+        instruct_on_access_denied(dev)
+    res = ""
+    res += f"{repr(dev)}\n"
+    res += f"  manufacturer: {dev.manufacturer}\n"
+    res += f"  product: {dev.product}\n"
+    res += f"  serial: {dev.serial_number}\n"
+    configs = dev.configurations()
+    if configs:
+        res += f"  configurations:\n"
+        for cfg in configs:
+            res += f"  - {repr(cfg)}\n"
+            intfs = cfg.interfaces()
+            if intfs:
+                res += f"    interfaces:\n"
+                for intf in intfs:
+                    res += f"    - {repr(intf)}\n"
+    return res
+
+
+def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:
+    # detect whether we are in arch linux or ubuntu linux
+    if Path("/etc/arch-release").exists():
+        restart_udev_command = "sudo udevadm control --reload"
+    elif Path("/etc/lsb-release").exists():
+        restart_udev_command = "sudo systemctl restart udev.service"
+    else:
+        restart_udev_command = None
+
+    lines = []
+    lines.append(
+        f"You do not have sufficient access to the "
+        "device. You probably want to add the a udev rule in "
+        "/etc/udev/rules.d with the following command:"
+    )
+    lines.append("")
+    lines.append(
+        f"echo '"
+        f'ACTION=="add", '
+        f'SUBSYSTEMS=="usb", '
+        f'ATTRS{{idVendor}}=="{dev.idVendor:04x}", '
+        f'ATTRS{{idProduct}}=="{dev.idProduct:04x}", '
+        f'MODE="0660" '
+        f'GROUP="plugdev"'
+        f"' | sudo tee /etc/udev/rules.d/91-dymo-{dev.idProduct:x}.rules"
+    )
+    lines.append("")
+    lines.append(
+        "Following that, turn your device off and back "
+        "on again to activate the new permissions."
+    )
+    lines.append("")
+    lines.append(
+        "If this still does not resolve the problem, you might try restarting "
+        "the udev service, even though it should not be necessary. "
+        "In case restarting udev is necessary, please report this at "
+        "<https://github.com/computerlyrik/dymoprint/pull/56>. "
+        "If this does not resolve your problem, please report this also at "
+        "that link."
+    )
+    if restart_udev_command:
+        lines.append("")
+        lines.append("Restart udev command:")
+        lines.append("")
+        lines.append(f"{restart_udev_command}")
+    raise RuntimeError("\n\n" + "\n".join(lines) + "\n")
 
 
 class DymoRenderEngine:
@@ -295,80 +366,88 @@ class DymoPrinterServer:
         label_matrix = [
             array.array("B", label_row).tolist() for label_row in label_rows
         ]
-        # get device file name
-        if not DEV_NODE:
-            dev = getDeviceFile(DEV_CLASS, DEV_VENDOR, DEV_PRODUCT)
-        else:
-            dev = DEV_NODE
 
-        if dev:
-            try:
-                devout = open(dev, "rb+")
-            except PermissionError:
-                access_error(dev)
-            devin = devout
-            # We are in the normal HID file mode, so no syn_wait is needed.
-            syn_wait = None
-            in_usb_mode = False
-        else:
-            # We are in the experimental PyUSB mode, if a device can be found.
-            syn_wait = 64
-            # Find and prepare device communication endpoints.
-            dev = usb.core.find(
-                custom_match=lambda d: (
-                    d.idVendor == DEV_VENDOR and d.idProduct == DEV_LM280_PRODUCT
+        syn_wait = 64
+
+        dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))
+        if len(dymo_devs) == 0:
+            print(f"No Dymo devices found (expected vendor {hex(DEV_VENDOR)})")
+            for dev in usb.core.find(find_all=True):
+                print(
+                    f"- Vendor ID: {hex(dev.idVendor):6}  Product ID: {hex(dev.idProduct)}"
                 )
-            )
+            die("Unable to open device.")
+        if len(dymo_devs) > 1:
+            print(f"Found multiple Dymo devices:")
+            for dev in dymo_devs:
+                print(device_info(dev))
+            print(f"Using first device.")
+            dev = dymo_devs[0]
+        else:
+            dev = dymo_devs[0]
+            print(f"Found one Dymo device: {device_info(dev)}")
+        dev = dymo_devs[0]
+        if dev.idProduct in SUPPORTED_PRODUCTS:
+            print(f"Recognized device as {SUPPORTED_PRODUCTS[dev.idProduct]}")
+        else:
+            print(f"Unrecognized device: {hex(dev.idProduct)}. {UNCONFIRMED_MESSAGE}")
 
-            if dev is None:
-                die("The device '%s' could not be found on this system." % DEV_NAME)
-            else:
-                print("Entering experimental PyUSB mode.")
-                in_usb_mode = True
-
+        try:
+            dev.get_active_configuration()
+            print(f"Active device configuration already found.")
+        except usb.core.USBError as e:
             try:
                 dev.set_configuration()
+                print(f"Device configuration set.")
             except usb.core.USBError as e:
                 if e.errno == 13:
                     raise RuntimeError("Access denied")
                 if e.errno == 16:
-                    # Resource busy
-                    pass
+                    print(f"Device is busy, but this is okay.")
                 else:
                     raise
 
+        intf = usb.util.find_descriptor(
+            dev.get_active_configuration(), bInterfaceClass=PRINTER_INTERFACE_CLASS
+        )
+        if intf is not None:
+            print(f"Opened printer interface: {repr(intf)}")
+        else:
             intf = usb.util.find_descriptor(
-                dev.get_active_configuration(), bInterfaceClass=DEV_LM280_CLASS
+                dev.get_active_configuration(), bInterfaceClass=HID_INTERFACE_CLASS
             )
-            if dev.is_kernel_driver_active(intf.bInterfaceNumber):
-                dev.detach_kernel_driver(intf.bInterfaceNumber)
-            devout = usb.util.find_descriptor(
-                intf,
-                custom_match=(
-                    lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
-                    == usb.util.ENDPOINT_OUT
-                ),
-            )
-            devin = usb.util.find_descriptor(
-                intf,
-                custom_match=(
-                    lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
-                    == usb.util.ENDPOINT_IN
-                ),
-            )
+        if intf is not None:
+            print(f"Opened HID interface: {repr(intf)}")
+        else:
+            die("Could not open a valid interface.")
+        assert isinstance(intf, usb.core.Interface)
+
+        if dev.is_kernel_driver_active(intf.bInterfaceNumber):
+            print(f"Detaching kernel driver from interface {intf.bInterfaceNumber}")
+            dev.detach_kernel_driver(intf.bInterfaceNumber)
+        devout = usb.util.find_descriptor(
+            intf,
+            custom_match=(
+                lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                == usb.util.ENDPOINT_OUT
+            ),
+        )
+        devin = usb.util.find_descriptor(
+            intf,
+            custom_match=(
+                lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                == usb.util.ENDPOINT_IN
+            ),
+        )
 
         if not devout or not devin:
-            die("The device '%s' could not be found on this system." % DEV_NAME)
+            die("The device endpoints not be found.")
 
         # create dymo labeler object
-        try:
-            lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
-        except OSError:
-            access_error(dev)
+        lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
 
         print("Printing label..")
         lm.printLabel(label_matrix, margin=margin)
         print("Done printing.")
-
-        if in_usb_mode:
-            usb.util.dispose_resources(dev)
+        usb.util.dispose_resources(dev)
+        print("Cleaned up.")

@@ -28,16 +28,25 @@ except ImportError as error:
 DESCRIPTION = (
     "Linux Software to print with LabelManager PnP from Dymo\nwritten in Python"
 )
-DEV_CLASS = 3
+UNCONFIRMED_MESSAGE = (
+    "WARNING: This device is not confirmed to work with this software. Please "
+    "report your experiences in https://github.com/computerlyrik/dymoprint/issues/44"
+)
+SUPPORTED_PRODUCTS = {
+    0x1001: f"LabelManager PnP (no mode switch)",
+    0x1002: f"LabelManager PnP (mode switch)",
+    0x1003: f"LabelManager 420P (no mode switch) {UNCONFIRMED_MESSAGE}",
+    0x1004: f"LabelManager 420P (mode switch) {UNCONFIRMED_MESSAGE}",
+    0x1005: f"LabelManager 280 (no mode switch)",
+    0x1006: f"LabelManager 280 (no mode switch)",
+    0x1007: f"LabelManager Wireless PnP (no mode switch) {UNCONFIRMED_MESSAGE}",
+    0x1008: f"LabelManager Wireless PnP (mode switch) {UNCONFIRMED_MESSAGE}",
+    0x1009: f"MobileLabeler {UNCONFIRMED_MESSAGE}",
+}
 DEV_VENDOR = 0x0922
-DEV_PRODUCT = 0x1002
-# DEV_PRODUCT     = 0x1001
-DEV_NODE = None
-DEV_NAME = "Dymo LabelManager PnP"
 
-DEV_LM280_CLASS = 7
-DEV_LM280_PRODUCT = 0x1005
-DEV_LM280_NAME = "Dymo LabelManager 280"
+PRINTER_INTERFACE_CLASS = 0x07
+HID_INTERFACE_CLASS = 0x03
 
 # Escape character preceeding all commands
 ESC = 0x1B
