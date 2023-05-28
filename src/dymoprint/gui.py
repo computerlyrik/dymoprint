@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 from PIL import Image, ImageOps, ImageQt
 from PyQt6 import QtCore
@@ -160,10 +161,11 @@ class DymoPrintWindow(QWidget):
     def print_label(self):
         try:
             self.print_server.print_label(self.label_bitmap, self.margin.value())
-        except RuntimeError as err:
-            QMessageBox.warning(self, "Printing Failed!", f"{err}")
-        except USBError as err:
-            QMessageBox.warning(self, "Printing Failed!", f"{err}")
+        except (RuntimeError, USBError) as err:
+            print(traceback.format_exc())
+            QMessageBox.warning(
+                self, "Printing Failed!", f"{err}\n\n{traceback.format_exc()}"
+            )
 
 
 def main():
