@@ -19,6 +19,10 @@ Linux Software to print with LabelManager PnP from Dymo
 * Supports combined barcode / qrcode and text printing
 * GUI Application based on PyQt6 - expanded combinations
 
+## HELP WANTED
+
+Test the latest [experimental version](https://github.com/computerlyrik/dymoprint/pull/56) and report back if it works for you.
+
 ## Installation
 
 It is recommended to install dymoprint with [pipx](https://pypa.github.io/pipx/) so that it runs in an isolated virtual environment:
@@ -39,11 +43,35 @@ or on Arch with
 sudo pacman -S python-pipx
 ```
 
+## Experimental features
 
-To install for development, fork and clone this repository, and from this directory, and run (ideally within a venv):
+To install a test branch, by user `ghuser` for the branch `branchname`, run
+
+```bash
+pipx install --force git+https://github.com/ghuser/dymoprint@branchname
+```
+
+To revert back to the release version, run
+
+```bash
+pipx install --force dymoprint
+```
+
+To install a particular release version, specify `dymoprint==x.y.z` instead of `dymoprint` in the above command.
+
+## Development
+
+To install for development, fork and clone this repository, and run (ideally within a venv):
 
 ```bash
 pip install --editable .
+```
+
+This project uses [pre-commit](https://pre-commit.com/) to run some checks before committing.
+After installing the `pre-commit` executable, please run
+
+```bash
+pre-commit install
 ```
 
 ## Configuration
