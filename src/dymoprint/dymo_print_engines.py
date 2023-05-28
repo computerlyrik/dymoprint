@@ -361,10 +361,8 @@ class DymoPrinterServer:
             die(access_error(dev))
 
         print("Printing label..")
-        if margin is not None:
-            lm.printLabel(label_matrix, margin=margin)
-        else:
-            lm.printLabel(label_matrix)
+        lm.printLabel(label_matrix, margin=margin)
+        print("Done printing.")
 
         if in_usb_mode:
             usb.util.dispose_resources(dev)
