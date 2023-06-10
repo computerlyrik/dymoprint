@@ -69,7 +69,8 @@ class DymoRenderEngine:
 
         if not qr_scale:
             die(
-                "Error: too much information to store in the QR code, points are smaller than the device resolution"
+                "Error: too much information to store in the QR code, points "
+                "are smaller than the device resolution"
             )
 
         code_bitmap = Image.new("1", (label_width, label_height))
@@ -125,13 +126,15 @@ class DymoRenderEngine:
         align="left",
     ):
         """
-        Renders a text image from the input text, font file name, frame width, and font size ratio.
+        Renders a text image from the input text, font file name, frame width, and
+        font size ratio.
 
         Args:
             labeltext (list[str]): The input text to be rendered.
             font_file_name (str): The name of the font file to be used.
             frame_width (int): The width of the frame around the text.
-            font_size_ratio (float): The ratio of font size to line height. Default is 1.
+            font_size_ratio (float): The ratio of font size to line height. Default
+                is 1.
 
         Returns:
             Image: A text image.

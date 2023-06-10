@@ -1,6 +1,4 @@
-import sys
-
 from .labeler import DymoLabeler
 from .metadata import __version__
 
-__all__ = ["DymoLabeler"]
+__all__ = ["__version__", "DymoLabeler"]

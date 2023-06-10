@@ -26,7 +26,7 @@ def font_filename(flag):
     CONFIG_FILE = os.path.join(user_config_dir(), "dymoprint.ini")
     if conf.read(CONFIG_FILE):
         # reading FONTS section
-        if not "FONTS" in conf.sections():
+        if "FONTS" not in conf.sections():
             die('! config file "%s" not valid. Please change or remove.' % CONFIG_FILE)
         for style in style_to_file.keys():
             style_to_file[style] = conf.get("FONTS", style)

@@ -64,7 +64,6 @@ class BarcodeImageWriter(BaseWriter):
                     c = 1
             # Left quiet zone is x startposition
             xpos = self.quiet_zone
-            bxs = xpos  # x start of barcode
             for mod in mlist:
                 if mod < 1:
                     color = self.background
@@ -75,7 +74,6 @@ class BarcodeImageWriter(BaseWriter):
                     xpos, ypos, self.module_width * abs(mod), color
                 )
                 xpos += self.module_width * abs(mod)
-            bxe = xpos
             # Add right quiet zone to every line, except last line,
             # quiet zone already provided with background,
             # should it be removed complety?

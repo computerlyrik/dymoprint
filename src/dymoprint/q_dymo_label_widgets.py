@@ -12,7 +12,6 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -116,7 +115,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
 
     def content_changed(self):
         """
-        Updates the height of the label and emits the itemRenderSignal when the content of the label changes.
+        Updates the height of the label and emits the itemRenderSignal when the
+        content of the label changes.
         """
         self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
@@ -148,7 +148,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
     """
     A widget for rendering QR codes on Dymo labels.
     Args:
-        render_engine (RenderEngine): The render engine to use for rendering the QR code.
+        render_engine (RenderEngine): The render engine to use for rendering
+            the QR code.
         parent (QWidget, optional): The parent widget. Defaults to None.
     """
 
@@ -156,7 +157,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         """
         Initializes the QrDymoLabelWidget.
         Args:
-            render_engine (RenderEngine): The render engine to use for rendering the QR code.
+            render_engine (RenderEngine): The render engine to use for rendering
+                the QR code.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
         super().__init__(parent)
@@ -198,13 +200,17 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         parent (QWidget): The parent widget of this widget.
     Attributes:
         render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
-        label (QLineEdit): A QLineEdit widget for entering the content of the barcode label.
-        codding (QComboBox): A QComboBox widget for selecting the type of barcode to render.
+        label (QLineEdit): A QLineEdit widget for entering the content of the
+            barcode label.
+        codding (QComboBox): A QComboBox widget for selecting the type of barcode
+            to render.
     Signals:
-        content_changed(): Emitted when the content of the label or the selected barcode type changes.
+        content_changed(): Emitted when the content of the label or the selected
+            barcode type changes.
     Methods:
         __init__(self, render_engine, parent=None): Initializes the widget.
-        render_label(self): Renders the barcode label using the current content and barcode type.
+        render_label(self): Renders the barcode label using the current content
+            and barcode type.
     """
 
     def __init__(self, render_engine, parent=None):
@@ -278,7 +284,8 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         """
         Initializes the ImageDymoLabelWidget.
         Args:
-            render_engine (RenderEngine): The render engine to use for rendering the label.
+            render_engine (RenderEngine): The render engine to use for rendering
+                the label.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
         super().__init__(parent)
