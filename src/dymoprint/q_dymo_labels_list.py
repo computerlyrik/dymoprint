@@ -30,7 +30,7 @@ class QDymoLabelList(QListWidget):
     renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
 
     def __init__(self, render_engine, min_payload_len=0, justify="center", parent=None):
-        super(QDymoLabelList, self).__init__(parent)
+        super().__init__(parent)
         self.min_payload_len = min_payload_len
         self.justify = justify
         self.render_engine = render_engine

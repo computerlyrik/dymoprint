@@ -41,7 +41,7 @@ def getDeviceFile(classID, vendorID, productID):
     filepath = os.path.join(foundpath, "dev")
 
     # get the major and minor numbers
-    f = open(filepath, "r")
+    f = open(filepath)
     devnums = [int(n) for n in f.readline().strip().split(":")]
     f.close()
     devnum = os.makedev(devnums[0], devnums[1])
@@ -73,7 +73,7 @@ def access_error(dev):
     die(
         f"You probably want to add a rule like one of the following in /etc/udev/rules.d/{filename}"
     )
-    with open(filename, "r") as fin:
+    with open(filename) as fin:
         print(fin.read(), file=sys.stderr)
     die(
         "Following that, restart udev and re-plug your device. See README.md for details",

@@ -105,6 +105,6 @@ class BarcodeImageWriter(BaseWriter):
         return self._image
 
     def save(self, filename, output):
-        filename = "{0}.{1}".format(filename, self.format.lower())
+        filename = f"{filename}.{self.format.lower()}"
         output.save(filename, self.format.upper())
         return filename

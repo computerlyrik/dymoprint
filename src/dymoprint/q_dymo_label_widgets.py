@@ -68,7 +68,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     """
 
     def __init__(self, render_engine, parent=None):
-        super(TextDymoLabelWidget, self).__init__(parent)
+        super().__init__(parent)
         self.render_engine = render_engine
 
         self.label = QPlainTextEdit("text")
@@ -85,7 +85,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
 
         self.align.addItems(["left", "center", "right"])
 
-        for (name, font_path) in parse_fonts():
+        for name, font_path in parse_fonts():
             self.font_style.addItem(name, font_path)
             if "Regular" in name:
                 self.font_style.setCurrentText(name)
@@ -159,7 +159,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             render_engine (RenderEngine): The render engine to use for rendering the QR code.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
-        super(QrDymoLabelWidget, self).__init__(parent)
+        super().__init__(parent)
         self.render_engine = render_engine
 
         self.label = QLineEdit("")
@@ -208,7 +208,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     """
 
     def __init__(self, render_engine, parent=None):
-        super(BarcodeDymoLabelWidget, self).__init__(parent)
+        super().__init__(parent)
         self.render_engine = render_engine
 
         self.label = QLineEdit("")
@@ -281,7 +281,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render_engine (RenderEngine): The render engine to use for rendering the label.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
-        super(ImageDymoLabelWidget, self).__init__(parent)
+        super().__init__(parent)
         self.render_engine = render_engine
 
         self.label = QLineEdit("")

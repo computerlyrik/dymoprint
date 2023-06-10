@@ -159,7 +159,6 @@ class DymoRenderEngine:
         )
         text_bitmap = Image.new("1", (label_width, label_height))
         with draw_image(text_bitmap) as label_draw:
-
             # draw frame into empty image
             if frame_width:
                 label_draw.rectangle(
@@ -358,7 +357,7 @@ class DymoPrinterServer:
         # create dymo labeler object
         try:
             lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
-        except IOError:
+        except OSError:
             die(access_error(dev))
 
         print("Printing label..")
