@@ -65,21 +65,22 @@ def getDeviceFile(classID, vendorID, productID):
                 return filepath
 
 
-def access_error(dev):
-    die("You do not have sufficient access to the device file %s:" % dev, sys.stderr)
+def access_error(dev) -> NoReturn:
+    print(f"You do not have sufficient access to the device file {dev}")
     subprocess.call(["ls", "-l", dev], stdout=sys.stderr)
     print(file=sys.stderr)
     filename = "91-dymo-labelmanager-pnp.rules"
-    die(
+    print(
         f"You probably want to add a rule like "
         f"one of the following in /etc/udev/rules.d/{filename}"
     )
     with open(filename) as fin:
         print(fin.read(), file=sys.stderr)
-    die(
+    print(
         "Following that, restart udev and re-plug "
         "your device. See README.md for details",
     )
+    sys.exit(1)
 
 
 """ scaling pixel up, input: (x,y),scale-factor """

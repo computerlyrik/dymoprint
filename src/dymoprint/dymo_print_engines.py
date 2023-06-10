@@ -302,7 +302,10 @@ class DymoPrinterServer:
             dev = DEV_NODE
 
         if dev:
-            devout = open(dev, "rb+")
+            try:
+                devout = open(dev, "rb+")
+            except PermissionError:
+                access_error(dev)
             devin = devout
             # We are in the normal HID file mode, so no syn_wait is needed.
             syn_wait = None
@@ -361,7 +364,7 @@ class DymoPrinterServer:
         try:
             lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
         except OSError:
-            die(access_error(dev))
+            access_error(dev)
 
         print("Printing label..")
         lm.printLabel(label_matrix, margin=margin)
