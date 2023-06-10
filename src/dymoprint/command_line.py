@@ -12,7 +12,7 @@ import os
 from PIL import Image, ImageOps
 
 from . import __version__
-from .constants import USE_QR, e_qrcode
+from .constants import DEFAULT_MARGIN, USE_QR, e_qrcode
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .font_config import font_filename
 from .metadata import our_metadata
@@ -109,8 +109,9 @@ def parse_args():
         help="Printing the first text parameter as barcode",
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
+    assert DEFAULT_MARGIN == 56 * 2, "DEFAULT_MARGIN has changed; update the next line."
     parser.add_argument(
-        "-m", type=int, default=56 * 2, help="Override margin (default is 56*2)"
+        "-m", type=int, default=DEFAULT_MARGIN, help="Override margin (default is 56*2)"
     )
     parser.add_argument(
         "--scale", type=int, default=90, help="Scaling font factor, [0,10] [%%]"
