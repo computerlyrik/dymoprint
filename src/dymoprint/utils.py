@@ -7,14 +7,10 @@
 # === END LICENSE STATEMENT ===
 
 import contextlib
-import fcntl
 import os
 import re
-import struct
 import subprocess
 import sys
-import termios
-import textwrap
 from typing import NoReturn
 
 from PIL import ImageDraw
@@ -25,13 +21,6 @@ def die(message=None) -> NoReturn:
         print(message, file=sys.stderr)
         raise RuntimeError(message)
     sys.exit(1)
-
-
-def pprint(par, fd=sys.stdout):
-    rows, columns = struct.unpack(
-        "HH", fcntl.ioctl(sys.stderr, termios.TIOCGWINSZ, struct.pack("HH", 0, 0))
-    )
-    print(textwrap.fill(par, columns), file=fd)
 
 
 def getDeviceFile(classID, vendorID, productID):
