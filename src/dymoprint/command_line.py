@@ -110,7 +110,7 @@ def parse_args():
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument(
-        "-m", type=int, default=56, help="Override margin (default is 56*2)"
+        "-m", type=int, default=56 * 2, help="Override margin (default is 56*2)"
     )
     parser.add_argument(
         "--scale", type=int, default=90, help="Scaling font factor, [0,10] [%%]"
