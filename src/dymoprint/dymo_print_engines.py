@@ -69,7 +69,8 @@ class DymoRenderEngine:
 
         if not qr_scale:
             die(
-                "Error: too much information to store in the QR code, points are smaller than the device resolution"
+                "Error: too much information to store in the QR code, points "
+                "are smaller than the device resolution"
             )
 
         code_bitmap = Image.new("1", (label_width, label_height))
@@ -125,13 +126,15 @@ class DymoRenderEngine:
         align="left",
     ):
         """
-        Renders a text image from the input text, font file name, frame width, and font size ratio.
+        Renders a text image from the input text, font file name, frame width, and
+        font size ratio.
 
         Args:
             labeltext (list[str]): The input text to be rendered.
             font_file_name (str): The name of the font file to be used.
             frame_width (int): The width of the frame around the text.
-            font_size_ratio (float): The ratio of font size to line height. Default is 1.
+            font_size_ratio (float): The ratio of font size to line height. Default
+                is 1.
 
         Returns:
             Image: A text image.
@@ -159,7 +162,6 @@ class DymoRenderEngine:
         )
         text_bitmap = Image.new("1", (label_width, label_height))
         with draw_image(text_bitmap) as label_draw:
-
             # draw frame into empty image
             if frame_width:
                 label_draw.rectangle(
@@ -300,7 +302,10 @@ class DymoPrinterServer:
             dev = DEV_NODE
 
         if dev:
-            devout = open(dev, "rb+")
+            try:
+                devout = open(dev, "rb+")
+            except PermissionError:
+                access_error(dev)
             devin = devout
             # We are in the normal HID file mode, so no syn_wait is needed.
             syn_wait = None
@@ -358,8 +363,8 @@ class DymoPrinterServer:
         # create dymo labeler object
         try:
             lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
-        except IOError:
-            die(access_error(dev))
+        except OSError:
+            access_error(dev)
 
         print("Printing label..")
         lm.printLabel(label_matrix, margin=margin)

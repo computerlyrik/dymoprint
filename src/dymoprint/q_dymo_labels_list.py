@@ -20,17 +20,22 @@ class QDymoLabelList(QListWidget):
         renderSignal (QtCore.pyqtSignal): A signal emitted when the label is rendered.
         render_engine (RenderEngine): The render engine used for rendering the label.
     Methods:
-        __init__(self, render_engine, parent=None): Initializes the QListWidget with the given render engine and parent.
-        dropEvent(self, e) -> None: Overrides the default drop event to update the label rendering.
-        update_render_engine(self, render_engine): Updates the render engine used for rendering the label.
-        render_label(self): Renders the label using the current render engine and emits the renderSignal.
-        contextMenuEvent(self, event): Overrides the default context menu event to add or delete label widgets.
+        __init__(self, render_engine, parent=None): Initializes the QListWidget
+            with the given render engine and parent.
+        dropEvent(self, e) -> None: Overrides the default drop event to update
+            the label rendering.
+        update_render_engine(self, render_engine): Updates the render engine used
+            for rendering the label.
+        render_label(self): Renders the label using the current render engine and
+            emits the renderSignal.
+        contextMenuEvent(self, event): Overrides the default context menu event to
+            add or delete label widgets.
     """
 
     renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
 
     def __init__(self, render_engine, min_payload_len=0, justify="center", parent=None):
-        super(QDymoLabelList, self).__init__(parent)
+        super().__init__(parent)
         self.min_payload_len = min_payload_len
         self.justify = justify
         self.render_engine = render_engine

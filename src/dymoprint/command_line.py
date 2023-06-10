@@ -64,7 +64,10 @@ def parse_args():
             "right",
         ],
         default="center",
-        help="Justify content of label if minimum label length is specified (left,center,right)",
+        help=(
+            "Justify content of label if minimum label length "
+            "is specified (left,center,right)"
+        ),
     )
     parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
     parser.add_argument(

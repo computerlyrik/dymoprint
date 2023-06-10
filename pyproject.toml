@@ -7,6 +7,7 @@ build-backend = "setuptools.build_meta"
 version_scheme = "no-guess-dev"
 
 [tool.isort]
+src_paths = ["src"]
 profile = "black"
 
 [tool.tox]
