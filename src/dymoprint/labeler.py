@@ -8,7 +8,7 @@
 import array
 from typing import Optional
 
-from .constants import ESC, SYN
+from .constants import DEFAULT_MARGIN, ESC, SYN
 
 
 class DymoLabeler:
@@ -189,19 +189,16 @@ class DymoLabeler:
         response = self.sendCommand()
         print(response)
 
-    def printLabel(self, lines, margin=None):
+    def printLabel(self, lines, margin=DEFAULT_MARGIN):
         """Print the label described by lines. (Automatically split label if
         larger than maxLines)"""
-
-        if margin is None:
-            margin = 56 * 2
 
         while len(lines) > self.maxLines + 1:
             self.rawPrintLabel(lines[0 : self.maxLines], margin=0)
             del lines[0 : self.maxLines]
         self.rawPrintLabel(lines, margin=margin)
 
-    def rawPrintLabel(self, lines, margin=56 * 2):
+    def rawPrintLabel(self, lines, margin=DEFAULT_MARGIN):
         """Print the label described by lines. (HLF)"""
 
         # optimize the matrix for the dymo label printer
@@ -219,7 +216,7 @@ class DymoLabeler:
         for line in lines:
             self.line(line)
         if margin > 0:
-            self.skipLines(margin)
+            self.skipLines(margin * 2)
         self.statusRequest()
         response = self.sendCommand()
         print(f"Post-send response: {response}")

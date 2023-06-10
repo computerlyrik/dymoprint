@@ -22,6 +22,7 @@ from usb.core import USBError
 
 import dymoprint_fonts
 
+from .constants import DEFAULT_MARGIN
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -66,7 +67,7 @@ class DymoPrintWindow(QWidget):
 
         self.margin.setMinimum(20)
         self.margin.setMaximum(1000)
-        self.margin.setValue(56)
+        self.margin.setValue(DEFAULT_MARGIN)
         self.tape_size.addItem("12", 12)
         self.tape_size.addItem("9", 9)
         self.tape_size.addItem("6", 6)
@@ -158,7 +159,7 @@ class DymoPrintWindow(QWidget):
 
     def print_label(self):
         try:
-            self.print_server.print_label(self.label_bitmap, self.margin.value() * 2)
+            self.print_server.print_label(self.label_bitmap, self.margin.value())
         except RuntimeError as err:
             QMessageBox.warning(self, "Printing Failed!", f"{err}")
         except USBError as err:

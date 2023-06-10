@@ -11,6 +11,7 @@ from PIL import Image, ImageFont, ImageOps
 from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
 from .constants import (
+    DEFAULT_MARGIN,
     DEV_CLASS,
     DEV_LM280_CLASS,
     DEV_LM280_PRODUCT,
@@ -263,13 +264,13 @@ class DymoRenderEngine:
 
 class DymoPrinterServer:
     @staticmethod
-    def print_label(label_bitmap, margin=56 * 2, tape_size: int = 12):
+    def print_label(label_bitmap, margin=DEFAULT_MARGIN, tape_size: int = 12):
         """
         Prints a label using a Dymo labeler object.
 
         :param label_bitmap: The image to be printed as a label.
         :type label_bitmap: Image
-        :param margin: The margin size in dots. Default is 56.
+        :param margin: The margin size in dots.
         :type margin: int, optional
         :param tape_size: The size of the tape in millimeters. Default is 12.
         :type tape_size: int, optional
