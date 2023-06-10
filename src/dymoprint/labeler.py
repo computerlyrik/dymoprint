@@ -216,7 +216,7 @@ class DymoLabeler:
         for line in lines:
             self.line(line)
         if margin > 0:
-            self.skipLines(margin)
+            self.skipLines(margin * 2)
         self.statusRequest()
         response = self.sendCommand()
         print(f"Post-send response: {response}")
