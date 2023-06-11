@@ -4,7 +4,6 @@ import array
 import math
 import os
 import platform
-from pathlib import Path
 from typing import NoReturn
 
 import barcode as barcode_module
@@ -23,6 +22,8 @@ from .constants import (
     QRCode,
 )
 from .utils import die, draw_image, scaling
+
+GITHUB_LINK = "<https://github.com/computerlyrik/dymoprint/pull/56>"
 
 
 def device_info(dev: usb.core.Device) -> str:
@@ -49,13 +50,45 @@ def device_info(dev: usb.core.Device) -> str:
 
 
 def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:
-    # detect whether we are in arch linux or ubuntu linux
-    if Path("/etc/arch-release").exists():
-        restart_udev_command = "sudo udevadm control --reload"
-    elif Path("/etc/lsb-release").exists():
-        restart_udev_command = "sudo systemctl restart udev.service"
+    system = platform.system()
+    if system == "Linux":
+        instruct_on_access_denied_linux(dev)
+    elif system == "Windows":
+        raise RuntimeError(
+            "Couldn't access the device. Please make sure that the "
+            "device driver is set to WinUSB. This can be accomplished "
+            "with Zadig <https://zadig.akeo.ie/>."
+        )
+    elif system == "Darwin":
+        raise RuntimeError(
+            f"Could not access {dev}. Thanks for bravely trying this on a Mac. You "
+            f"are in uncharted territory. It would be appreciated if you share the "
+            f"results of your experimentation at {GITHUB_LINK}."
+        )
     else:
-        restart_udev_command = None
+        raise RuntimeError(f"Unknown platform {system}")
+
+
+def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
+    # try:
+    #     os_release = platform.freedesktop_os_release()
+    # except OSError:
+    #     os_release = {}
+    # dists_with_empties = [os_release.get("ID", "")] + os_release.get(
+    #     "ID_LIKE", ""
+    # ).split(" ")
+    # dists = [dist for dist in dists_with_empties if dist]
+    # if "arch" in dists:
+    #     restart_udev_command = "sudo udevadm control --reload"
+    # elif "ubuntu" in dists or "debian" in dists:
+    #     restart_udev_command = "sudo systemctl restart udev.service"
+    # # detect whether we are in arch linux or ubuntu linux
+    # if Path("/etc/arch-release").exists():
+    #     restart_udev_command = "sudo udevadm control --reload"
+    # elif Path("/etc/lsb-release").exists():
+    #     restart_udev_command = "sudo systemctl restart udev.service"
+    # else:
+    #     restart_udev_command = None
 
     lines = []
     lines.append(
@@ -64,35 +97,40 @@ def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:
         "/etc/udev/rules.d with the following command:"
     )
     lines.append("")
+    udev_rule = ", ".join(
+        [
+            'ACTION=="add"',
+            'SUBSYSTEMS=="usb"',
+            f'ATTRS{{idVendor}}=="{dev.idVendor:04x}"',
+            f'ATTRS{{idProduct}}=="{dev.idProduct:04x}"',
+            'MODE="0660"',
+            'GROUP="plugdev"',
+            'TAG+="uaccess"',
+        ]
+    )
     lines.append(
-        f"echo '"
-        f'ACTION=="add", '
-        f'SUBSYSTEMS=="usb", '
-        f'ATTRS{{idVendor}}=="{dev.idVendor:04x}", '
-        f'ATTRS{{idProduct}}=="{dev.idProduct:04x}", '
-        f'MODE="0660" '
-        f'GROUP="plugdev"'
-        f"' | sudo tee /etc/udev/rules.d/91-dymo-{dev.idProduct:x}.rules"
+        f"  echo '{udev_rule}' "
+        f"| sudo tee /etc/udev/rules.d/91-dymo-{dev.idProduct:x}.rules"
     )
     lines.append("")
+    lines.append("Next refresh udev with:")
+    lines.append("")
+    lines.append("  sudo udevadm control --reload-rules")
+    lines.append('  sudo udevadm trigger --attr-match=idVendor="0922"')
+    lines.append("")
     lines.append(
-        "Following that, turn your device off and back "
+        "Finally, turn your device off and back "
         "on again to activate the new permissions."
     )
     lines.append("")
     lines.append(
-        "If this still does not resolve the problem, you might try restarting "
-        "the udev service, even though it should not be necessary. "
-        "In case restarting udev is necessary, please report this at "
-        "<https://github.com/computerlyrik/dymoprint/pull/56>. "
-        "If this does not resolve your problem, please report this also at "
-        "that link."
+        f"If this still does not resolve the problem, you might need to reboot. "
+        f"In case rebooting is necessary, please report this at {GITHUB_LINK}. "
+        f"We are still trying to figure out a simple procedure which works "
+        f"for everyone. In case you still cannot connect, "
+        f"or if you have any information or ideas, please post them at "
+        f"that link."
     )
-    if restart_udev_command:
-        lines.append("")
-        lines.append("Restart udev command:")
-        lines.append("")
-        lines.append(f"{restart_udev_command}")
     raise RuntimeError("\n\n" + "\n".join(lines) + "\n")
 
 
