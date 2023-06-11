@@ -418,10 +418,10 @@ class DymoPrinterServer:
             intf = usb.util.find_descriptor(
                 dev.get_active_configuration(), bInterfaceClass=HID_INTERFACE_CLASS
             )
-        if intf is not None:
-            print(f"Opened HID interface: {repr(intf)}")
-        else:
-            die("Could not open a valid interface.")
+            if intf is not None:
+                print(f"Opened HID interface: {repr(intf)}")
+            else:
+                die("Could not open a valid interface.")
         assert isinstance(intf, usb.core.Interface)
 
         try:
