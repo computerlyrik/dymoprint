@@ -36,12 +36,12 @@ def device_info(dev: usb.core.Device) -> str:
     res += f"  serial: {dev.serial_number}\n"
     configs = dev.configurations()
     if configs:
-        res += f"  configurations:\n"
+        res += "  configurations:\n"
         for cfg in configs:
             res += f"  - {repr(cfg)}\n"
             intfs = cfg.interfaces()
             if intfs:
-                res += f"    interfaces:\n"
+                res += "    interfaces:\n"
                 for intf in intfs:
                     res += f"    - {repr(intf)}\n"
     return res
@@ -58,7 +58,7 @@ def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:
 
     lines = []
     lines.append(
-        f"You do not have sufficient access to the "
+        "You do not have sufficient access to the "
         "device. You probably want to add the a udev rule in "
         "/etc/udev/rules.d with the following command:"
     )
@@ -374,14 +374,15 @@ class DymoPrinterServer:
             print(f"No Dymo devices found (expected vendor {hex(DEV_VENDOR)})")
             for dev in usb.core.find(find_all=True):
                 print(
-                    f"- Vendor ID: {hex(dev.idVendor):6}  Product ID: {hex(dev.idProduct)}"
+                    f"- Vendor ID: {hex(dev.idVendor):6}  "
+                    f"Product ID: {hex(dev.idProduct)}"
                 )
             die("Unable to open device.")
         if len(dymo_devs) > 1:
-            print(f"Found multiple Dymo devices:")
+            print("Found multiple Dymo devices:")
             for dev in dymo_devs:
                 print(device_info(dev))
-            print(f"Using first device.")
+            print("Using first device.")
             dev = dymo_devs[0]
         else:
             dev = dymo_devs[0]
@@ -394,16 +395,16 @@ class DymoPrinterServer:
 
         try:
             dev.get_active_configuration()
-            print(f"Active device configuration already found.")
-        except usb.core.USBError as e:
+            print("Active device configuration already found.")
+        except usb.core.USBError:
             try:
                 dev.set_configuration()
-                print(f"Device configuration set.")
+                print("Device configuration set.")
             except usb.core.USBError as e:
                 if e.errno == 13:
                     raise RuntimeError("Access denied")
                 if e.errno == 16:
-                    print(f"Device is busy, but this is okay.")
+                    print("Device is busy, but this is okay.")
                 else:
                     raise
 

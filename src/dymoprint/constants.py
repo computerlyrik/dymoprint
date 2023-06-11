@@ -33,12 +33,12 @@ UNCONFIRMED_MESSAGE = (
     "report your experiences in https://github.com/computerlyrik/dymoprint/issues/44"
 )
 SUPPORTED_PRODUCTS = {
-    0x1001: f"LabelManager PnP (no mode switch)",
-    0x1002: f"LabelManager PnP (mode switch)",
+    0x1001: "LabelManager PnP (no mode switch)",
+    0x1002: "LabelManager PnP (mode switch)",
     0x1003: f"LabelManager 420P (no mode switch) {UNCONFIRMED_MESSAGE}",
     0x1004: f"LabelManager 420P (mode switch) {UNCONFIRMED_MESSAGE}",
-    0x1005: f"LabelManager 280 (no mode switch)",
-    0x1006: f"LabelManager 280 (no mode switch)",
+    0x1005: "LabelManager 280 (no mode switch)",
+    0x1006: "LabelManager 280 (no mode switch)",
     0x1007: f"LabelManager Wireless PnP (no mode switch) {UNCONFIRMED_MESSAGE}",
     0x1008: f"LabelManager Wireless PnP (mode switch) {UNCONFIRMED_MESSAGE}",
     0x1009: f"MobileLabeler {UNCONFIRMED_MESSAGE}",
