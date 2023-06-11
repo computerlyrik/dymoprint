@@ -3,6 +3,7 @@ from __future__ import annotations
 import array
 import math
 import os
+import platform
 from pathlib import Path
 from typing import NoReturn
 
@@ -423,9 +424,12 @@ class DymoPrinterServer:
             die("Could not open a valid interface.")
         assert isinstance(intf, usb.core.Interface)
 
-        if dev.is_kernel_driver_active(intf.bInterfaceNumber):
-            print(f"Detaching kernel driver from interface {intf.bInterfaceNumber}")
-            dev.detach_kernel_driver(intf.bInterfaceNumber)
+        try:
+            if dev.is_kernel_driver_active(intf.bInterfaceNumber):
+                print(f"Detaching kernel driver from interface {intf.bInterfaceNumber}")
+                dev.detach_kernel_driver(intf.bInterfaceNumber)
+        except NotImplementedError:
+            print(f"Kernel driver detaching not necessary on " f"{platform.system()}.")
         devout = usb.util.find_descriptor(
             intf,
             custom_match=(
