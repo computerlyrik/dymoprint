@@ -11,17 +11,21 @@ Linux Software to print with LabelManager PnP from Dymo
 
 ## Features
 
-* Works on python 3.7 and up
-* Supports text printing
-* Supports qr code printing
-* Supports barcode printing
-* Supports image printing
-* Supports combined barcode / qrcode and text printing
-* GUI Application based on PyQt6 - expanded combinations
+* Text printing
+* QR code printing
+* Barcode printing
+* Image printing
+* Combinations of the above
+* GUI Application based on PyQt6
 
-## HELP WANTED
+### Experimental
 
-Test the latest [experimental version](https://github.com/computerlyrik/dymoprint/pull/56) and report back if it works for you.
+* LabelManager 280
+* LabelManager 420P
+* LabelManager Wireless PnP
+* Windows support by setting the driver to WinUSB using [Zadig](https://zadig.akeo.ie/)
+
+For more information about experimental device support, see [#44](https://github.com/computerlyrik/dymoprint/issues/44).
 
 ## Installation
 
@@ -43,7 +47,20 @@ or on Arch with
 sudo pacman -S python-pipx
 ```
 
-## Experimental features
+By default, users don't have permission to access generic USB devices, so you will
+need to add a rule. The first time you run `dymoprint`, it will give instructions
+about how to do this:
+
+```bash
+$ dymoprint "Hello world"
+...
+You do not have sufficient access to the device. You probably want to add the a udev rule in /etc/udev/rules.d with the following command:
+
+  echo 'ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1001", MODE="0666"' | sudo tee /etc/udev/rules.d/91-dymo-1001.rules
+...
+```
+
+## Testing experimental features
 
 To install a test branch, by user `ghuser` for the branch `branchname`, run
 
@@ -73,69 +90,6 @@ After installing the `pre-commit` executable, please run
 ```bash
 pre-commit install
 ```
-
-## Configuration
-
-### For ubuntu based distributions
-
-Use **udev** and **modeswitch** configurations to work with the LabelManager PNP.
-**modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
-
-```bash
-sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
-```
-
-and restart services with:
-
-```bash
-sudo systemctl restart udev.service
-```
-
-Finally, physically disconnect and reconnect the LabelManager PnP.
-
-([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
-
-### For arch based distributions
-
-(should also work for manjaro, but not tested yet)
-use **udev** and **modeswitch** configurations to work with the LabelManager PNP.
-**modeswitch** changes the mode (and USB Id) from mass storage device to printer device.
-
-Install **usb_modeswitch** at first:
-
-```bash
-sudo pacman -S usb_modeswitch
-```
-
-if the **/etc/usb_modeswitch.d/** folder was not created at installation do:
-
-```bash
-sudo mkdir /etc/usb_modeswitch.d/
-````
-
-now copy the udev and usb_modswitch configs:
-
-```bash
-sudo cp 91-dymo-labelmanager-pnp.rules /etc/udev/rules.d/
-sudo cp dymo-labelmanager-pnp.conf /etc/usb_modeswitch.d/
-```
-
-and restart services with:
-
-```bash
-sudo udevadm control --reload
-```
-
-you might need to change the permissions of the hid device (dymoprint will tell if it is the case):
-
-```bash
-sudo chown your_user:users /dev/hidraw0
-```
-
-Finally, physically disconnect and reconnect the LabelManager PnP.
-
-([more info](http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=947))
 
 ## Font management
 
@@ -247,7 +201,7 @@ dymoprint -c code128 Test "bc_txt"
 
 ### ToDo
 
-* (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
+* ~~(?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?~~
 * ~~put everything in classes that would need to be used by a GUI~~
 * ~~for more options use command line parser framework~~
 * ~~allow selection of font with command line options~~
@@ -258,3 +212,6 @@ dymoprint -c code128 Test "bc_txt"
 * ~~print graphics~~
 * ~~plot frame around label~~
 * vertical print
+* refactor code with better abstractions
+* pixel fonts
+* web interface

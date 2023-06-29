@@ -8,6 +8,8 @@
 import array
 from typing import Optional
 
+import usb
+
 from .constants import DEFAULT_MARGIN, ESC, SYN
 
 
@@ -37,6 +39,8 @@ class DymoLabeler:
     # (1000) and the transfer speeds available in the descriptors somewhere, a
     # sensible timeout can also be calculated dynamically.
     synwait: Optional[int]
+    devout: usb.core.Endpoint
+    devin: usb.core.Endpoint
 
     def __init__(self, devout, devin, synwait=None, tape_size=12):
         """Initialize the LabelManager object. (HLF)"""

@@ -7,9 +7,6 @@
 # === END LICENSE STATEMENT ===
 
 import contextlib
-import os
-import re
-import subprocess
 import sys
 from typing import NoReturn
 
@@ -20,66 +17,6 @@ def die(message=None) -> NoReturn:
     if message:
         print(message, file=sys.stderr)
         raise RuntimeError(message)
-    sys.exit(1)
-
-
-def getDeviceFile(classID, vendorID, productID):
-    # find file containing the device's major and minor numbers
-    searchdir = "/sys/bus/hid/devices"
-    pattern = "^%04d:%04X:%04X.[0-9A-F]{4}$" % (classID, vendorID, productID)
-    deviceCandidates = os.listdir(searchdir)
-    foundpath = None
-    for devname in deviceCandidates:
-        if re.match(pattern, devname):
-            foundpath = os.path.join(searchdir, devname)
-            break
-    if not foundpath:
-        return
-    searchdir = os.path.join(foundpath, "hidraw")
-    devname = os.listdir(searchdir)[0]
-    foundpath = os.path.join(searchdir, devname)
-    filepath = os.path.join(foundpath, "dev")
-
-    # get the major and minor numbers
-    f = open(filepath)
-    devnums = [int(n) for n in f.readline().strip().split(":")]
-    f.close()
-    devnum = os.makedev(devnums[0], devnums[1])
-
-    # check if a symlink with the major and minor numbers is available
-    filepath = "/dev/char/%d:%d" % (devnums[0], devnums[1])
-    if os.path.exists(filepath):
-        return os.path.realpath(filepath)
-
-    # check if the relevant sysfs path component matches a file name in
-    # /dev, that has the proper major and minor numbers
-    filepath = os.path.join("/dev", devname)
-    if os.stat(filepath).st_rdev == devnum:
-        return filepath
-
-    # search for a device file with the proper major and minor numbers
-    for dirpath, dirnames, filenames in os.walk("/dev"):
-        for filename in filenames:
-            filepath = os.path.join(dirpath, filename)
-            if os.stat(filepath).st_rdev == devnum:
-                return filepath
-
-
-def access_error(dev) -> NoReturn:
-    print(f"You do not have sufficient access to the device file {dev}")
-    subprocess.call(["ls", "-l", dev], stdout=sys.stderr)
-    print(file=sys.stderr)
-    filename = "91-dymo-labelmanager-pnp.rules"
-    print(
-        f"You probably want to add a rule like "
-        f"one of the following in /etc/udev/rules.d/{filename}"
-    )
-    with open(filename) as fin:
-        print(fin.read(), file=sys.stderr)
-    print(
-        "Following that, restart udev and re-plug "
-        "your device. See README.md for details",
-    )
     sys.exit(1)
 
 
