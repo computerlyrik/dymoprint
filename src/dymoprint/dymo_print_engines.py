@@ -103,9 +103,7 @@ def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
             'SUBSYSTEMS=="usb"',
             f'ATTRS{{idVendor}}=="{dev.idVendor:04x}"',
             f'ATTRS{{idProduct}}=="{dev.idProduct:04x}"',
-            'MODE="0660"',
-            'GROUP="plugdev"',
-            'TAG+="uaccess"',
+            'MODE="0666"',
         ]
     )
     lines.append(
