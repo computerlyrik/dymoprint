@@ -11,13 +11,21 @@ Linux Software to print with LabelManager PnP from Dymo
 
 ## Features
 
-* Works on python 3.7 and up
-* Supports text printing
-* Supports qr code printing
-* Supports barcode printing
-* Supports image printing
-* Supports combined barcode / qrcode and text printing
-* GUI Application based on PyQt6 - expanded combinations
+* Text printing
+* QR code printing
+* Barcode printing
+* Image printing
+* Combinations of the above
+* GUI Application based on PyQt6
+
+### Experimental
+
+* LabelManager 280
+* LabelManager 420P
+* LabelManager Wireless PnP
+* Windows support by setting the driver to WinUSB using [Zadig](https://zadig.akeo.ie/)
+
+For more information about experimental device support, see [#44](https://github.com/computerlyrik/dymoprint/issues/44).
 
 ## Installation
 
@@ -52,7 +60,7 @@ You do not have sufficient access to the device. You probably want to add the a 
 ...
 ```
 
-## Experimental features
+## Testing experimental features
 
 To install a test branch, by user `ghuser` for the branch `branchname`, run
 
@@ -193,7 +201,7 @@ dymoprint -c code128 Test "bc_txt"
 
 ### ToDo
 
-* (?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?
+* ~~(?)support multiple ProductIDs (1001, 1002) -> use usb-modeswitch?~~
 * ~~put everything in classes that would need to be used by a GUI~~
 * ~~for more options use command line parser framework~~
 * ~~allow selection of font with command line options~~
@@ -204,3 +212,6 @@ dymoprint -c code128 Test "bc_txt"
 * ~~print graphics~~
 * ~~plot frame around label~~
 * vertical print
+* refactor code with better abstractions
+* pixel fonts
+* web interface
