@@ -265,9 +265,9 @@ class DymoRenderEngine:
             frame_width = min(frame_width, 3)
 
         font = ImageFont.truetype(font_file_name, fontsize)
-        label_width = max(font.getsize(line)[0] for line in labeltext) + (
-            font_offset * 2
-        )
+        boxes = (font.getbbox(line) for line in labeltext)
+        line_widths = (right - left for left, _, right, _ in boxes)
+        label_width = max(line_widths) + (font_offset * 2)
         text_bitmap = Image.new("1", (label_width, label_height))
         with draw_image(text_bitmap) as label_draw:
             # draw frame into empty image
