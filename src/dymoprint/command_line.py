@@ -192,4 +192,4 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
     else:
-        print_server.print_label(label_bitmap, margin=args.m)
+        print_server.print_label(label_bitmap, margin=args.m, tape_size=args.t)
