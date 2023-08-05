@@ -20,6 +20,7 @@ Linux Software to print with LabelManager PnP from Dymo
 
 ### Experimental
 
+* LabelPoint 350
 * LabelManager 280
 * LabelManager 420P
 * LabelManager Wireless PnP

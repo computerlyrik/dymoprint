@@ -124,9 +124,9 @@ def parse_args():
     parser.add_argument(
         "-t",
         type=int,
-        choices=[6, 9, 12],
+        choices=[6, 9, 12, 19],
         default=12,
-        help="Tape size: 6,9,12 mm, default=12mm",
+        help="Tape size: 6,9,12,19 mm, default=12mm",
     )
     return parser.parse_args()
 
@@ -192,4 +192,4 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
     else:
-        print_server.print_label(label_bitmap, margin=args.m)
+        print_server.print_label(label_bitmap, margin=args.m, tape_size=args.t)
