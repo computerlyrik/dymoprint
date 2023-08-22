@@ -53,10 +53,30 @@ def parse_args():
         default="left",
         help="Align multiline text (left,center,right)",
     )
-    parser.add_argument(
-        "-l", type=int, default=0, help="Specify minimum label length in mm"
+
+    length_options = parser.add_argument_group("Length options")
+
+    length_options.add_argument(
+        "-l",
+        "--min-length",
+        type=int,
+        default=0,
+        help="Specify minimum label length in mm",
     )
-    parser.add_argument(
+    length_options.add_argument(
+        "--max-length",
+        type=int,
+        default=None,
+        help="Specify maximum label length in mm, error if the label won't fit",
+    )
+    length_options.add_argument(
+        "--fixed-length",
+        type=int,
+        default=None,
+        help="Specify fixed label length in mm, error if the label won't fit",
+    )
+
+    length_options.add_argument(
         "-j",
         choices=[
             "left",
@@ -65,8 +85,8 @@ def parse_args():
         ],
         default="center",
         help=(
-            "Justify content of label if minimum label length "
-            "is specified (left,center,right)"
+            "Justify content of label if label content is less than the "
+            "minimum or fixed length (left, center, right)"
         ),
     )
     parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
@@ -131,6 +151,14 @@ def parse_args():
     return parser.parse_args()
 
 
+def mm_to_payload(mm, margin):
+    """Convert a length in mm to a number of pixels of payload
+
+    The print resolution is 7 pixels/mm, and margin is subtracted
+    from each side."""
+    return (mm * 7) - margin * 2
+
+
 def main():
     args = parse_args()
     print_server = DymoPrinterServer()
@@ -154,6 +182,14 @@ def main():
     if args.c and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
 
+    if args.fixed_length is not None and (
+        args.min_length != 0 or args.max_length is not None
+    ):
+        die("Error: can't specify min/max and fixed length at the same time")
+
+    if args.max_length is not None and args.max_length < args.min_length:
+        die("Error: maximum length is less than minimum length")
+
     bitmaps = []
 
     if args.qr:
@@ -174,9 +210,24 @@ def main():
 
     margin = args.m
     justify = args.j
-    min_label_mm_len: int = args.l
-    min_payload_len = max(0, (min_label_mm_len * 7) - margin * 2)
-    label_bitmap = render_engine.merge_render(bitmaps, min_payload_len, justify)
+
+    if args.fixed_length is not None:
+        min_label_mm_len = args.fixed_length
+        max_label_mm_len = args.fixed_length
+    else:
+        min_label_mm_len = args.min_length
+        max_label_mm_len = args.max_length
+
+    min_payload_len = max(0, mm_to_payload(min_label_mm_len, margin))
+    max_payload_len = (
+        mm_to_payload(max_label_mm_len, margin)
+        if max_label_mm_len is not None
+        else None
+    )
+
+    label_bitmap = render_engine.merge_render(
+        bitmaps, min_payload_len, max_payload_len, justify
+    )
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick:
