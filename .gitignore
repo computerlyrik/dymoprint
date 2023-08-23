@@ -79,3 +79,6 @@ MANIFEST
 # Per-project virtualenvs
 .venv*/
 .conda*/
+
+# setuptools_scm
+src/dymoprint/_version.py
