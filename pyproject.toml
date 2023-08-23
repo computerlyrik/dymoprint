@@ -1,10 +1,64 @@
 [build-system]
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "hatchling >=1.11.1,<2.0.0",
+    "hatch-vcs >=0.3.0,<0.4",
+]
+build-backend = "hatchling.build"
 
-[tool.setuptools_scm]
+[project]
+name = "dymoprint"
+description = "Linux Software to print with LabelManager PnP from Dymo"
+readme = "README.md"
+url = "https://github.com/computerlyrik/dymoprint"
+authors = [{name = "Sebastian J. Bronner", email = "waschtl@sbronner.com"}]
+maintainers = [{name = "Ben Mares", email = "services-dymoprint@tensorial.com"}]
+license = "Apache-2.0"
+license-file = "LICENSE"
+dependencies = [
+    "importlib-metadata; python_version<'3.8'",
+    "appdirs",
+    "Pillow>=8.1.2,<11",
+    "PyQRCode>=1.2.1,<2",
+    "python-barcode>=0.13.1,<1",
+    "pyusb",
+    "PyQt6",
+    "PyQt6-tools",
+]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Printing"
+]
+dynamic = ["version"]
+requires-python = ">=3.7,<4"
+
+[project.urls]
+Homepage = "https://github.com/computerlyrik/dymoprint"
+source = "https://github.com/computerlyrik/dymoprint"
+tracker = "https://github.com/computerlyrik/dymoprint/issues"
+
+[project.scripts]
+dymoprint = "dymoprint.command_line:main"
+dymoprint_gui = "dymoprint.gui:main"
+
+[tool.hatch.version]
+source = "vcs"
 # See configuration details in https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+raw-options = {version_scheme = "no-guess-dev"}
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/dymoprint/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/dymoprint",
+    "src/dymoprint_fonts",
+]
 
 [tool.isort]
 src_paths = ["src"]
