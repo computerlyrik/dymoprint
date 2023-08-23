@@ -12,7 +12,7 @@ import os
 from PIL import Image, ImageOps
 
 from . import __version__
-from .constants import DEFAULT_MARGIN, USE_QR, e_qrcode
+from .constants import DEFAULT_MARGIN, PIXELS_PER_MM, USE_QR, e_qrcode
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .font_config import font_filename
 from .metadata import our_metadata
@@ -151,12 +151,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def mm_to_payload(mm, margin):
+def mm_to_payload_px(mm, margin):
     """Convert a length in mm to a number of pixels of payload
 
     The print resolution is 7 pixels/mm, and margin is subtracted
     from each side."""
-    return (mm * 7) - margin * 2
+    return (mm * PIXELS_PER_MM) - margin * 2
 
 
 def main():
@@ -218,15 +218,15 @@ def main():
         min_label_mm_len = args.min_length
         max_label_mm_len = args.max_length
 
-    min_payload_len = max(0, mm_to_payload(min_label_mm_len, margin))
-    max_payload_len = (
-        mm_to_payload(max_label_mm_len, margin)
+    min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
+    max_payload_len_px = (
+        mm_to_payload_px(max_label_mm_len, margin)
         if max_label_mm_len is not None
         else None
     )
 
     label_bitmap = render_engine.merge_render(
-        bitmaps, min_payload_len, max_payload_len, justify
+        bitmaps, min_payload_len_px, max_payload_len_px, justify
     )
 
     # print or show the label

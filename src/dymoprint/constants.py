@@ -67,3 +67,5 @@ FLAG_TO_STYLE = {
     "i": "italic",
     "n": "narrow",
 }
+
+PIXELS_PER_MM = 7
