@@ -131,8 +131,8 @@ class DymoPrintWindow(QWidget):
         self.render_engine = DymoRenderEngine(self.tape_size.currentData())
         justify = self.justify.currentText()
         min_label_mm_len: int = self.min_label_len.value()
-        min_payload_len = max(0, (min_label_mm_len * 7) - self.margin.value() * 2)
-        self.list.update_params(self.render_engine, min_payload_len, justify)
+        min_payload_len_px = max(0, (min_label_mm_len * 7) - self.margin.value() * 2)
+        self.list.update_params(self.render_engine, min_payload_len_px, justify)
 
     def update_label_render(self, label_bitmap):
         self.label_bitmap = label_bitmap

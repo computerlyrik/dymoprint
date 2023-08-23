@@ -226,7 +226,10 @@ def main():
     )
 
     label_bitmap = render_engine.merge_render(
-        bitmaps, min_payload_len_px, max_payload_len_px, justify
+        bitmaps=bitmaps,
+        min_payload_len_px=min_payload_len_px,
+        max_payload_len_px=max_payload_len_px,
+        justify=justify,
     )
 
     # print or show the label
