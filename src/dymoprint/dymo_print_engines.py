@@ -327,7 +327,12 @@ class DymoRenderEngine:
         return Image.new("1", (1, label_height))
 
     def merge_render(
-        self, bitmaps, min_payload_len=0, max_payload_len=None, justify="center"
+        self,
+        *,
+        bitmaps,
+        min_payload_len_px=0,
+        max_payload_len_px=None,
+        justify="center",
     ):
         """
         Merges multiple images into a single image.
@@ -352,12 +357,12 @@ class DymoRenderEngine:
                 label_bitmap.paste(bitmap, box=(offset, 0))
                 offset += bitmap.width + padding
         elif len(bitmaps) == 0:
-            label_bitmap = self.render_empty(max(min_payload_len, 1))
+            label_bitmap = self.render_empty(max(min_payload_len_px, 1))
         else:
             label_bitmap = bitmaps[0]
 
-        if max_payload_len is not None and label_bitmap.width > max_payload_len:
-            excess_px = label_bitmap.width - max_payload_len
+        if max_payload_len_px is not None and label_bitmap.width > max_payload_len_px:
+            excess_px = label_bitmap.width - max_payload_len_px
             excess_mm = excess_px / PIXELS_PER_MM
             # Round up to nearest 0.1mm
             excess_mm = math.ceil(excess_mm * 10) / 10
@@ -366,16 +371,16 @@ class DymoRenderEngine:
                 f"exceeds allowed length of {excess_mm:.1f} mm."
             )
 
-        if min_payload_len > label_bitmap.width:
+        if min_payload_len_px > label_bitmap.width:
             offset = 0
             if justify == "center":
-                offset = max(0, int((min_payload_len - label_bitmap.width) / 2))
+                offset = max(0, int((min_payload_len_px - label_bitmap.width) / 2))
             if justify == "right":
-                offset = max(0, int(min_payload_len - label_bitmap.width))
+                offset = max(0, int(min_payload_len_px - label_bitmap.width))
             out_label_bitmap = Image.new(
                 "1",
                 (
-                    min_payload_len,
+                    min_payload_len_px,
                     label_bitmap.height,
                 ),
             )

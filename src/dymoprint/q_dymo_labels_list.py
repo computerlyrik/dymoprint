@@ -34,9 +34,11 @@ class QDymoLabelList(QListWidget):
 
     renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
 
-    def __init__(self, render_engine, min_payload_len=0, justify="center", parent=None):
+    def __init__(
+        self, render_engine, min_payload_len_px=0, justify="center", parent=None
+    ):
         super().__init__(parent)
-        self.min_payload_len = min_payload_len
+        self.min_payload_len_px = min_payload_len_px
         self.justify = justify
         self.render_engine = render_engine
         self.setAlternatingRowColors(True)
@@ -58,15 +60,15 @@ class QDymoLabelList(QListWidget):
         super().dropEvent(e)
         self.render_label()
 
-    def update_params(self, render_engine, min_payload_len=0, justify="center"):
+    def update_params(self, render_engine, min_payload_len_px=0, justify="center"):
         """
         Updates the render engine used for rendering the label.
         Args:
             justify: justification [center,left,right]
-            min_payload_len: minimum payload size
+            min_payload_len_px: minimum payload size
             render_engine (RenderEngine): The new render engine to use.
         """
-        self.min_payload_len = min_payload_len
+        self.min_payload_len_px = min_payload_len_px
         self.justify = justify
         self.render_engine = render_engine
         for i in range(self.count()):
@@ -86,7 +88,10 @@ class QDymoLabelList(QListWidget):
                 item.setSizeHint(item_widget.sizeHint())
                 bitmaps.append(item_widget.render_label())
         label_bitmap = self.render_engine.merge_render(
-            bitmaps, self.min_payload_len, self.justify
+            bitmaps=bitmaps,
+            min_payload_len_px=self.min_payload_len_px,
+            max_payload_len_px=None,
+            justify=self.justify,
         )
 
         self.renderSignal.emit(label_bitmap)
