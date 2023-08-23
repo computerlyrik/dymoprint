@@ -16,6 +16,7 @@ from .constants import (
     DEFAULT_MARGIN,
     DEV_VENDOR,
     HID_INTERFACE_CLASS,
+    PIXELS_PER_MM,
     PRINTER_INTERFACE_CLASS,
     SUPPORTED_PRODUCTS,
     UNCONFIRMED_MESSAGE,
@@ -356,7 +357,14 @@ class DymoRenderEngine:
             label_bitmap = bitmaps[0]
 
         if max_payload_len is not None and label_bitmap.width > max_payload_len:
-            die("Error: Label exceeds fixed length")
+            excess_px = label_bitmap.width - max_payload_len
+            excess_mm = excess_px / PIXELS_PER_MM
+            # Round up to nearest 0.1mm
+            excess_mm = math.ceil(excess_mm * 10) / 10
+            die(
+                f"Error: Label exceeds allowed length by "
+                f"exceeds allowed length of {excess_mm:.1f} mm."
+            )
 
         if min_payload_len > label_bitmap.width:
             offset = 0
