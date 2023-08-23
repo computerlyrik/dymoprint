@@ -325,7 +325,9 @@ class DymoRenderEngine:
         label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
         return Image.new("1", (1, label_height))
 
-    def merge_render(self, bitmaps, min_payload_len=0, justify="center"):
+    def merge_render(
+        self, bitmaps, min_payload_len=0, max_payload_len=None, justify="center"
+    ):
         """
         Merges multiple images into a single image.
 
@@ -352,6 +354,9 @@ class DymoRenderEngine:
             label_bitmap = self.render_empty(max(min_payload_len, 1))
         else:
             label_bitmap = bitmaps[0]
+
+        if max_payload_len is not None and label_bitmap.width > max_payload_len:
+            die("Error: Label exceeds fixed length")
 
         if min_payload_len > label_bitmap.width:
             offset = 0
