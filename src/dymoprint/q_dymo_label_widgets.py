@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 from dymoprint.constants import ICON_DIR
 from dymoprint.dymo_print_engines import DymoRenderEngine
 
+from .constants import AVAILABLE_BARCODES
 from .font_config import parse_fonts
 
 
@@ -208,7 +209,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
         label (QLineEdit): A QLineEdit widget for entering the content of the
             barcode label.
-        codding (QComboBox): A QComboBox widget for selecting the type of barcode
+        Type (QComboBox): A QComboBox widget for selecting the type of barcode
             to render.
     Signals:
         content_changed(): Emitted when the content of the label or the selected
@@ -228,34 +229,16 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         item_icon = QLabel()
         item_icon.setPixmap(QIcon(str(ICON_DIR / "barcode_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        self.codding = QComboBox()
-        self.codding.addItems(
-            [
-                "code39",
-                "code128",
-                "ean",
-                "ean13",
-                "ean8",
-                "gs1",
-                "gtin",
-                "isbn",
-                "isbn10",
-                "isbn13",
-                "issn",
-                "jan",
-                "pzn",
-                "upc",
-                "upca",
-            ]
-        )
+        self.Type = QComboBox()
+        self.Type.addItems(AVAILABLE_BARCODES)
 
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
-        layout.addWidget(QLabel("Codding:"))
-        layout.addWidget(self.codding)
+        layout.addWidget(QLabel("Type:"))
+        layout.addWidget(self.Type)
 
         self.label.textChanged.connect(self.content_changed)
-        self.codding.currentTextChanged.connect(self.content_changed)
+        self.Type.currentTextChanged.connect(self.content_changed)
         self.setLayout(layout)
 
     def render_label(self):
@@ -266,12 +249,116 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         """
         try:
             render = self.render_engine.render_barcode(
-                self.label.text(), self.codding.currentText()
+                self.label.text(), self.Type.currentText()
             )
             return render
 
         except BaseException as err:
             QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", f"{err}")
+            return self.render_engine.render_empty()
+
+
+class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
+    """
+    A widget for rendering labels with barcode and text below it
+    using the Dymo label printer.
+    Args:
+        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
+        parent (QWidget): The parent widget of this widget.
+    Attributes:
+        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
+        label (QLineEdit): A QLineEdit widget for entering the content of the
+            barcode label.
+        Type (QComboBox): A QComboBox widget for selecting the type of barcode
+            to render.
+        font_style (QComboBox): The font style selection dropdown.
+        font_size (QSpinBox): The font size selection spinner.
+        draw_frame (QSpinBox): The frame width selection spinner.
+    Signals:
+        content_changed(): Emitted when the content of the label or the selected
+            barcode type changes.
+    Methods:
+        __init__(self, render_engine, parent=None): Initializes the widget.
+        render_label(self): Renders the barcode label using the current content
+            and barcode type.
+    """
+
+    def __init__(self, render_engine, parent=None):
+        super().__init__(parent)
+        self.render_engine = render_engine
+
+        self.label = QPlainTextEdit("text")
+        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
+        # self.label = QLineEdit("")
+        self.setFixedHeight(self.label.height() + 10)
+        self.font_style = QComboBox()
+        self.font_size = QSpinBox()
+        self.font_size.setMaximum(150)
+        self.font_size.setMinimum(0)
+        self.font_size.setSingleStep(1)
+        self.font_size.setValue(90)
+        self.draw_frame = QSpinBox()
+        self.align = QComboBox()
+
+        self.align.addItems(["left", "center", "right"])
+
+        for name, font_path in parse_fonts():
+            self.font_style.addItem(name, font_path)
+            if "Regular" in name:
+                self.font_style.setCurrentText(name)
+
+        layout = QHBoxLayout()
+        item_icon = QLabel()
+        item_icon.setPixmap(
+            QIcon(str(ICON_DIR / "barcode_text_icon.png")).pixmap(32, 32)
+        )
+        item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.barcode_type = QComboBox()
+        self.barcode_type.addItems(AVAILABLE_BARCODES)
+
+        layout.addWidget(item_icon)
+        layout.addWidget(self.label)
+        layout.addWidget(QLabel("Font:"))
+        layout.addWidget(self.font_style)
+        layout.addWidget(QLabel("Size [%]:"))
+        layout.addWidget(self.font_size)
+        layout.addWidget(QLabel("Frame Width:"))
+        layout.addWidget(self.draw_frame)
+        layout.addWidget(QLabel("Alignment:"))
+        layout.addWidget(self.align)
+        layout.addWidget(QLabel("Type:"))
+        layout.addWidget(self.barcode_type)
+        self.label.textChanged.connect(self.content_changed)
+        self.draw_frame.valueChanged.connect(self.content_changed)
+        self.font_size.valueChanged.connect(self.content_changed)
+        self.font_style.currentTextChanged.connect(self.content_changed)
+        self.align.currentTextChanged.connect(self.content_changed)
+        self.barcode_type.currentTextChanged.connect(self.content_changed)
+        self.setLayout(layout)
+
+    def render_label(self):
+        """
+        Renders the labels with barcode and text below it using the current settings.
+        Returns:
+            QImage: The rendered label image.
+        Raises:
+            QMessageBox.warning: If the rendering fails.
+        """
+        try:
+            render = self.render_engine.render_barcode_with_text(
+                barcode_input_text=self.label.toPlainText(),
+                bar_code_type=self.barcode_type.currentText(),
+                font_file_name=self.font_style.currentData(),
+                frame_width=self.draw_frame.value(),
+                font_size_ratio=self.font_size.value() / 100.0,
+                align=self.align.currentText(),
+            )
+            return render
+
+        except BaseException as err:
+            QMessageBox.warning(
+                self, "BarcodeWithTextDymoLabelWidget render fail!", f"{err}"
+            )
             return self.render_engine.render_empty()
 
 

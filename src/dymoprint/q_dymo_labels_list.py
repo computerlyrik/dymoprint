@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMe
 
 from .q_dymo_label_widgets import (
     BarcodeDymoLabelWidget,
+    BarcodeWithTextDymoLabelWidget,
     ImageDymoLabelWidget,
     QrDymoLabelWidget,
     TextDymoLabelWidget,
@@ -106,6 +107,7 @@ class QDymoLabelList(QListWidget):
         add_text = contextMenu.addAction("Add Text")
         add_qr = contextMenu.addAction("Add QR")
         add_barcode = contextMenu.addAction("Add Barcode")
+        add_barcode_with_text = contextMenu.addAction("Add Barcode with text")
         add_img = contextMenu.addAction("Add Image")
         delete = contextMenu.addAction("Delete")
         menu_click = contextMenu.exec(event.globalPos())
@@ -129,6 +131,14 @@ class QDymoLabelList(QListWidget):
         if menu_click == add_barcode:
             item = QListWidgetItem(self)
             item_widget = BarcodeDymoLabelWidget(self.render_engine)
+            item.setSizeHint(item_widget.sizeHint())
+            self.addItem(item)
+            self.setItemWidget(item, item_widget)
+            item_widget.itemRenderSignal.connect(self.render_label)
+
+        if menu_click == add_barcode_with_text:
+            item = QListWidgetItem(self)
+            item_widget = BarcodeWithTextDymoLabelWidget(self.render_engine)
             item.setSizeHint(item_widget.sizeHint())
             self.addItem(item)
             self.setItemWidget(item, item_widget)

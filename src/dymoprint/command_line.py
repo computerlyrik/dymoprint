@@ -12,7 +12,13 @@ import os
 from PIL import Image, ImageOps
 
 from . import __version__
-from .constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, USE_QR, e_qrcode
+from .constants import (
+    AVAILABLE_BARCODES,
+    DEFAULT_MARGIN_PX,
+    PIXELS_PER_MM,
+    USE_QR,
+    e_qrcode,
+)
 from .dymo_print_engines import DymoRenderEngine, print_label
 from .font_config import font_filename
 from .metadata import our_metadata
@@ -117,25 +123,15 @@ def parse_args():
     )
     parser.add_argument(
         "-c",
-        choices=[
-            "code39",
-            "code128",
-            "ean",
-            "ean13",
-            "ean8",
-            "gs1",
-            "gtin",
-            "isbn",
-            "isbn10",
-            "isbn13",
-            "issn",
-            "jan",
-            "pzn",
-            "upc",
-            "upca",
-        ],
+        choices=AVAILABLE_BARCODES,
         default=False,
         help="Printing the first text parameter as barcode",
+    )
+    parser.add_argument(
+        "--barcode-text",
+        choices=AVAILABLE_BARCODES,
+        default=False,
+        help="Printing the first text parameter as barcode and text under it",
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument(
@@ -205,6 +201,13 @@ def main():
 
     elif args.c:
         bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.c))
+
+    elif args.barcode_text:
+        bitmaps.append(
+            render_engine.render_barcode_with_text(
+                labeltext.pop(0), args.barcode_text, FONT_FILENAME, args.f
+            )
+        )
 
     if labeltext:
         bitmaps.append(
