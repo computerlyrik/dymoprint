@@ -33,6 +33,7 @@ UNCONFIRMED_MESSAGE = (
     "report your experiences in https://github.com/computerlyrik/dymoprint/issues/44"
 )
 SUPPORTED_PRODUCTS = {
+    0x0011: "DYMO LabelMANAGER PC",
     0x0015: "LabelPoint 350",
     0x1001: "LabelManager PnP (no mode switch)",
     0x1002: "LabelManager PnP (mode switch)",
