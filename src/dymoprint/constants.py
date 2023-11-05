@@ -74,7 +74,9 @@ FLAG_TO_STYLE = {
     "n": "narrow",
 }
 
-PIXELS_PER_MM = 7
+DPI = 180
+MM_PER_INCH = 25.4
+PIXELS_PER_MM = DPI / MM_PER_INCH
 
 DEFAULT_FONT_DIR = Path(dymoprint.resources.fonts.__file__).parent
 ICON_DIR = Path(dymoprint.resources.icons.__file__).parent
