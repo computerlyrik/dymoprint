@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from dymoprint.constants import ICON_DIR
+from dymoprint.dymo_print_engines import DymoRenderEngine
 
 from .font_config import parse_fonts
 
@@ -66,7 +67,14 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         itemRenderSignal: A signal emitted when the content of the label changes.
     """
 
-    def __init__(self, render_engine, parent=None):
+    render_engine: DymoRenderEngine
+    align: QComboBox
+    label: QPlainTextEdit
+    font_style: QComboBox
+    font_size: QSpinBox
+    draw_frame: QSpinBox
+
+    def __init__(self, render_engine: DymoRenderEngine, parent: QWidget | None = None):
         super().__init__(parent)
         self.render_engine = render_engine
 
@@ -127,13 +135,15 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         Raises:
             QMessageBox.warning: If the rendering fails.
         """
+        selected_alignment = self.align.currentText()
+        assert selected_alignment in ("left", "center", "right")
         try:
             render = self.render_engine.render_text(
-                labeltext=self.label.toPlainText().splitlines(),
+                text_lines=self.label.toPlainText().splitlines(),
                 font_file_name=self.font_style.currentData(),
-                frame_width=self.draw_frame.value(),
+                frame_width_px=self.draw_frame.value(),
                 font_size_ratio=self.font_size.value() / 100.0,
-                align=self.align.currentText(),
+                align=selected_alignment,
             )
             return render
         except BaseException as err:

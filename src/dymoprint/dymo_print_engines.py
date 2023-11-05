@@ -4,7 +4,7 @@ import array
 import math
 import os
 import platform
-from typing import NoReturn
+from typing import NamedTuple, NoReturn
 
 import barcode as barcode_module
 import usb
@@ -134,36 +134,20 @@ def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
 
 
 class DymoRenderEngine:
-    def __init__(self, tape_size=12):
-        """
-        Initializes a DymoRenderEngine object with a specified tape size.
+    tape_size_mm: int
 
-        Args:
-            tape_size (int): The size of the tape in millimeters. Default is 12mm.
-        """
-        self.tape_size = tape_size
+    def __init__(self, tape_size_mm: int = 12) -> None:
+        """Initialize a DymoRenderEngine object with a specified tape size."""
+        self.tape_size_mm = tape_size_mm
 
-    def render_empty(self, label_len=1):
-        """
-        Renders an empty label image.
-
-        Returns:
-            Image: An empty label image.
-        """
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
+    def render_empty(self, label_len: int = 1) -> Image.Image:
+        """Render an empty label image."""
+        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         return Image.new("1", (label_len, label_height))
 
-    def render_qr(self, qr_input_text):
-        """
-        Renders a QR code image from the input text.
-
-        Args:
-            qr_input_text (str): The input text to be encoded in the QR code.
-
-        Returns:
-            Image: A QR code image.
-        """
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
+    def render_qr(self, qr_input_text: str) -> Image.Image:
+        """Render a QR code image from the input text."""
+        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(qr_input_text) == 0:
             return Image.new("1", (1, label_height))
 
@@ -195,18 +179,11 @@ class DymoRenderEngine:
                         label_draw.point(pix, 255)
         return code_bitmap
 
-    def render_barcode(self, barcode_input_text, bar_code_type):
-        """
-        Renders a barcode image from the input text and barcode type.
-
-        Args:
-            barcode_input_text (str): The input text to be encoded in the barcode.
-            bar_code_type (str): The type of barcode to be rendered.
-
-        Returns:
-            Image: A barcode image.
-        """
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
+    def render_barcode(
+        self, barcode_input_text: str, bar_code_type: str
+    ) -> Image.Image:
+        """Render a barcode image from the input text and barcode type."""
+        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(barcode_input_text) == 0:
             return Image.new("1", (1, label_height))
 
@@ -217,8 +194,9 @@ class DymoRenderEngine:
             {
                 "font_size": 0,
                 "vertical_margin": 8,
-                "module_height": (DymoLabeler.max_bytes_per_line(self.tape_size) * 8)
-                - 16,
+                "module_height": (
+                    DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8 - 16
+                ),
                 "module_width": 2,
                 "background": "black",
                 "foreground": "white",
@@ -228,69 +206,60 @@ class DymoRenderEngine:
 
     def render_text(
         self,
-        labeltext: list[str],
+        text_lines: str | list[str],
         font_file_name: str,
-        frame_width,
-        font_size_ratio=0.9,
-        align="left",
-    ):
+        frame_width_px: int,
+        font_size_ratio: float = 0.9,
+        align: str = "left",
+    ) -> Image.Image:
+        """Render text to image.
+
+        font_size_ratio is the ratio of font size to line height.
         """
-        Renders a text image from the input text, font file name, frame width, and
-        font size ratio.
+        assert align in ("left", "center", "right")
+        if isinstance(text_lines, str):
+            text_lines = [text_lines]
 
-        Args:
-            labeltext (list[str]): The input text to be rendered.
-            font_file_name (str): The name of the font file to be used.
-            frame_width (int): The width of the frame around the text.
-            font_size_ratio (float): The ratio of font size to line height. Default
-                is 1.
-
-        Returns:
-            Image: A text image.
-        """
-        if type(labeltext) is str:
-            labeltext = [labeltext]
-
-        if len(labeltext) == 0:
-            labeltext = [" "]
+        if len(text_lines) == 0:
+            text_lines = [" "]
 
         # create an empty label image
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
-        line_height = float(label_height) / len(labeltext)
-        fontsize = int(round(line_height * font_size_ratio))
+        label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        line_height = float(label_height_px) / len(text_lines)
+        font_size_px = int(round(line_height * font_size_ratio))
 
-        font_offset = int((line_height - fontsize) / 2)
+        font_offset_px = int((line_height - font_size_px) / 2)
 
-        if frame_width:
-            frame_width = min(frame_width, font_offset)
-            frame_width = min(frame_width, 3)
+        if frame_width_px:
+            frame_width_px = min(frame_width_px, font_offset_px)
+            frame_width_px = min(frame_width_px, 3)
 
-        font = ImageFont.truetype(font_file_name, fontsize)
-        boxes = (font.getbbox(line) for line in labeltext)
+        font = ImageFont.truetype(font_file_name, font_size_px)
+        boxes = (font.getbbox(line) for line in text_lines)
         line_widths = (right - left for left, _, right, _ in boxes)
-        label_width = max(line_widths) + (font_offset * 2)
-        text_bitmap = Image.new("1", (label_width, label_height))
+        label_width_px = max(line_widths) + (font_offset_px * 2)
+        text_bitmap = Image.new("1", (label_width_px, label_height_px))
         with draw_image(text_bitmap) as label_draw:
             # draw frame into empty image
-            if frame_width:
+            if frame_width_px:
                 label_draw.rectangle(
-                    ((0, 4), (label_width - 1, label_height - 4)), fill=255
+                    ((0, 4), (label_width_px - 1, label_height_px - 4)), fill=255
                 )
                 label_draw.rectangle(
                     (
-                        (frame_width, 4 + frame_width),
+                        (frame_width_px, 4 + frame_width_px),
                         (
-                            label_width - (frame_width + 1),
-                            label_height - (frame_width + 4),
+                            label_width_px - (frame_width_px + 1),
+                            label_height_px - (frame_width_px + 4),
                         ),
                     ),
                     fill=0,
                 )
 
             # write the text into the empty image
-            multiline_text = "\n".join(labeltext)
+            multiline_text = "\n".join(text_lines)
             label_draw.multiline_text(
-                (label_width / 2, label_height / 2),
+                (label_width_px / 2, label_height_px / 2),
                 multiline_text,
                 align=align,
                 anchor="mm",
@@ -299,19 +268,10 @@ class DymoRenderEngine:
             )
         return text_bitmap
 
-    def render_picture(self, picture_path: str):
-        """
-        Renders a picture image from the input picture path.
-
-        Args:
-            picture_path (str): The path of the picture to be rendered.
-
-        Returns:
-            Image: A picture image.
-        """
+    def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
             if os.path.exists(picture_path):
-                label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
+                label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
                 with Image.open(picture_path) as img:
                     if img.height > label_height:
                         ratio = label_height / img.height
@@ -323,26 +283,18 @@ class DymoRenderEngine:
                     return ImageOps.invert(img).convert("1")
             else:
                 die(f"picture path:{picture_path}  doesn't exist ")
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size) * 8
+        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         return Image.new("1", (1, label_height))
 
     def merge_render(
         self,
         *,
-        bitmaps,
+        bitmaps: list[Image.Image],
         min_payload_len_px=0,
         max_payload_len_px=None,
         justify="center",
-    ):
-        """
-        Merges multiple images into a single image.
-
-        Args:
-            bitmaps (list[Image]): A list of images to be merged.
-
-        Returns:
-            Image: A merged image.
-        """
+    ) -> Image.Image:
+        """Merge multiple images into a single image."""
         if len(bitmaps) > 1:
             padding = 4
             label_bitmap = Image.new(
@@ -390,40 +342,23 @@ class DymoRenderEngine:
         return label_bitmap
 
 
-class DymoPrinterServer:
-    @staticmethod
-    def print_label(label_bitmap, margin=DEFAULT_MARGIN, tape_size: int = 12):
-        """
-        Prints a label using a Dymo labeler object.
+def print_label(
+    label_bitmap: Image.Image, margin_px: int = DEFAULT_MARGIN, tape_size_mm: int = 12
+) -> None:
+    """Print a label bitmap to the detected printer."""
+    # convert the image to the proper matrix for the dymo labeler object
+    label_rotated = label_bitmap.transpose(Image.ROTATE_270)
+    labelstream = label_rotated.tobytes()
+    label_stream_row_length = int(math.ceil(label_bitmap.height / 8))
+    if len(labelstream) // label_stream_row_length != label_bitmap.width:
+        die("An internal problem was encountered while processing the label " "bitmap!")
+    label_rows = [
+        labelstream[i : i + label_stream_row_length]
+        for i in range(0, len(labelstream), label_stream_row_length)
+    ]
+    label_matrix = [array.array("B", label_row).tolist() for label_row in label_rows]
 
-        :param label_bitmap: The image to be printed as a label.
-        :type label_bitmap: Image
-        :param margin: The margin size in dots.
-        :type margin: int, optional
-        :param tape_size: The size of the tape in millimeters. Default is 12.
-        :type tape_size: int, optional
-        :return: None
-        :rtype: None
-        """
-        # convert the image to the proper matrix for the dymo labeler object
-        label_rotated = label_bitmap.transpose(Image.ROTATE_270)
-        labelstream = label_rotated.tobytes()
-        label_stream_row_length = int(math.ceil(label_bitmap.height / 8))
-        if len(labelstream) // label_stream_row_length != label_bitmap.width:
-            die(
-                "An internal problem was encountered while processing the label "
-                "bitmap!"
-            )
-        label_rows = [
-            labelstream[i : i + label_stream_row_length]
-            for i in range(0, len(labelstream), label_stream_row_length)
-        ]
-        label_matrix = [
-            array.array("B", label_row).tolist() for label_row in label_rows
-        ]
-
-        syn_wait = 64
-
+    def detect_device() -> DetectedDevice:
         dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))
         if len(dymo_devs) == 0:
             print(f"No Dymo devices found (expected vendor {hex(DEV_VENDOR)})")
@@ -501,12 +436,26 @@ class DymoPrinterServer:
 
         if not devout or not devin:
             die("The device endpoints not be found.")
+        return DetectedDevice(dev, intf, devout, devin)
 
-        # create dymo labeler object
-        lm = DymoLabeler(devout, devin, synwait=syn_wait, tape_size=tape_size)
+    detected_device = detect_device()
 
-        print("Printing label..")
-        lm.printLabel(label_matrix, margin=margin)
-        print("Done printing.")
-        usb.util.dispose_resources(dev)
-        print("Cleaned up.")
+    lm = DymoLabeler(
+        detected_device.devout,
+        detected_device.devin,
+        synwait=64,
+        tape_size=tape_size_mm,
+    )
+
+    print("Printing label..")
+    lm.printLabel(label_matrix, margin=margin_px)
+    print("Done printing.")
+    usb.util.dispose_resources(detected_device.dev)
+    print("Cleaned up.")
+
+
+class DetectedDevice(NamedTuple):
+    dev: usb.core.Device
+    intf: usb.core.Interface
+    devout: usb.core.Endpoint
+    devin: usb.core.Endpoint

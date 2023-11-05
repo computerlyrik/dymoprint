@@ -13,7 +13,7 @@ from PIL import Image, ImageOps
 
 from . import __version__
 from .constants import DEFAULT_MARGIN, PIXELS_PER_MM, USE_QR, e_qrcode
-from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
+from .dymo_print_engines import DymoRenderEngine, print_label
 from .font_config import font_filename
 from .metadata import our_metadata
 from .unicode_blocks import image_to_unicode
@@ -136,7 +136,7 @@ def parse_args():
         "-m",
         type=int,
         default=DEFAULT_MARGIN,
-        help=f"Override margin (default is {DEFAULT_MARGIN})",
+        help=f"Margin in px (default is {DEFAULT_MARGIN})",
     )
     parser.add_argument(
         "--scale", type=int, default=90, help="Scaling font factor, [0,10] [%%]"
@@ -161,7 +161,6 @@ def mm_to_payload_px(mm, margin):
 
 def main():
     args = parse_args()
-    print_server = DymoPrinterServer()
     render_engine = DymoRenderEngine(args.t)
 
     # read config file
@@ -201,7 +200,11 @@ def main():
     if labeltext:
         bitmaps.append(
             render_engine.render_text(
-                labeltext, FONT_FILENAME, args.f, int(args.scale) / 100.0, args.a
+                text_lines=labeltext,
+                font_file_name=FONT_FILENAME,
+                frame_width_px=args.f,
+                font_size_ratio=int(args.scale) / 100.0,
+                align=args.a,
             )
         )
 
@@ -246,4 +249,4 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
     else:
-        print_server.print_label(label_bitmap, margin=args.m, tape_size=args.t)
+        print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)

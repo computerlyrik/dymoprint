@@ -29,8 +29,8 @@ class DymoLabeler:
     """
 
     @staticmethod
-    def max_bytes_per_line(tape_size=12):
-        return int(8 * tape_size / 12)
+    def max_bytes_per_line(tape_size_mm: int = 12) -> int:
+        return int(8 * tape_size_mm / 12)
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
@@ -140,7 +140,7 @@ class DymoLabeler:
         cmd = [ESC, ord("C"), value]
         self.buildCommand(cmd)
 
-    def bytesPerLine(self, value):
+    def bytesPerLine(self, value: int):
         """Set the number of bytes sent in the following lines. (MLF)"""
 
         if value < 0 or value + self.dotTab_ > self.max_bytes_per_line(self.tape_size):
