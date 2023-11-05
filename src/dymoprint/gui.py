@@ -20,17 +20,18 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import USBError
 
-from .constants import DEFAULT_MARGIN, ICON_DIR
-from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
+from .constants import DEFAULT_MARGIN_PX, ICON_DIR
+from .dymo_print_engines import DymoRenderEngine, print_label
 from .q_dymo_labels_list import QDymoLabelList
 
 
 class DymoPrintWindow(QWidget):
+    label_bitmap: Image.Image | None
+
     def __init__(self):
         super().__init__()
-        self.print_server = DymoPrinterServer()
         self.render_engine = DymoRenderEngine(12)
-        self.label_bitmap = Image
+        self.label_bitmap = None
 
         self.window_layout = QVBoxLayout()
         self.list = QDymoLabelList(self.render_engine)
@@ -64,7 +65,7 @@ class DymoPrintWindow(QWidget):
 
         self.margin.setMinimum(20)
         self.margin.setMaximum(1000)
-        self.margin.setValue(DEFAULT_MARGIN)
+        self.margin.setValue(DEFAULT_MARGIN_PX)
         self.tape_size.addItem("19", 19)
         self.tape_size.addItem("12", 12)
         self.tape_size.addItem("9", 9)
@@ -135,11 +136,11 @@ class DymoPrintWindow(QWidget):
         label_image = Image.new(
             "L",
             (
-                self.margin.value() + self.label_bitmap.width + self.margin.value(),
-                self.label_bitmap.height,
+                self.margin.value() + label_bitmap.width + self.margin.value(),
+                label_bitmap.height,
             ),
         )
-        label_image.paste(self.label_bitmap, (self.margin.value(), 0))
+        label_image.paste(label_bitmap, (self.margin.value(), 0))
         label_image_inv = ImageOps.invert(label_image).copy()
         qim = ImageQt.ImageQt(label_image_inv)
         q_image = QPixmap.fromImage(qim)
@@ -158,7 +159,9 @@ class DymoPrintWindow(QWidget):
 
     def print_label(self):
         try:
-            self.print_server.print_label(
+            if self.label_bitmap is None:
+                raise RuntimeError("No label to print! Call update_label_render first.")
+            print_label(
                 self.label_bitmap, self.margin.value(), self.tape_size.currentData()
             )
         except (RuntimeError, USBError) as err:

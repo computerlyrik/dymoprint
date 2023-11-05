@@ -65,7 +65,7 @@ FONT_SIZERATIO = 7 / 8
 
 DEFAULT_FONT_STYLE = "regular"
 
-DEFAULT_MARGIN = 56
+DEFAULT_MARGIN_PX = 56
 
 FLAG_TO_STYLE = {
     "r": "regular",

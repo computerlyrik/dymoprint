@@ -6,11 +6,11 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 import array
-from typing import Optional
+from typing import List, Optional
 
 import usb
 
-from .constants import DEFAULT_MARGIN, ESC, SYN
+from .constants import DEFAULT_MARGIN_PX, ESC, SYN
 
 
 class DymoLabeler:
@@ -28,9 +28,11 @@ class DymoLabeler:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
+    tape_size_mm: int
+
     @staticmethod
-    def max_bytes_per_line(tape_size=12):
-        return int(8 * tape_size / 12)
+    def max_bytes_per_line(tape_size_mm: int = 12) -> int:
+        return int(8 * tape_size_mm / 12)
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
@@ -42,11 +44,11 @@ class DymoLabeler:
     devout: usb.core.Endpoint
     devin: usb.core.Endpoint
 
-    def __init__(self, devout, devin, synwait=None, tape_size=12):
+    def __init__(self, devout, devin, synwait=None, tape_size_mm=12):
         """Initialize the LabelManager object. (HLF)"""
 
-        self.tape_size = tape_size
-        self.cmd: list[int] = []
+        self.tape_size_mm = tape_size_mm
+        self.cmd: List[int] = []
         self.response = False
         self.bytesPerLine_ = None
         self.dotTab_ = 0
@@ -125,7 +127,7 @@ class DymoLabeler:
     def dotTab(self, value):
         """Set the bias text height, in bytes. (MLF)"""
 
-        if value < 0 or value > self.max_bytes_per_line(self.tape_size):
+        if value < 0 or value > self.max_bytes_per_line(self.tape_size_mm):
             raise ValueError
         cmd = [ESC, ord("B"), value]
         self.buildCommand(cmd)
@@ -140,10 +142,12 @@ class DymoLabeler:
         cmd = [ESC, ord("C"), value]
         self.buildCommand(cmd)
 
-    def bytesPerLine(self, value):
+    def bytesPerLine(self, value: int):
         """Set the number of bytes sent in the following lines. (MLF)"""
 
-        if value < 0 or value + self.dotTab_ > self.max_bytes_per_line(self.tape_size):
+        if value < 0 or value + self.dotTab_ > self.max_bytes_per_line(
+            self.tape_size_mm
+        ):
             raise ValueError
         if value == self.bytesPerLine_:
             return
@@ -168,8 +172,8 @@ class DymoLabeler:
         """Set Chain Mark. (MLF)"""
 
         self.dotTab(0)
-        self.bytesPerLine(self.max_bytes_per_line(self.tape_size))
-        self.line([0x99] * self.max_bytes_per_line(self.tape_size))
+        self.bytesPerLine(self.max_bytes_per_line(self.tape_size_mm))
+        self.line([0x99] * self.max_bytes_per_line(self.tape_size_mm))
 
     def skipLines(self, value):
         """Set number of lines of white to print. (MLF)"""
@@ -181,7 +185,13 @@ class DymoLabeler:
         self.buildCommand(cmd)
 
     def initLabel(self):
-        """Set the label initialization sequence. (MLF)"""
+        """Set the label initialization sequence. (MLF)
+
+        This was in the original dymoprint by S. Bronner but was never invoked.
+        (There was a self.initLabel without parentheses.)
+        I see no mention of it in the technical reference, so this seems to be
+        dead code.
+        """
 
         cmd = [0x00] * 8
         self.buildCommand(cmd)
@@ -193,16 +203,16 @@ class DymoLabeler:
         response = self.sendCommand()
         print(response)
 
-    def printLabel(self, lines, margin=DEFAULT_MARGIN):
+    def printLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines. (Automatically split label if
         larger than maxLines)"""
 
         while len(lines) > self.maxLines + 1:
-            self.rawPrintLabel(lines[0 : self.maxLines], margin=0)
+            self.rawPrintLabel(lines[0 : self.maxLines], margin_px=0)
             del lines[0 : self.maxLines]
-        self.rawPrintLabel(lines, margin=margin)
+        self.rawPrintLabel(lines, margin_px=margin_px)
 
-    def rawPrintLabel(self, lines, margin=DEFAULT_MARGIN):
+    def rawPrintLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines. (HLF)"""
 
         # optimize the matrix for the dymo label printer
@@ -214,13 +224,12 @@ class DymoLabeler:
             while len(line) > 0 and line[-1] == 0:
                 del line[-1]
 
-        self.initLabel
         self.tapeColor(0)
         self.dotTab(dottab)
         for line in lines:
             self.line(line)
-        if margin > 0:
-            self.skipLines(margin * 2)
+        if margin_px > 0:
+            self.skipLines(margin_px * 2)
         self.statusRequest()
         response = self.sendCommand()
         print(f"Post-send response: {response}")
