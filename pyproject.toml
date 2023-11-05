@@ -55,10 +55,7 @@ raw-options = {version_scheme = "no-guess-dev"}
 version-file = "src/dymoprint/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "src/dymoprint",
-    "src/dymoprint_fonts",
-]
+packages = ["src/dymoprint"]
 
 [tool.isort]
 src_paths = ["src"]

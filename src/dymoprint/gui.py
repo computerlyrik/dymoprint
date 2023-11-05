@@ -1,4 +1,3 @@
-import os
 import sys
 import traceback
 
@@ -21,9 +20,7 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import USBError
 
-import dymoprint_fonts
-
-from .constants import DEFAULT_MARGIN
+from .constants import DEFAULT_MARGIN, ICON_DIR
 from .dymo_print_engines import DymoPrinterServer, DymoRenderEngine
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -54,8 +51,7 @@ class DymoPrintWindow(QWidget):
 
     def init_elements(self):
         self.setWindowTitle("DymoPrint GUI")
-        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
-        self.setWindowIcon(QIcon(os.path.join(ICON_DIR, "gui_icon.png")))
+        self.setWindowIcon(QIcon(str(ICON_DIR / "gui_icon.png")))
         self.setGeometry(200, 200, 1100, 400)
         printer_icon = QIcon.fromTheme("printer")
         self.print_button.setIcon(printer_icon)

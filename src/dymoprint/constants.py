@@ -14,6 +14,11 @@
 # Please beware that DEV_NODE must be set to None when not used, else you will
 # be bitten by the NameError exception.
 
+from pathlib import Path
+
+import dymoprint.resources.fonts
+import dymoprint.resources.icons
+
 try:
     from pyqrcode import QRCode
 
@@ -70,3 +75,6 @@ FLAG_TO_STYLE = {
 }
 
 PIXELS_PER_MM = 7
+
+DEFAULT_FONT_DIR = Path(dymoprint.resources.fonts.__file__).parent
+ICON_DIR = Path(dymoprint.resources.icons.__file__).parent
