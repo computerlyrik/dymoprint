@@ -185,7 +185,13 @@ class DymoLabeler:
         self.buildCommand(cmd)
 
     def initLabel(self):
-        """Set the label initialization sequence. (MLF)"""
+        """Set the label initialization sequence. (MLF)
+
+        This was in the original dymoprint by S. Bronner but was never invoked.
+        (There was a self.initLabel without parentheses.)
+        I see no mention of it in the technical reference, so this seems to be
+        dead code.
+        """
 
         cmd = [0x00] * 8
         self.buildCommand(cmd)
@@ -218,7 +224,6 @@ class DymoLabeler:
             while len(line) > 0 and line[-1] == 0:
                 del line[-1]
 
-        self.initLabel
         self.tapeColor(0)
         self.dotTab(dottab)
         for line in lines:
