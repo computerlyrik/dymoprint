@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import USBError
 
-from .constants import DEFAULT_MARGIN, ICON_DIR
+from .constants import DEFAULT_MARGIN_PX, ICON_DIR
 from .dymo_print_engines import DymoRenderEngine, print_label
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -65,7 +65,7 @@ class DymoPrintWindow(QWidget):
 
         self.margin.setMinimum(20)
         self.margin.setMaximum(1000)
-        self.margin.setValue(DEFAULT_MARGIN)
+        self.margin.setValue(DEFAULT_MARGIN_PX)
         self.tape_size.addItem("19", 19)
         self.tape_size.addItem("12", 12)
         self.tape_size.addItem("9", 9)

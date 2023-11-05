@@ -17,6 +17,8 @@ GITHUB_LINK = "<https://github.com/computerlyrik/dymoprint/pull/56>"
 
 
 class DetectedDevice(NamedTuple):
+    id: int
+    """See dymoprint.constants.SUPPORTED_PRODUCTS for a list of known IDs."""
     dev: usb.core.Device
     intf: usb.core.Interface
     devout: usb.core.Endpoint
@@ -124,7 +126,9 @@ def detect_device() -> DetectedDevice:
 
     if not devout or not devin:
         die("The device endpoints not be found.")
-    return DetectedDevice(dev, intf, devout, devin)
+    return DetectedDevice(
+        id=dev.idProduct, dev=dev, intf=intf, devout=devout, devin=devin
+    )
 
 
 def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:

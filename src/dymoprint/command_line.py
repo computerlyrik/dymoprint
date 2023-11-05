@@ -12,7 +12,7 @@ import os
 from PIL import Image, ImageOps
 
 from . import __version__
-from .constants import DEFAULT_MARGIN, PIXELS_PER_MM, USE_QR, e_qrcode
+from .constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, USE_QR, e_qrcode
 from .dymo_print_engines import DymoRenderEngine, print_label
 from .font_config import font_filename
 from .metadata import our_metadata
@@ -135,8 +135,8 @@ def parse_args():
     parser.add_argument(
         "-m",
         type=int,
-        default=DEFAULT_MARGIN,
-        help=f"Margin in px (default is {DEFAULT_MARGIN})",
+        default=DEFAULT_MARGIN_PX,
+        help=f"Margin in px (default is {DEFAULT_MARGIN_PX})",
     )
     parser.add_argument(
         "--scale", type=int, default=90, help="Scaling font factor, [0,10] [%%]"
