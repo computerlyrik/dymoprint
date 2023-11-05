@@ -4,22 +4,17 @@ from configparser import ConfigParser
 
 from appdirs import user_config_dir
 
-import dymoprint_fonts
-
-from .constants import DEFAULT_FONT_STYLE, FLAG_TO_STYLE
+from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
 
 
 def font_filename(flag):
-    # The directory of the dymoprints_fonts package
-    DEFAULT_FONT_DIR = os.path.dirname(dymoprint_fonts.__file__)
-
     # Default values
     style_to_file = {
-        "regular": os.path.join(DEFAULT_FONT_DIR, "Carlito-Regular.ttf"),
-        "bold": os.path.join(DEFAULT_FONT_DIR, "Carlito-Bold.ttf"),
-        "italic": os.path.join(DEFAULT_FONT_DIR, "Carlito-Italic.ttf"),
-        "narrow": os.path.join(DEFAULT_FONT_DIR, "Carlito-BoldItalic.ttf"),
+        "regular": str(DEFAULT_FONT_DIR / "Carlito-Regular.ttf"),
+        "bold": str(DEFAULT_FONT_DIR / "Carlito-Bold.ttf"),
+        "italic": str(DEFAULT_FONT_DIR / "Carlito-Italic.ttf"),
+        "narrow": str(DEFAULT_FONT_DIR / "Carlito-BoldItalic.ttf"),
     }
 
     conf = ConfigParser(style_to_file)
@@ -35,7 +30,6 @@ def font_filename(flag):
 
 
 def parse_fonts() -> dict:
-    DEFAULT_FONT_DIR = os.path.dirname(dymoprint_fonts.__file__)
     fonts = list()
     for f in os.listdir(DEFAULT_FONT_DIR):
         m = re.match(r"(.*-.*).ttf", f)

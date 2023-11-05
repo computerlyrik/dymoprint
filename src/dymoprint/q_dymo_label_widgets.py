@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-import dymoprint_fonts
+from dymoprint.constants import ICON_DIR
 
 from .font_config import parse_fonts
 
@@ -90,11 +90,8 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
                 self.font_style.setCurrentText(name)
 
         layout = QHBoxLayout()
-        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "txt_icon.png")).pixmap(32, 32)
-        )
+        item_icon.setPixmap(QIcon(str(ICON_DIR / "txt_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -166,9 +163,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
 
         self.label = QLineEdit("")
         layout = QHBoxLayout()
-        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(QIcon(os.path.join(ICON_DIR, "qr_icon.png")).pixmap(32, 32))
+        item_icon.setPixmap(QIcon(str(ICON_DIR / "qr_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
@@ -219,11 +215,8 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
 
         self.label = QLineEdit("")
         layout = QHBoxLayout()
-        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "barcode_icon.png")).pixmap(32, 32)
-        )
+        item_icon.setPixmap(QIcon(str(ICON_DIR / "barcode_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self.codding = QComboBox()
         self.codding.addItems(
@@ -293,11 +286,8 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
 
         self.label = QLineEdit("")
         layout = QHBoxLayout()
-        ICON_DIR = os.path.dirname(dymoprint_fonts.__file__)
         item_icon = QLabel()
-        item_icon.setPixmap(
-            QIcon(os.path.join(ICON_DIR, "img_icon.png")).pixmap(32, 32)
-        )
+        item_icon.setPixmap(QIcon(str(ICON_DIR / "img_icon.png")).pixmap(32, 32))
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         button = QPushButton("Select file")
