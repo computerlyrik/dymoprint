@@ -28,6 +28,38 @@ class DymoRenderEngine:
         label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         return Image.new("1", (label_len, label_height))
 
+    def render_test(self, width: int = 100) -> Image.Image:
+        """Render a test pattern"""
+        canvas = Image.new("1", (10+width+2+40, width))
+
+        # 5 vertical lines
+        for x in range(0,9,2):
+            for y in range(canvas.height):
+                canvas.putpixel((x, y), 1)
+
+        # checkerboard pattern
+        cb = Image.new("1", (width, width))
+        ss = 1;
+        while ss <= (width/2):
+            for x in range(ss-1,2*ss-1):
+                for y in range(0,width):
+                    if ((math.floor(y/ss) % 2) == 0):
+                        cb.putpixel((x,y), 1)
+            ss *= 2
+        canvas.paste(cb, (10,0))
+
+        # a bunch of horizontal lines, on top and bottom
+        hl = Image.new("1", (20, 9))
+        for y in range(0,9,2):
+            for x in range(20):
+                hl.putpixel((x, y), 1)
+        canvas.paste(hl, (10+width+2,0))        
+        canvas.paste(hl, (10+width+2,width-9))
+        canvas.paste(hl, (10+width+2+20,1))        
+        canvas.paste(hl, (10+width+2+20,width-9-1))
+        
+        return canvas
+
     def render_qr(self, qr_input_text: str) -> Image.Image:
         """Render a QR code image from the input text."""
         label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8

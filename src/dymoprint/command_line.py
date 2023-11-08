@@ -53,6 +53,12 @@ def parse_args():
         default="left",
         help="Align multiline text (left,center,right)",
     )
+    parser.add_argument(
+        "--test-pattern",
+        type=int,
+        default=0,
+        help="Prints test pattern of a desired dot width",
+    )
 
     length_options = parser.add_argument_group("Length options")
 
@@ -190,6 +196,9 @@ def main():
         die("Error: maximum length is less than minimum length")
 
     bitmaps = []
+
+    if args.test_pattern:
+        bitmaps.append(render_engine.render_test(args.test_pattern))
 
     if args.qr:
         bitmaps.append(render_engine.render_qr(labeltext.pop(0)))

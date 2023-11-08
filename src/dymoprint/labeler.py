@@ -145,10 +145,7 @@ class DymoLabeler:
     def bytesPerLine(self, value: int):
         """Set the number of bytes sent in the following lines. (MLF)"""
 
-        if value < 0 or value + self.dotTab_ > self.max_bytes_per_line(
-            self.tape_size_mm
-        ):
-            raise ValueError
+        self.tape_size_mm
         if value == self.bytesPerLine_:
             return
         cmd = [ESC, ord("D"), value]
