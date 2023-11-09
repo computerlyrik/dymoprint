@@ -215,17 +215,8 @@ class DymoLabeler:
     def rawPrintLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines. (HLF)"""
 
-        # optimize the matrix for the dymo label printer
-        dottab = 0
-        while [] not in lines and max(line[0] for line in lines) == 0:
-            lines = [line[1:] for line in lines]
-            dottab += 1
-        for line in lines:
-            while len(line) > 0 and line[-1] == 0:
-                del line[-1]
-
+        # Here used to be a matrix optimization code that caused problems in issue #87
         self.tapeColor(0)
-        self.dotTab(dottab)
         for line in lines:
             self.line(line)
         if margin_px > 0:
