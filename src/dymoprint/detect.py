@@ -11,6 +11,7 @@ from .constants import (
     PRINTER_INTERFACE_CLASS,
     SUPPORTED_PRODUCTS,
     UNCONFIRMED_MESSAGE,
+    OFFSETS,
 )
 
 GITHUB_LINK = "<https://github.com/computerlyrik/dymoprint/pull/56>"
@@ -47,6 +48,8 @@ def device_info(dev: usb.core.Device) -> str:
                     res += f"    - {repr(intf)}\n"
     return res
 
+def get_device_offsets(det_dev, tape_size) -> tuple[int, int, int]:
+    return OFFSETS[det_dev.id][tape_size]
 
 def detect_device() -> DetectedDevice:
     dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))

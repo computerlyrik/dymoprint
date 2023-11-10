@@ -244,6 +244,9 @@ def main():
         justify=justify,
     )
 
+    if not args.test_pattern:
+        label_bitmap = render_engine.add_offset(label_bitmap)
+
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick:
         print("Demo mode: showing label..")
@@ -258,4 +261,5 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
     else:
-        print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+        print_label(render_engine.detected_device,
+                    label_bitmap, margin_px=args.m, tape_size_mm=args.t)

@@ -80,3 +80,31 @@ PIXELS_PER_MM = DPI / MM_PER_INCH
 
 DEFAULT_FONT_DIR = Path(dymoprint.resources.fonts.__file__).parent
 ICON_DIR = Path(dymoprint.resources.icons.__file__).parent
+
+# Print offset dictionaries
+# The three values indicate:
+# - Printer header size in dots
+# - A number of the first visible dot on a test print,
+# - A number of the last visible dot on a test print.
+# Note the dot numeration is zero based.
+# Impossible combinations (such as PnP with 19mm tape) should have sane defaults.
+dict_pnp  = {6: (64,11,51), 9: (64,1,62),  12: (64,0,63),   19: (64,0,63)}
+dict_420p = {6: (128,44,85), 9: (128,31,94), 12: (128,38,117), 19: (128,2,127)}
+
+# Offset meta-dictionary
+# This one binds printer PID with an offset dictionary.
+# All supported products must have an entry here.
+OFFSETS = {
+    0x0011: dict_pnp,
+    0x0015: dict_pnp,
+    0x1001: dict_pnp,
+    0x1002: dict_pnp,
+    0x1003: dict_420p,
+    0x1004: dict_420p,
+    0x1005: dict_pnp,
+    0x1006: dict_pnp,
+    0x1007: dict_pnp,
+    0x1008: dict_pnp,
+    0x1009: dict_pnp
+}
+

@@ -8,7 +8,7 @@ import barcode as barcode_module
 import usb
 from PIL import Image, ImageFont, ImageOps
 
-from dymoprint.detect import detect_device
+from dymoprint.detect import detect_device, get_device_offsets
 
 from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
@@ -18,15 +18,20 @@ from .utils import die, draw_image, scaling
 
 class DymoRenderEngine:
     tape_size_mm: int
+    tape_size_dots: int
+    offsets: tuple[int,int,int]
+    detected_device: DetectedDevice
 
     def __init__(self, tape_size_mm: int = 12) -> None:
         """Initialize a DymoRenderEngine object with a specified tape size."""
         self.tape_size_mm = tape_size_mm
+        self.detected_device = detect_device()
+        self.offsets = get_device_offsets(self.detected_device, self.tape_size_mm)
+        self.tape_size_dots = self.offsets[2] - self.offsets[1] + 1
 
     def render_empty(self, label_len: int = 1) -> Image.Image:
         """Render an empty label image."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
-        return Image.new("1", (label_len, label_height))
+        return Image.new("1", (label_len, self.tape_size_dots))
 
     def render_test(self, width: int = 100) -> Image.Image:
         """Render a test pattern"""
@@ -62,7 +67,7 @@ class DymoRenderEngine:
 
     def render_qr(self, qr_input_text: str) -> Image.Image:
         """Render a QR code image from the input text."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        label_height = self.tape_size_dots
         if len(qr_input_text) == 0:
             return Image.new("1", (1, label_height))
 
@@ -98,7 +103,7 @@ class DymoRenderEngine:
         self, barcode_input_text: str, bar_code_type: str
     ) -> Image.Image:
         """Render a barcode image from the input text and barcode type."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        label_height = self.tape_size_dots
         if len(barcode_input_text) == 0:
             return Image.new("1", (1, label_height))
 
@@ -110,7 +115,7 @@ class DymoRenderEngine:
                 "font_size": 0,
                 "vertical_margin": 8,
                 "module_height": (
-                    DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8 - 16
+                    self.tape_size_dots
                 ),
                 "module_width": 2,
                 "background": "black",
@@ -139,7 +144,7 @@ class DymoRenderEngine:
             text_lines = [" "]
 
         # create an empty label image
-        label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        label_height_px = self.tape_size_dots
         line_height = float(label_height_px) / len(text_lines)
         font_size_px = int(round(line_height * font_size_ratio))
 
@@ -186,7 +191,7 @@ class DymoRenderEngine:
     def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
             if os.path.exists(picture_path):
-                label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+                label_height = self.tape_size_dots
                 with Image.open(picture_path) as img:
                     if img.height > label_height:
                         ratio = label_height / img.height
@@ -255,9 +260,23 @@ class DymoRenderEngine:
             return out_label_bitmap
 
         return label_bitmap
+    
+    def add_offset(self, label_bitmap) -> Image.Image:
+        """Add offset specified for given printer model and tape size"""
+        label_padded = Image.new(
+                "1",
+                (
+                    label_bitmap.width, 
+                    label_bitmap.height + self.offsets[0] - self.offsets[2] - 1
+                ),
+        )
+        label_padded.paste(label_bitmap, (0, 0))
+        return label_padded
+
 
 
 def print_label(
+    detected_device: DetectedDevice,
     label_bitmap: Image.Image,
     margin_px: int = DEFAULT_MARGIN_PX,
     tape_size_mm: int = 12,
@@ -267,7 +286,6 @@ def print_label(
     The label bitmap is a PIL image in 1-bit format (mode=1), and pixels with value
     equal to 1 are burned.
     """
-    detected_device = detect_device()
 
     # Convert the image to the proper matrix for the dymo labeler object so that
     # rows span the width of the label, and the first row corresponds to the left
