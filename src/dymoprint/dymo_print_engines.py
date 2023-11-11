@@ -287,7 +287,7 @@ def print_label(
     equal to 1 are burned.
     """
 
-    if detected_device == None:
+    if detected_device is None:
         detected_device = detect_device()
 
     # Convert the image to the proper matrix for the dymo labeler object so that
