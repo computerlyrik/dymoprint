@@ -1,5 +1,5 @@
 import platform
-from typing import NamedTuple, NoReturn
+from typing import Tuple, NamedTuple, NoReturn
 
 import usb
 
@@ -48,7 +48,7 @@ def device_info(dev: usb.core.Device) -> str:
                     res += f"    - {repr(intf)}\n"
     return res
 
-def get_device_offsets(det_dev, tape_size) -> tuple[int, int, int]:
+def get_device_offsets(det_dev, tape_size) -> Tuple[int, int, int]:
     return OFFSETS[det_dev.id][tape_size]
 
 def detect_device() -> DetectedDevice:
