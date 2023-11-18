@@ -31,6 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Printing"
 ]
 dynamic = ["version"]
@@ -65,12 +66,12 @@ legacy_tox_ini = """
 [tox]
 envlist =
   py37
-  py311
+  py312
 
 [gh-actions]
 python =
     3.7: py37
-    3.11: py311
+    3.12: py312
 
 [testenv]
 commands =
