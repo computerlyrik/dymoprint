@@ -123,6 +123,7 @@ def parse_args():
     )
     parser.add_argument(
         "-c",
+        "--barcode",
         choices=AVAILABLE_BARCODES,
         default=False,
         help="Printing the first text parameter as barcode",
