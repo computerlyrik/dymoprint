@@ -145,38 +145,33 @@ class DymoRenderEngine:
         assert align in ("left", "center", "right")
         # Generate barcode
         code_bitmap = self.render_barcode(barcode_input_text, bar_code_type)
-        code_bitmap = code_bitmap.resize(
-            (code_bitmap.width * 2 // 3, code_bitmap.height * 2 // 3)
-        )
 
         # Generate text
         text_bitmap = self.render_text(
-            barcode_input_text, font_file_name, frame_width, font_size_ratio, align
+            text_lines=barcode_input_text,
+            font_file_name=font_file_name,
+            frame_width_px=frame_width,
+            font_size_ratio=font_size_ratio,
+            align=align,
+            label_height_px=code_bitmap.height // 3,
         )
-        text_width = int(
-            text_bitmap.width // (text_bitmap.height / (code_bitmap.height / 2))
-        )
-        text_bitmap = text_bitmap.resize((text_width, code_bitmap.height // 2))
 
-        # Merge two images into one bitmap
-        code_with_text_bitmap = Image.new(
-            "1", (code_bitmap.width, 3 * code_bitmap.height // 2), "black"
-        )
-        code_with_text_bitmap.paste(code_bitmap, (0, 0))
+        text_width = text_bitmap.width
+        text_height = text_bitmap.height
+        code_width = code_bitmap.width
+        code_height = code_bitmap.height
         if align == "left":
-            code_with_text_bitmap.paste(text_bitmap, (0, code_bitmap.height))
+            code_bitmap.paste(text_bitmap, (0, code_height - text_height - 1))
         elif align == "center":
-            code_with_text_bitmap.paste(
+            code_bitmap.paste(
                 text_bitmap,
-                (code_bitmap.width // 2 - text_width // 2, code_bitmap.height),
+                (code_width // 2 - text_width // 2, code_height - text_height - 1),
             )
         elif align == "right":
-            code_with_text_bitmap.paste(
-                text_bitmap, (code_bitmap.width - text_width, code_bitmap.height)
+            code_bitmap.paste(
+                text_bitmap, (code_width - text_width, code_height - text_height - 1)
             )
-
-        code_with_text_bitmap = code_with_text_bitmap.convert("L", palette=Image.AFFINE)
-        return code_with_text_bitmap
+        return code_bitmap
 
     def render_text(
         self,
