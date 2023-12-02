@@ -185,6 +185,7 @@ class DymoRenderEngine:
         frame_width_px: int,
         font_size_ratio: float = 0.9,
         align: str = "left",
+        label_height_px: int | None = None,
     ) -> Image.Image:
         """Render text to image.
 
@@ -198,7 +199,8 @@ class DymoRenderEngine:
             text_lines = [" "]
 
         # create an empty label image
-        label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        if label_height_px is None:
+            label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         line_height = float(label_height_px) / len(text_lines)
         font_size_px = int(round(line_height * font_size_ratio))
 
