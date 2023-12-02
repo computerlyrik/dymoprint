@@ -156,21 +156,19 @@ class DymoRenderEngine:
             label_height_px=code_bitmap.height // 3,
         )
 
-        text_width = text_bitmap.width
-        text_height = text_bitmap.height
-        code_width = code_bitmap.width
-        code_height = code_bitmap.height
+        # Define the x and y of the upper-left corner of the text
+        # to be pasted onto the barcode
+        text_x = code_bitmap.height - text_bitmap.height - 1
         if align == "left":
-            code_bitmap.paste(text_bitmap, (0, code_height - text_height - 1))
+            text_y = 0
         elif align == "center":
-            code_bitmap.paste(
-                text_bitmap,
-                (code_width // 2 - text_width // 2, code_height - text_height - 1),
-            )
+            text_y = code_bitmap.width // 2 - text_bitmap.width // 2
         elif align == "right":
-            code_bitmap.paste(
-                text_bitmap, (code_width - text_width, code_height - text_height - 1)
-            )
+            text_y = code_bitmap.width - text_bitmap.width
+        else:
+            raise ValueError(f"Invalid align value: {align}")
+
+        code_bitmap.paste(text_bitmap, (text_y, text_x))
         return code_bitmap
 
     def render_text(
