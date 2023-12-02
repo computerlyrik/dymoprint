@@ -301,6 +301,8 @@ class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
         self.align = QComboBox()
 
         self.align.addItems(["left", "center", "right"])
+        # Set the default value to "center"
+        self.align.setCurrentIndex(1)
 
         for name, font_path in parse_fonts():
             self.font_style.addItem(name, font_path)
