@@ -3,6 +3,7 @@ import os
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QHBoxLayout,
@@ -199,7 +200,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             return self.render_engine.render_empty()
 
 
-class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
+class OldBarcodeDymoLabelWidget(BaseDymoLabelWidget):
     """
     A widget for rendering barcode labels using the Dymo label printer.
     Args:
@@ -258,10 +259,9 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             return self.render_engine.render_empty()
 
 
-class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
+class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     """
-    A widget for rendering labels with barcode and text below it
-    using the Dymo label printer.
+    A widget for rendering barcode labels using the Dymo label printer.
     Args:
         render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
         parent (QWidget): The parent widget of this widget.
@@ -283,31 +283,55 @@ class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
             and barcode type.
     """
 
+    render_engine: DymoRenderEngine
+    label: QLineEdit
+    barcode_type_label: QLabel
+    barcode_type: QComboBox
+    show_text_label: QLabel
+    show_text_checkbox: QCheckBox
+    font_style: QComboBox
+    font_size: QSpinBox
+    draw_frame: QSpinBox
+    font_label: QLabel
+    font_style: QComboBox
+    size_label: QLabel
+    font_size: QSpinBox
+    frame_label: QLabel
+    draw_frame: QSpinBox
+    align_label: QLabel
+    align: QComboBox
+
     def __init__(self, render_engine, parent=None):
         super().__init__(parent)
         self.render_engine = render_engine
 
-        self.label = QPlainTextEdit("text")
-        self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
-        # self.label = QLineEdit("")
-        self.setFixedHeight(self.label.height() + 10)
+        self.label = QLineEdit("")
+
+        # Hidable text fields and their labels
+        self.font_label = QLabel("Font:")
         self.font_style = QComboBox()
+        self.size_label = QLabel("Size [%]:")
         self.font_size = QSpinBox()
         self.font_size.setMaximum(150)
         self.font_size.setMinimum(0)
         self.font_size.setSingleStep(1)
         self.font_size.setValue(90)
+        self.frame_label = QLabel("Frame Width:")
         self.draw_frame = QSpinBox()
+        self.align_label = QLabel("Alignment:")
         self.align = QComboBox()
 
         self.align.addItems(["left", "center", "right"])
         # Set the default value to "center"
         self.align.setCurrentIndex(1)
 
+        # Populate font_style
         for name, font_path in parse_fonts():
             self.font_style.addItem(name, font_path)
             if "Regular" in name:
                 self.font_style.setCurrentText(name)
+
+        self.set_text_fields_visibility(True)
 
         layout = QHBoxLayout()
         item_icon = QLabel()
@@ -315,28 +339,57 @@ class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
             QIcon(str(ICON_DIR / "barcode_text_icon.png")).pixmap(32, 32)
         )
         item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+        self.barcode_type_label = QLabel("Type:")
         self.barcode_type = QComboBox()
         self.barcode_type.addItems(AVAILABLE_BARCODES)
 
+        # Checkbox for toggling text fields
+        self.show_text_label = QLabel("Text:")
+        self.show_text_checkbox = QCheckBox()
+        self.show_text_checkbox.setChecked(True)
+        self.show_text_checkbox.stateChanged.connect(
+            self.toggle_text_fields_and_rerender
+        )
+
         layout.addWidget(item_icon)
         layout.addWidget(self.label)
-        layout.addWidget(QLabel("Font:"))
-        layout.addWidget(self.font_style)
-        layout.addWidget(QLabel("Size [%]:"))
-        layout.addWidget(self.font_size)
-        layout.addWidget(QLabel("Frame Width:"))
-        layout.addWidget(self.draw_frame)
-        layout.addWidget(QLabel("Alignment:"))
-        layout.addWidget(self.align)
-        layout.addWidget(QLabel("Type:"))
+        layout.addWidget(self.barcode_type_label)
         layout.addWidget(self.barcode_type)
+        layout.addWidget(self.show_text_label)
+        layout.addWidget(self.show_text_checkbox)
+        layout.addWidget(self.font_label)
+        layout.addWidget(self.font_style)
+        layout.addWidget(self.size_label)
+        layout.addWidget(self.font_size)
+        layout.addWidget(self.frame_label)
+        layout.addWidget(self.draw_frame)
+        layout.addWidget(self.align_label)
+        layout.addWidget(self.align)
+
         self.label.textChanged.connect(self.content_changed)
         self.draw_frame.valueChanged.connect(self.content_changed)
         self.font_size.valueChanged.connect(self.content_changed)
         self.font_style.currentTextChanged.connect(self.content_changed)
         self.align.currentTextChanged.connect(self.content_changed)
         self.barcode_type.currentTextChanged.connect(self.content_changed)
+
         self.setLayout(layout)
+
+    def set_text_fields_visibility(self, visible):
+        self.font_label.setVisible(visible)
+        self.font_style.setVisible(visible)
+        self.size_label.setVisible(visible)
+        self.font_size.setVisible(visible)
+        self.frame_label.setVisible(visible)
+        self.draw_frame.setVisible(visible)
+        self.align_label.setVisible(visible)
+        self.align.setVisible(visible)
+
+    def toggle_text_fields_and_rerender(self):
+        is_checked = self.show_text_checkbox.isChecked()
+        self.set_text_fields_visibility(is_checked)
+        self.content_changed()  # Trigger rerender
 
     def render_label(self):
         """
@@ -347,16 +400,20 @@ class BarcodeWithTextDymoLabelWidget(BaseDymoLabelWidget):
             QMessageBox.warning: If the rendering fails.
         """
         try:
-            render = self.render_engine.render_barcode_with_text(
-                barcode_input_text=self.label.toPlainText(),
-                bar_code_type=self.barcode_type.currentText(),
-                font_file_name=self.font_style.currentData(),
-                frame_width=self.draw_frame.value(),
-                font_size_ratio=self.font_size.value() / 100.0,
-                align=self.align.currentText(),
-            )
+            if self.show_text_checkbox.isChecked():
+                render = self.render_engine.render_barcode_with_text(
+                    barcode_input_text=self.label.text(),
+                    bar_code_type=self.barcode_type.currentText(),
+                    font_file_name=self.font_style.currentData(),
+                    frame_width=self.draw_frame.value(),
+                    font_size_ratio=self.font_size.value() / 100.0,
+                    align=self.align.currentText(),
+                )
+            else:
+                render = self.render_engine.render_barcode(
+                    self.label.text(), self.barcode_type.currentText()
+                )
             return render
-
         except BaseException as err:
             QMessageBox.warning(
                 self, "BarcodeWithTextDymoLabelWidget render fail!", f"{err}"
