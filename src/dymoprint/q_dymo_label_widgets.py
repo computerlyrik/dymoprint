@@ -200,65 +200,6 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             return self.render_engine.render_empty()
 
 
-class OldBarcodeDymoLabelWidget(BaseDymoLabelWidget):
-    """
-    A widget for rendering barcode labels using the Dymo label printer.
-    Args:
-        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
-        parent (QWidget): The parent widget of this widget.
-    Attributes:
-        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
-        label (QLineEdit): A QLineEdit widget for entering the content of the
-            barcode label.
-        Type (QComboBox): A QComboBox widget for selecting the type of barcode
-            to render.
-    Signals:
-        content_changed(): Emitted when the content of the label or the selected
-            barcode type changes.
-    Methods:
-        __init__(self, render_engine, parent=None): Initializes the widget.
-        render_label(self): Renders the barcode label using the current content
-            and barcode type.
-    """
-
-    def __init__(self, render_engine, parent=None):
-        super().__init__(parent)
-        self.render_engine = render_engine
-
-        self.label = QLineEdit("")
-        layout = QHBoxLayout()
-        item_icon = QLabel()
-        item_icon.setPixmap(QIcon(str(ICON_DIR / "barcode_icon.png")).pixmap(32, 32))
-        item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        self.Type = QComboBox()
-        self.Type.addItems(AVAILABLE_BARCODES)
-
-        layout.addWidget(item_icon)
-        layout.addWidget(self.label)
-        layout.addWidget(QLabel("Type:"))
-        layout.addWidget(self.Type)
-
-        self.label.textChanged.connect(self.content_changed)
-        self.Type.currentTextChanged.connect(self.content_changed)
-        self.setLayout(layout)
-
-    def render_label(self):
-        """
-        Renders the barcode label using the current content and barcode type.
-        Returns:
-            QPixmap: A QPixmap object representing the rendered barcode label.
-        """
-        try:
-            render = self.render_engine.render_barcode(
-                self.label.text(), self.Type.currentText()
-            )
-            return render
-
-        except BaseException as err:
-            QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", f"{err}")
-            return self.render_engine.render_empty()
-
-
 class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     """
     A widget for rendering barcode labels using the Dymo label printer.
