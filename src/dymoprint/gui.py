@@ -161,7 +161,7 @@ class DymoPrintWindow(QWidget):
         try:
             if self.label_bitmap is None:
                 raise RuntimeError("No label to print! Call update_label_render first.")
-            print_label(
+            print_label(None,
                 self.label_bitmap, self.margin.value(), self.tape_size.currentData()
             )
         except (RuntimeError, USBError) as err:
