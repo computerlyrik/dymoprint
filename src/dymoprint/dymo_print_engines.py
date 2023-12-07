@@ -30,34 +30,34 @@ class DymoRenderEngine:
 
     def render_test(self, width: int = 100) -> Image.Image:
         """Render a test pattern"""
-        canvas = Image.new("1", (10+width+2+40, width))
+        canvas = Image.new("1", (10 + width + 2 + 40, width))
 
         # 5 vertical lines
-        for x in range(0,9,2):
+        for x in range(0, 9, 2):
             for y in range(canvas.height):
                 canvas.putpixel((x, y), 1)
 
         # checkerboard pattern
         cb = Image.new("1", (width, width))
-        ss = 1;
-        while ss <= (width/2):
-            for x in range(ss-1,2*ss-1):
-                for y in range(0,width):
-                    if ((math.floor(y/ss) % 2) == 0):
-                        cb.putpixel((x,y), 1)
+        ss = 1
+        while ss <= (width / 2):
+            for x in range(ss - 1, 2 * ss - 1):
+                for y in range(0, width):
+                    if (math.floor(y / ss) % 2) == 0:
+                        cb.putpixel((x, y), 1)
             ss *= 2
-        canvas.paste(cb, (10,0))
+        canvas.paste(cb, (10, 0))
 
         # a bunch of horizontal lines, on top and bottom
         hl = Image.new("1", (20, 9))
-        for y in range(0,9,2):
+        for y in range(0, 9, 2):
             for x in range(20):
                 hl.putpixel((x, y), 1)
-        canvas.paste(hl, (10+width+2,0))        
-        canvas.paste(hl, (10+width+2,width-9))
-        canvas.paste(hl, (10+width+2+20,1))        
-        canvas.paste(hl, (10+width+2+20,width-9-1))
-        
+        canvas.paste(hl, (10 + width + 2, 0))
+        canvas.paste(hl, (10 + width + 2, width - 9))
+        canvas.paste(hl, (10 + width + 2 + 20, 1))
+        canvas.paste(hl, (10 + width + 2 + 20, width - 9 - 1))
+
         return canvas
 
     def render_qr(self, qr_input_text: str) -> Image.Image:
@@ -119,6 +119,58 @@ class DymoRenderEngine:
         )
         return code_bitmap
 
+    def render_barcode_with_text(
+        self,
+        barcode_input_text,
+        bar_code_type,
+        font_file_name: str,
+        frame_width,
+        font_size_ratio=0.9,
+        align="center",
+    ):
+        """
+        Renders a barcode image with the text below it.
+
+        Args:
+            barcode_input_text (str): The input text to be encoded in the barcode.
+            bar_code_type (str): The type of barcode to be rendered.
+            font_file_name (str): The name of the font file to be used.
+            frame_width (int): The width of the frame around the text.
+            font_size_ratio (float): The ratio of font size to line height. Default
+                is 1.
+
+        Returns:
+            Image: A barcode with text image.
+        """
+        assert align in ("left", "center", "right")
+        # Generate barcode
+        code_bitmap = self.render_barcode(barcode_input_text, bar_code_type)
+
+        # Generate text
+        text_bitmap = self.render_text(
+            text_lines=barcode_input_text,
+            font_file_name=font_file_name,
+            frame_width_px=frame_width,
+            font_size_ratio=font_size_ratio,
+            align=align,
+            label_height_px=code_bitmap.height // 3,
+        )
+
+        # Define the x and y of the upper-left corner of the text
+        # to be pasted onto the barcode
+        text_x = code_bitmap.height - text_bitmap.height - 1
+        if align == "left":
+            text_y = 0
+        elif align == "center":
+            text_y = code_bitmap.width // 2 - text_bitmap.width // 2
+        elif align == "right":
+            text_y = code_bitmap.width - text_bitmap.width
+        else:
+            raise ValueError(f"Invalid align value: {align}")
+
+        code_bitmap.paste(text_bitmap, (text_y, text_x))
+        return code_bitmap
+
     def render_text(
         self,
         text_lines: str | list[str],
@@ -126,6 +178,7 @@ class DymoRenderEngine:
         frame_width_px: int,
         font_size_ratio: float = 0.9,
         align: str = "left",
+        label_height_px: int | None = None,
     ) -> Image.Image:
         """Render text to image.
 
@@ -139,7 +192,8 @@ class DymoRenderEngine:
             text_lines = [" "]
 
         # create an empty label image
-        label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+        if label_height_px is None:
+            label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         line_height = float(label_height_px) / len(text_lines)
         font_size_px = int(round(line_height * font_size_ratio))
 

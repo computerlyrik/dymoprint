@@ -80,3 +80,21 @@ PIXELS_PER_MM = DPI / MM_PER_INCH
 
 DEFAULT_FONT_DIR = Path(dymoprint.resources.fonts.__file__).parent
 ICON_DIR = Path(dymoprint.resources.icons.__file__).parent
+
+AVAILABLE_BARCODES = [
+    "code39",
+    "code128",
+    "ean",
+    "ean13",
+    "ean8",
+    "gs1",
+    "gtin",
+    "isbn",
+    "isbn10",
+    "isbn13",
+    "issn",
+    "jan",
+    "pzn",
+    "upc",
+    "upca",
+]
