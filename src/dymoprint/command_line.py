@@ -181,7 +181,7 @@ def main():
     if args.qr and not USE_QR:
         die("Error: %s" % e_qrcode)
 
-    if args.c and args.qr:
+    if args.barcode and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
 
     if args.fixed_length is not None and (
@@ -200,8 +200,8 @@ def main():
     if args.qr:
         bitmaps.append(render_engine.render_qr(labeltext.pop(0)))
 
-    elif args.c:
-        bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.c))
+    elif args.barcode:
+        bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.barcode))
 
     elif args.barcode_text:
         bitmaps.append(
