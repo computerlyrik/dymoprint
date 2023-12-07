@@ -26,7 +26,6 @@ dependencies = [
 classifiers = [
     "Operating System :: POSIX :: Linux",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -35,7 +34,7 @@ classifiers = [
     "Topic :: Printing"
 ]
 dynamic = ["version"]
-requires-python = ">=3.7,<4"
+requires-python = ">=3.8,<4"
 
 [project.urls]
 Homepage = "https://github.com/computerlyrik/dymoprint"
@@ -65,12 +64,18 @@ profile = "black"
 legacy_tox_ini = """
 [tox]
 envlist =
-  py37
+  py38
+  py39
+  py310
+  py311
   py312
 
 [gh-actions]
 python =
-    3.7: py37
+    3.8: py38
+    3.9: py39
+    3.10: py310
+    3.11: py311
     3.12: py312
 
 [testenv]
