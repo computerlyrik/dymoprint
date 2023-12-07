@@ -1,5 +1,6 @@
 import sys
 import traceback
+from typing import Optional
 
 from PIL import Image, ImageOps, ImageQt
 from PyQt6 import QtCore
@@ -26,7 +27,7 @@ from .q_dymo_labels_list import QDymoLabelList
 
 
 class DymoPrintWindow(QWidget):
-    label_bitmap: Image.Image | None
+    label_bitmap: Optional[Image.Image]
 
     def __init__(self):
         super().__init__()

@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
@@ -76,7 +77,9 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     font_size: QSpinBox
     draw_frame: QSpinBox
 
-    def __init__(self, render_engine: DymoRenderEngine, parent: QWidget | None = None):
+    def __init__(
+        self, render_engine: DymoRenderEngine, parent: Optional[QWidget] = None
+    ):
         super().__init__(parent)
         self.render_engine = render_engine
 
