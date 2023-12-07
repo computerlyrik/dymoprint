@@ -261,6 +261,8 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.draw_frame = QSpinBox()
         self.align_label = QLabel("Alignment:")
         self.align = QComboBox()
+        self.item_icon = QLabel()
+        self.item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         self.align.addItems(["left", "center", "right"])
         # Set the default value to "center"
@@ -275,11 +277,6 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.set_text_fields_visibility(True)
 
         layout = QHBoxLayout()
-        item_icon = QLabel()
-        item_icon.setPixmap(
-            QIcon(str(ICON_DIR / "barcode_text_icon.png")).pixmap(32, 32)
-        )
-        item_icon.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         self.barcode_type_label = QLabel("Type:")
         self.barcode_type = QComboBox()
@@ -293,7 +290,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             self.toggle_text_fields_and_rerender
         )
 
-        layout.addWidget(item_icon)
+        layout.addWidget(self.item_icon)
         layout.addWidget(self.label)
         layout.addWidget(self.barcode_type_label)
         layout.addWidget(self.barcode_type)
@@ -326,6 +323,14 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.draw_frame.setVisible(visible)
         self.align_label.setVisible(visible)
         self.align.setVisible(visible)
+        if visible:
+            self.item_icon.setPixmap(
+                QIcon(str(ICON_DIR / "barcode_text_icon.png")).pixmap(32, 32)
+            )
+        else:
+            self.item_icon.setPixmap(
+                QIcon(str(ICON_DIR / "barcode_icon.png")).pixmap(32, 32)
+            )
 
     def toggle_text_fields_and_rerender(self):
         is_checked = self.show_text_checkbox.isChecked()
