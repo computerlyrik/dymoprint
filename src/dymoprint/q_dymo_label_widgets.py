@@ -237,11 +237,8 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     font_size: QSpinBox
     draw_frame: QSpinBox
     font_label: QLabel
-    font_style: QComboBox
     size_label: QLabel
-    font_size: QSpinBox
     frame_label: QLabel
-    draw_frame: QSpinBox
     align_label: QLabel
     align: QComboBox
 
