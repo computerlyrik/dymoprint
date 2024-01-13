@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from pathlib import Path
 
-from appdirs import user_config_dir
+from platformdirs import user_config_dir
 
 from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
