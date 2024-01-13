@@ -35,7 +35,7 @@ class DymoPrintWindow(QWidget):
         self.label_bitmap = None
 
         self.window_layout = QVBoxLayout()
-        self.list = QDymoLabelList(self.render_engine)
+        self.label_list = QDymoLabelList(self.render_engine)
         self.label_render = QLabel()
         self.print_button = QPushButton()
         self.margin = QSpinBox()
@@ -49,7 +49,7 @@ class DymoPrintWindow(QWidget):
         self.init_connections()
         self.init_layout()
 
-        self.list.render_label()
+        self.label_list.render_label()
 
     def init_elements(self):
         self.setWindowTitle("DymoPrint GUI")
@@ -84,13 +84,13 @@ class DymoPrintWindow(QWidget):
         )
 
     def init_connections(self):
-        self.margin.valueChanged.connect(self.list.render_label)
+        self.margin.valueChanged.connect(self.label_list.render_label)
         self.tape_size.currentTextChanged.connect(self.update_params)
         self.min_label_len.valueChanged.connect(self.update_params)
         self.justify.currentTextChanged.connect(self.update_params)
-        self.foreground_color.currentTextChanged.connect(self.list.render_label)
-        self.background_color.currentTextChanged.connect(self.list.render_label)
-        self.list.renderSignal.connect(self.update_label_render)
+        self.foreground_color.currentTextChanged.connect(self.label_list.render_label)
+        self.background_color.currentTextChanged.connect(self.label_list.render_label)
+        self.label_list.renderSignal.connect(self.update_label_render)
         self.print_button.clicked.connect(self.print_label)
 
     def init_layout(self):
@@ -121,7 +121,7 @@ class DymoPrintWindow(QWidget):
         )
 
         self.window_layout.addWidget(settings_widget)
-        self.window_layout.addWidget(self.list)
+        self.window_layout.addWidget(self.label_list)
         self.window_layout.addWidget(render_widget)
         self.setLayout(self.window_layout)
 
@@ -130,7 +130,7 @@ class DymoPrintWindow(QWidget):
         justify = self.justify.currentText()
         min_label_mm_len: int = self.min_label_len.value()
         min_payload_len_px = max(0, (min_label_mm_len * 7) - self.margin.value() * 2)
-        self.list.update_params(self.render_engine, min_payload_len_px, justify)
+        self.label_list.update_params(self.render_engine, min_payload_len_px, justify)
 
     def update_label_render(self, label_bitmap):
         self.label_bitmap = label_bitmap
