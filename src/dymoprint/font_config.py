@@ -1,10 +1,12 @@
 from configparser import ConfigParser
+from itertools import chain
 from pathlib import Path
 
 from platformdirs import user_config_dir
 
 from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
+from ._vendor.matplotlib import font_manager
 
 
 def font_filename(flag):
@@ -28,9 +30,14 @@ def font_filename(flag):
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
 
+def system_fonts():
+    for f in font_manager.findSystemFonts():
+        yield Path(f)
+
+
 def parse_fonts() -> dict:
     fonts = list()
-    for f in DEFAULT_FONT_DIR.iterdir():
+    for f in chain(DEFAULT_FONT_DIR.iterdir(), system_fonts()):
         if f.suffix == '.ttf':
             fonts.append((f.stem, f.absolute()))
-    return fonts
+    return sorted(fonts, key=lambda x: x[0].lower())

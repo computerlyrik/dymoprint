@@ -99,8 +99,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
 
         for name, font_path in parse_fonts():
             self.font_style.addItem(name, font_path)
-            if "Regular" in name:
-                self.font_style.setCurrentText(name)
+            self.font_style.setCurrentText("Carlito-Regular")
 
         layout = QHBoxLayout()
         item_icon = QLabel()
