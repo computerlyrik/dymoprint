@@ -1,6 +1,5 @@
-import os
-import re
 from configparser import ConfigParser
+from pathlib import Path
 
 from appdirs import user_config_dir
 
@@ -18,7 +17,7 @@ def font_filename(flag):
     }
 
     conf = ConfigParser(style_to_file)
-    CONFIG_FILE = os.path.join(user_config_dir(), "dymoprint.ini")
+    CONFIG_FILE = Path(user_config_dir()).joinpath("dymoprint.ini")
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if "FONTS" not in conf.sections():
@@ -31,8 +30,7 @@ def font_filename(flag):
 
 def parse_fonts() -> dict:
     fonts = list()
-    for f in os.listdir(DEFAULT_FONT_DIR):
-        m = re.match(r"(.*-.*).ttf", f)
-        if m:
-            fonts.append((m.group(1), os.path.join(DEFAULT_FONT_DIR, f)))
+    for f in DEFAULT_FONT_DIR.iterdir():
+        if f.suffix == '.ttf':
+            fonts.append((f.stem, f.absolute()))
     return fonts

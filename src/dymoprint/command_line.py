@@ -7,7 +7,7 @@
 # === END LICENSE STATEMENT ===
 
 import argparse
-import os
+from pathlib import Path
 
 from PIL import Image, ImageOps
 
@@ -172,7 +172,7 @@ def main():
     labeltext = args.text
 
     if args.u is not None:
-        if os.path.isfile(args.u):
+        if Path(args.u).is_file():
             FONT_FILENAME = args.u
         else:
             die("Error: file '%s' not found." % args.u)

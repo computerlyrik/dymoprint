@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import Optional
 
 from PyQt6 import QtCore
@@ -396,7 +396,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         file_dialog = QFileDialog()
         button.clicked.connect(
             lambda: self.label.setText(
-                os.path.abspath(file_dialog.getOpenFileName()[0])
+                str(Path(file_dialog.getOpenFileName()[0]).absolute())
             )
         )
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import array
 import math
-import os
+from pathlib import Path
 
 import barcode as barcode_module
 import usb
@@ -239,7 +239,7 @@ class DymoRenderEngine:
 
     def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
-            if os.path.exists(picture_path):
+            if Path(picture_path).exists():
                 label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
                 with Image.open(picture_path) as img:
                     if img.height > label_height:
