@@ -111,6 +111,11 @@ For my Arch-Linux System, fonts are located at e.g.
 It is also possible to Download a font from
 <http://font.ubuntu.com/> and use it.
 
+For font discovery, Dymoprint contains code excerpts from
+[`matplotlib`](https://github.com/matplotlib/matplotlib/).
+See [here](vendoring/README.md) for more information and
+[LICENSE](src/dymoprint/_vendor/matplotlib/LICENSE) for the license.
+
 ## Modes
 
 ### Print text
