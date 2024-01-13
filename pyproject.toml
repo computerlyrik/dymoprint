@@ -122,3 +122,22 @@ commands =
     python -m twine check dist/*
     python -m twine upload {posargs:--repository testpypi} dist/*
 """
+
+[tool.vendoring]
+destination = "src/dymoprint/_vendor"
+namespace = "dymoprint._vendor"
+requirements = "vendoring/vendor.txt"
+protected-files = [
+    "vendoring/README.md",
+    "vendoring/vendor.txt",
+]
+patches-dir = "vendoring/patches"
+
+[tool.vendoring.transformations]
+drop = [
+    'mpl_toolkits',
+    'pylab.py',
+    'matplotlib-3.7.4-py3.8-nspkg.pth',
+    '^matplotlib\/(?!font_manager\.py$).*$',
+    'matplotlib.pyi',
+]
