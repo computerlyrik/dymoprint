@@ -21,6 +21,7 @@ from .constants import (
     USE_QR,
     e_qrcode,
 )
+from .detect import detect_device
 from .dymo_print_engines import DymoRenderEngine, print_label
 from .font_config import font_filename, available_fonts
 from .metadata import our_metadata
@@ -283,4 +284,5 @@ def main():
             webbrowser.open(f'file://{fp.name}')
         
     else:
-        print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+        detected_device = detect_device()
+        print_label(detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t)
