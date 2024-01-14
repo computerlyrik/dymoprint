@@ -1,3 +1,4 @@
+import traceback
 from pathlib import Path
 from typing import Optional
 
@@ -156,7 +157,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
             )
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -201,9 +202,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         try:
             render = self.render_engine.render_qr(self.label.text())
             return render
-
         except BaseException as err:
-            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -359,9 +359,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                 )
             return render
         except BaseException as err:
-            QMessageBox.warning(
-                self, "BarcodeWithTextDymoLabelWidget render fail!", f"{err}"
-            )
+            QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -415,5 +413,5 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render = self.render_engine.render_picture(self.label.text())
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
