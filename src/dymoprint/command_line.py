@@ -22,7 +22,7 @@ from .constants import (
     e_qrcode,
 )
 from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import font_filename
+from .font_config import font_filename, available_fonts
 from .metadata import our_metadata
 from .unicode_blocks import image_to_unicode
 from .utils import die
@@ -103,7 +103,12 @@ def parse_args():
             "minimum or fixed length (left, center, right)"
         ),
     )
-    parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
+    parser.add_argument(
+        "-u",
+        "--font",
+        nargs="?",
+        help='Set user font, overrides "-s" parameter'
+    )
     parser.add_argument(
         "-n",
         "--preview",
@@ -178,11 +183,15 @@ def main():
 
     labeltext = args.text
 
-    if args.u is not None:
-        if Path(args.u).is_file():
-            FONT_FILENAME = args.u
+    if args.font is not None:
+        if Path(args.font).is_file():
+            FONT_FILENAME = args.font
         else:
-            die("Error: file '%s' not found." % args.u)
+            try:
+                FONT_FILENAME = next(f.absolute() for f in available_fonts() if args.font == f.stem)
+            except StopIteration:
+                fonts = ','.join(f.stem for f in available_fonts())
+                die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:

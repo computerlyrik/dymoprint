@@ -1,5 +1,4 @@
 from configparser import ConfigParser
-from itertools import chain
 from pathlib import Path
 
 from platformdirs import user_config_dir
@@ -30,14 +29,11 @@ def font_filename(flag):
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
 
-def system_fonts():
-    for f in font_manager.findSystemFonts():
-        yield Path(f)
+def available_fonts():
+    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == '.ttf']
+    fonts.extend(Path(f) for f in font_manager.findSystemFonts())
+    return sorted(fonts, key=lambda f: f.stem.lower())
 
 
-def parse_fonts() -> dict:
-    fonts = list()
-    for f in chain(DEFAULT_FONT_DIR.iterdir(), system_fonts()):
-        if f.suffix == '.ttf':
-            fonts.append((f.stem, f.absolute()))
-    return sorted(fonts, key=lambda x: x[0].lower())
+def parse_fonts():
+    return ((f.stem, f.absolute()) for f in available_fonts())
