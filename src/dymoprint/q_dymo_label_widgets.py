@@ -24,6 +24,15 @@ from .constants import AVAILABLE_BARCODES
 from .font_config import parse_fonts
 
 
+class FontStyle(QComboBox):
+    def __init__(self):
+        super(FontStyle, self).__init__()
+        # Populate font_style
+        for name, font_path in parse_fonts():
+            self.addItem(name, font_path)
+            self.setCurrentText("Carlito-Regular")
+
+
 class BaseDymoLabelWidget(QWidget):
     """
     A base class for creating Dymo label widgets.
@@ -63,7 +72,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     Attributes:
         render_engine (RenderEngine): The rendering engine used by this widget.
         label (QPlainTextEdit): The text label to be rendered on the Dymo label.
-        font_style (QComboBox): The font style selection dropdown.
+        font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
         draw_frame (QSpinBox): The frame width selection spinner.
     Signals:
@@ -73,7 +82,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     render_engine: DymoRenderEngine
     align: QComboBox
     label: QPlainTextEdit
-    font_style: QComboBox
+    font_style: FontStyle
     font_size: QSpinBox
     draw_frame: QSpinBox
 
@@ -86,7 +95,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.label = QPlainTextEdit("text")
         self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
-        self.font_style = QComboBox()
+        self.font_style = FontStyle()
         self.font_size = QSpinBox()
         self.font_size.setMaximum(150)
         self.font_size.setMinimum(0)
@@ -96,10 +105,6 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.align = QComboBox()
 
         self.align.addItems(["left", "center", "right"])
-
-        for name, font_path in parse_fonts():
-            self.font_style.addItem(name, font_path)
-            self.font_style.setCurrentText("Carlito-Regular")
 
         layout = QHBoxLayout()
         item_icon = QLabel()
@@ -214,7 +219,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             barcode label.
         Type (QComboBox): A QComboBox widget for selecting the type of barcode
             to render.
-        font_style (QComboBox): The font style selection dropdown.
+        font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
         draw_frame (QSpinBox): The frame width selection spinner.
     Signals:
@@ -232,7 +237,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     barcode_type: QComboBox
     show_text_label: QLabel
     show_text_checkbox: QCheckBox
-    font_style: QComboBox
+    font_style: FontStyle
     font_size: QSpinBox
     draw_frame: QSpinBox
     font_label: QLabel
@@ -249,7 +254,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
 
         # Hidable text fields and their labels
         self.font_label = QLabel("Font:")
-        self.font_style = QComboBox()
+        self.font_style = FontStyle()
         self.size_label = QLabel("Size [%]:")
         self.font_size = QSpinBox()
         self.font_size.setMaximum(150)
@@ -266,12 +271,6 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.align.addItems(["left", "center", "right"])
         # Set the default value to "center"
         self.align.setCurrentIndex(1)
-
-        # Populate font_style
-        for name, font_path in parse_fonts():
-            self.font_style.addItem(name, font_path)
-            if "Regular" in name:
-                self.font_style.setCurrentText(name)
 
         self.set_text_fields_visibility(True)
 
