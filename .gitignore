@@ -23,7 +23,6 @@ nosetests.xml
 *.bak
 *.org
 
-/.vscode/
 /venv*/
 
 # Temporary and binary files
@@ -48,7 +47,6 @@ __pycache__/*
 .pydevproject
 .settings
 .idea
-.vscode
 tags
 
 # Package files

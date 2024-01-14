@@ -7,7 +7,9 @@
 # === END LICENSE STATEMENT ===
 
 import argparse
-import os
+import webbrowser
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageOps
 
@@ -19,8 +21,9 @@ from .constants import (
     USE_QR,
     e_qrcode,
 )
+from .detect import detect_device
 from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import font_filename
+from .font_config import font_filename, available_fonts
 from .metadata import our_metadata
 from .unicode_blocks import image_to_unicode
 from .utils import die
@@ -101,7 +104,12 @@ def parse_args():
             "minimum or fixed length (left, center, right)"
         ),
     )
-    parser.add_argument("-u", nargs="?", help='Set user font, overrides "-s" parameter')
+    parser.add_argument(
+        "-u",
+        "--font",
+        nargs="?",
+        help='Set user font, overrides "-s" parameter'
+    )
     parser.add_argument(
         "-n",
         "--preview",
@@ -117,6 +125,11 @@ def parse_args():
         "--imagemagick",
         action="store_true",
         help="Preview label with Imagemagick, do not send to printer",
+    )
+    parser.add_argument(
+        "--browser",
+        action="store_true",
+        help="Preview label in the browser, do not send to printer",
     )
     parser.add_argument(
         "-qr", action="store_true", help="Printing the first text parameter as QR-code"
@@ -171,11 +184,15 @@ def main():
 
     labeltext = args.text
 
-    if args.u is not None:
-        if os.path.isfile(args.u):
-            FONT_FILENAME = args.u
+    if args.font is not None:
+        if Path(args.font).is_file():
+            FONT_FILENAME = args.font
         else:
-            die("Error: file '%s' not found." % args.u)
+            try:
+                FONT_FILENAME = next(f.absolute() for f in available_fonts() if args.font == f.stem)
+            except StopIteration:
+                fonts = ','.join(f.stem for f in available_fonts())
+                die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
@@ -249,7 +266,7 @@ def main():
     )
 
     # print or show the label
-    if args.preview or args.preview_inverted or args.imagemagick:
+    if args.preview or args.preview_inverted or args.imagemagick or args.browser:
         print("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
@@ -261,5 +278,11 @@ def main():
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
         if args.imagemagick:
             ImageOps.invert(label_image).show()
+        if args.browser:
+            fp = NamedTemporaryFile(suffix='.png', delete=False)
+            ImageOps.invert(label_image).save(fp)
+            webbrowser.open(f'file://{fp.name}')
+        
     else:
-        print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+        detected_device = detect_device()
+        print_label(detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t)

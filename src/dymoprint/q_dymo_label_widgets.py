@@ -1,4 +1,5 @@
-import os
+import traceback
+from pathlib import Path
 from typing import Optional
 
 from PyQt6 import QtCore
@@ -22,6 +23,15 @@ from dymoprint.dymo_print_engines import DymoRenderEngine
 
 from .constants import AVAILABLE_BARCODES
 from .font_config import parse_fonts
+
+
+class FontStyle(QComboBox):
+    def __init__(self):
+        super(FontStyle, self).__init__()
+        # Populate font_style
+        for name, font_path in parse_fonts():
+            self.addItem(name, font_path)
+            self.setCurrentText("Carlito-Regular")
 
 
 class BaseDymoLabelWidget(QWidget):
@@ -63,7 +73,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     Attributes:
         render_engine (RenderEngine): The rendering engine used by this widget.
         label (QPlainTextEdit): The text label to be rendered on the Dymo label.
-        font_style (QComboBox): The font style selection dropdown.
+        font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
         draw_frame (QSpinBox): The frame width selection spinner.
     Signals:
@@ -73,7 +83,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     render_engine: DymoRenderEngine
     align: QComboBox
     label: QPlainTextEdit
-    font_style: QComboBox
+    font_style: FontStyle
     font_size: QSpinBox
     draw_frame: QSpinBox
 
@@ -86,7 +96,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.label = QPlainTextEdit("text")
         self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
-        self.font_style = QComboBox()
+        self.font_style = FontStyle()
         self.font_size = QSpinBox()
         self.font_size.setMaximum(150)
         self.font_size.setMinimum(0)
@@ -96,11 +106,6 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.align = QComboBox()
 
         self.align.addItems(["left", "center", "right"])
-
-        for name, font_path in parse_fonts():
-            self.font_style.addItem(name, font_path)
-            if "Regular" in name:
-                self.font_style.setCurrentText(name)
 
         layout = QHBoxLayout()
         item_icon = QLabel()
@@ -152,7 +157,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
             )
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "TextDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -197,9 +202,8 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         try:
             render = self.render_engine.render_qr(self.label.text())
             return render
-
         except BaseException as err:
-            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "QrDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -215,7 +219,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             barcode label.
         Type (QComboBox): A QComboBox widget for selecting the type of barcode
             to render.
-        font_style (QComboBox): The font style selection dropdown.
+        font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
         draw_frame (QSpinBox): The frame width selection spinner.
     Signals:
@@ -233,15 +237,12 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     barcode_type: QComboBox
     show_text_label: QLabel
     show_text_checkbox: QCheckBox
-    font_style: QComboBox
+    font_style: FontStyle
     font_size: QSpinBox
     draw_frame: QSpinBox
     font_label: QLabel
-    font_style: QComboBox
     size_label: QLabel
-    font_size: QSpinBox
     frame_label: QLabel
-    draw_frame: QSpinBox
     align_label: QLabel
     align: QComboBox
 
@@ -253,7 +254,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
 
         # Hidable text fields and their labels
         self.font_label = QLabel("Font:")
-        self.font_style = QComboBox()
+        self.font_style = FontStyle()
         self.size_label = QLabel("Size [%]:")
         self.font_size = QSpinBox()
         self.font_size.setMaximum(150)
@@ -270,12 +271,6 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.align.addItems(["left", "center", "right"])
         # Set the default value to "center"
         self.align.setCurrentIndex(1)
-
-        # Populate font_style
-        for name, font_path in parse_fonts():
-            self.font_style.addItem(name, font_path)
-            if "Regular" in name:
-                self.font_style.setCurrentText(name)
 
         self.set_text_fields_visibility(True)
 
@@ -364,9 +359,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                 )
             return render
         except BaseException as err:
-            QMessageBox.warning(
-                self, "BarcodeWithTextDymoLabelWidget render fail!", f"{err}"
-            )
+            QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
 
 
@@ -399,7 +392,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         file_dialog = QFileDialog()
         button.clicked.connect(
             lambda: self.label.setText(
-                os.path.abspath(file_dialog.getOpenFileName()[0])
+                str(Path(file_dialog.getOpenFileName()[0]).absolute())
             )
         )
 
@@ -420,5 +413,5 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render = self.render_engine.render_picture(self.label.text())
             return render
         except BaseException as err:
-            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", f"{err}")
+            QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()

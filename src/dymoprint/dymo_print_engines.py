@@ -2,17 +2,16 @@ from __future__ import annotations
 
 import array
 import math
-import os
+from pathlib import Path
 
 import barcode as barcode_module
 import usb
 from PIL import Image, ImageFont, ImageOps
 
-from dymoprint.detect import detect_device
-
 from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
 from .constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
+from .detect import DetectedDevice
 from .utils import die, draw_image, scaling
 
 
@@ -239,7 +238,7 @@ class DymoRenderEngine:
 
     def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
-            if os.path.exists(picture_path):
+            if Path(picture_path).exists():
                 label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
                 with Image.open(picture_path) as img:
                     if img.height > label_height:
@@ -312,6 +311,7 @@ class DymoRenderEngine:
 
 
 def print_label(
+    detected_device: DetectedDevice,
     label_bitmap: Image.Image,
     margin_px: int = DEFAULT_MARGIN_PX,
     tape_size_mm: int = 12,
@@ -321,8 +321,7 @@ def print_label(
     The label bitmap is a PIL image in 1-bit format (mode=1), and pixels with value
     equal to 1 are burned.
     """
-    detected_device = detect_device()
-
+    assert detected_device is not None
     # Convert the image to the proper matrix for the dymo labeler object so that
     # rows span the width of the label, and the first row corresponds to the left
     # edge of the label.

@@ -16,7 +16,7 @@ license = "Apache-2.0"
 license-file = "LICENSE"
 dependencies = [
     "importlib-metadata; python_version<'3.8'",
-    "appdirs",
+    "platformdirs",
     "Pillow>=8.1.2,<11",
     "PyQRCode>=1.2.1,<2",
     "python-barcode>=0.13.1,<1",
@@ -122,3 +122,22 @@ commands =
     python -m twine check dist/*
     python -m twine upload {posargs:--repository testpypi} dist/*
 """
+
+[tool.vendoring]
+destination = "src/dymoprint/_vendor"
+namespace = "dymoprint._vendor"
+requirements = "vendoring/vendor.txt"
+protected-files = [
+    "vendoring/README.md",
+    "vendoring/vendor.txt",
+]
+patches-dir = "vendoring/patches"
+
+[tool.vendoring.transformations]
+drop = [
+    'mpl_toolkits',
+    'pylab.py',
+    'matplotlib-3.7.4-py3.8-nspkg.pth',
+    '^matplotlib\/(?!font_manager\.py$).*$',
+    'matplotlib.pyi',
+]

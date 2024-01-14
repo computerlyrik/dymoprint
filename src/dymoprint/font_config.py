@@ -1,11 +1,11 @@
-import os
-import re
 from configparser import ConfigParser
+from pathlib import Path
 
-from appdirs import user_config_dir
+from platformdirs import user_config_dir
 
 from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
+from ._vendor.matplotlib import font_manager
 
 
 def font_filename(flag):
@@ -18,7 +18,7 @@ def font_filename(flag):
     }
 
     conf = ConfigParser(style_to_file)
-    CONFIG_FILE = os.path.join(user_config_dir(), "dymoprint.ini")
+    CONFIG_FILE = Path(user_config_dir()).joinpath("dymoprint.ini")
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if "FONTS" not in conf.sections():
@@ -29,10 +29,11 @@ def font_filename(flag):
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
 
-def parse_fonts() -> dict:
-    fonts = list()
-    for f in os.listdir(DEFAULT_FONT_DIR):
-        m = re.match(r"(.*-.*).ttf", f)
-        if m:
-            fonts.append((m.group(1), os.path.join(DEFAULT_FONT_DIR, f)))
-    return fonts
+def available_fonts():
+    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == '.ttf']
+    fonts.extend(Path(f) for f in font_manager.findSystemFonts())
+    return sorted(fonts, key=lambda f: f.stem.lower())
+
+
+def parse_fonts():
+    return ((f.stem, str(f.absolute())) for f in available_fonts())
