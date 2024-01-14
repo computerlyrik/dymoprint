@@ -36,4 +36,4 @@ def available_fonts():
 
 
 def parse_fonts():
-    return ((f.stem, f.absolute()) for f in available_fonts())
+    return ((f.stem, str(f.absolute())) for f in available_fonts())
