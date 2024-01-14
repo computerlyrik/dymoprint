@@ -7,7 +7,9 @@
 # === END LICENSE STATEMENT ===
 
 import argparse
+import webbrowser
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageOps
 
@@ -117,6 +119,11 @@ def parse_args():
         "--imagemagick",
         action="store_true",
         help="Preview label with Imagemagick, do not send to printer",
+    )
+    parser.add_argument(
+        "--browser",
+        action="store_true",
+        help="Preview label in the browser, do not send to printer",
     )
     parser.add_argument(
         "-qr", action="store_true", help="Printing the first text parameter as QR-code"
@@ -249,7 +256,7 @@ def main():
     )
 
     # print or show the label
-    if args.preview or args.preview_inverted or args.imagemagick:
+    if args.preview or args.preview_inverted or args.imagemagick or args.browser:
         print("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
@@ -261,5 +268,10 @@ def main():
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
         if args.imagemagick:
             ImageOps.invert(label_image).show()
+        if args.browser:
+            fp = NamedTemporaryFile(suffix='.png', delete=False)
+            ImageOps.invert(label_image).save(fp)
+            webbrowser.open(f'file://{fp.name}')
+        
     else:
         print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
