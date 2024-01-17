@@ -108,9 +108,7 @@ class DymoRenderEngine:
             {
                 "font_size": 0,
                 "vertical_margin": 8,
-                "module_height": (
-                    DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8 - 16
-                ),
+                "module_height": label_height - 16,
                 "module_width": 2,
                 "background": "black",
                 "foreground": "white",
