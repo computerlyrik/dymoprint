@@ -16,16 +16,15 @@ from .utils import die, draw_image, scaling
 
 
 class DymoRenderEngine:
-    tape_size_mm: int
+    label_height_px: int
 
     def __init__(self, tape_size_mm: int = 12) -> None:
         """Initialize a DymoRenderEngine object with a specified tape size."""
-        self.tape_size_mm = tape_size_mm
+        self.label_height_px = DymoLabeler.max_bytes_per_line(tape_size_mm) * 8
 
     def render_empty(self, label_len: int = 1) -> Image.Image:
         """Render an empty label image."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
-        return Image.new("1", (label_len, label_height))
+        return Image.new("1", (label_len, self.label_height_px))
 
     def render_test(self, width: int = 100) -> Image.Image:
         """Render a test pattern"""
@@ -61,17 +60,16 @@ class DymoRenderEngine:
 
     def render_qr(self, qr_input_text: str) -> Image.Image:
         """Render a QR code image from the input text."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(qr_input_text) == 0:
-            return Image.new("1", (1, label_height))
+            return Image.new("1", (1, self.label_height_px))
 
         # create QR object from first string
         code = QRCode(qr_input_text, error="M")
         qr_text = code.text(quiet_zone=1).split()
 
         # create an empty label image
-        qr_scale = label_height // len(qr_text)
-        qr_offset = (label_height - len(qr_text) * qr_scale) // 2
+        qr_scale = self.label_height_px // len(qr_text)
+        qr_offset = (self.label_height_px - len(qr_text) * qr_scale) // 2
         label_width = len(qr_text) * qr_scale
 
         if not qr_scale:
@@ -80,7 +78,7 @@ class DymoRenderEngine:
                 "are smaller than the device resolution"
             )
 
-        code_bitmap = Image.new("1", (label_width, label_height))
+        code_bitmap = Image.new("1", (label_width, self.label_height_px))
 
         with draw_image(code_bitmap) as label_draw:
             # write the qr-code into the empty image
@@ -97,9 +95,8 @@ class DymoRenderEngine:
         self, barcode_input_text: str, bar_code_type: str
     ) -> Image.Image:
         """Render a barcode image from the input text and barcode type."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(barcode_input_text) == 0:
-            return Image.new("1", (1, label_height))
+            return Image.new("1", (1, self.label_height_px))
 
         code = barcode_module.get(
             bar_code_type, barcode_input_text, writer=BarcodeImageWriter()
@@ -108,7 +105,7 @@ class DymoRenderEngine:
             {
                 "font_size": 0,
                 "vertical_margin": 8,
-                "module_height": label_height - 16,
+                "module_height": self.label_height_px - 16,
                 "module_width": 2,
                 "background": "black",
                 "foreground": "white",
@@ -190,7 +187,7 @@ class DymoRenderEngine:
 
         # create an empty label image
         if label_height_px is None:
-            label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+            label_height_px = self.label_height_px
         line_height = float(label_height_px) / len(text_lines)
         font_size_px = int(round(line_height * font_size_ratio))
 
@@ -237,20 +234,18 @@ class DymoRenderEngine:
     def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
             if Path(picture_path).exists():
-                label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
                 with Image.open(picture_path) as img:
-                    if img.height > label_height:
-                        ratio = label_height / img.height
+                    if img.height > self.label_height_px:
+                        ratio = self.label_height_px / img.height
                         img = img.resize(
-                            (int(math.ceil(img.width * ratio)), label_height)
+                            (int(math.ceil(img.width * ratio)), self.label_height_px)
                         )
 
                     img = img.convert("L", palette=Image.AFFINE)
                     return ImageOps.invert(img).convert("1")
             else:
                 die(f"picture path:{picture_path}  doesn't exist ")
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
-        return Image.new("1", (1, label_height))
+        return Image.new("1", (1, self.label_height_px))
 
     def merge_render(
         self,
