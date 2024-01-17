@@ -148,14 +148,13 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         selected_alignment = self.align.currentText()
         assert selected_alignment in ("left", "center", "right")
         try:
-            render = self.render_engine.render_text(
+            return self.render_engine.render_text(
                 text_lines=self.label.toPlainText().splitlines(),
                 font_file_name=self.font_style.currentData(),
                 frame_width_px=self.draw_frame.value(),
                 font_size_ratio=self.font_size.value() / 100.0,
                 align=selected_alignment,
             )
-            return render
         except BaseException as err:
             QMessageBox.warning(self, "TextDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
@@ -200,8 +199,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             QMessageBox.warning: If the rendering fails.
         """
         try:
-            render = self.render_engine.render_qr(self.label.text())
-            return render
+            return self.render_engine.render_qr(self.label.text())
         except BaseException as err:
             QMessageBox.warning(self, "QrDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
@@ -345,7 +343,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         """
         try:
             if self.show_text_checkbox.isChecked():
-                render = self.render_engine.render_barcode_with_text(
+                return self.render_engine.render_barcode_with_text(
                     barcode_input_text=self.label.text(),
                     bar_code_type=self.barcode_type.currentText(),
                     font_file_name=self.font_style.currentData(),
@@ -354,10 +352,9 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                     align=self.align.currentText(),
                 )
             else:
-                render = self.render_engine.render_barcode(
+                return self.render_engine.render_barcode(
                     self.label.text(), self.barcode_type.currentText()
                 )
-            return render
         except BaseException as err:
             QMessageBox.warning(self, "BarcodeDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
@@ -410,8 +407,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             QPixmap: The rendered label as a QPixmap.
         """
         try:
-            render = self.render_engine.render_picture(self.label.text())
-            return render
+            return self.render_engine.render_picture(self.label.text())
         except BaseException as err:
             QMessageBox.warning(self, "ImageDymoLabelWidget render fail!", traceback.format_exc())
             return self.render_engine.render_empty()
