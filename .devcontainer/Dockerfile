@@ -15,3 +15,16 @@ RUN apt-get update \
     && apt-get install -y ${deps} \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install pre-commit ruff
+
+# Preinstall the dependencies (extremely hacky)
+COPY ../pyproject.toml /tmp/temp-project/pyproject.toml
+RUN touch /tmp/temp-project/README.md \
+    && cd /tmp/temp-project \
+    && git init \
+    && mkdir -p src/dymoprint \
+    && echo '__version__ = "0.0.0"' > src/dymoprint/_version.py \
+    && pip install -e . \
+    && pip uninstall -y dymoprint \
+    && rm -rf /tmp/temp-project
