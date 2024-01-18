@@ -332,7 +332,7 @@ def print_label(
     if len(labelstream) // label_stream_row_length != label_bitmap.width:
         die("An internal problem was encountered while processing the label bitmap!")
     label_rows: list[bytes] = [
-        labelstream[i: i + label_stream_row_length]
+        labelstream[i : i + label_stream_row_length]
         for i in range(0, len(labelstream), label_stream_row_length)
     ]
 

@@ -105,10 +105,7 @@ def parse_args():
         ),
     )
     parser.add_argument(
-        "-u",
-        "--font",
-        nargs="?",
-        help='Set user font, overrides "-s" parameter'
+        "-u", "--font", nargs="?", help='Set user font, overrides "-s" parameter'
     )
     parser.add_argument(
         "-n",
@@ -190,9 +187,11 @@ def main():
             FONT_FILENAME = args.font
         else:
             try:
-                FONT_FILENAME = next(f.absolute() for f in available_fonts() if args.font == f.stem)
+                FONT_FILENAME = next(
+                    f.absolute() for f in available_fonts() if args.font == f.stem
+                )
             except StopIteration:
-                fonts = ','.join(f.stem for f in available_fonts())
+                fonts = ",".join(f.stem for f in available_fonts())
                 die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
@@ -280,10 +279,12 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
         if args.browser:
-            with NamedTemporaryFile(suffix='.png', delete=False) as fp:
+            with NamedTemporaryFile(suffix=".png", delete=False) as fp:
                 ImageOps.invert(label_image).save(fp)
-                webbrowser.open(f'file://{fp.name}')
+                webbrowser.open(f"file://{fp.name}")
 
     else:
         detected_device = detect_device()
-        print_label(detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+        print_label(
+            detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t
+        )

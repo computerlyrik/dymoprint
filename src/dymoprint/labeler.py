@@ -79,7 +79,7 @@ class DymoLabeler:
                 while synCount < self.synwait:
                     try:
                         # Increment pos to the index of the next SYN character
-                        pos += self.cmd[pos + 1:].index(SYN) + 1
+                        pos += self.cmd[pos + 1 :].index(SYN) + 1
                         synCount += 1
                     except ValueError:
                         # No more SYN characters in cmd
@@ -190,8 +190,8 @@ class DymoLabeler:
         larger than maxLines).
         """
         while len(lines) > self.maxLines + 1:
-            self.rawPrintLabel(lines[0: self.maxLines], margin_px=0)
-            del lines[0: self.maxLines]
+            self.rawPrintLabel(lines[0 : self.maxLines], margin_px=0)
+            del lines[0 : self.maxLines]
         self.rawPrintLabel(lines, margin_px=margin_px)
 
     def rawPrintLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):

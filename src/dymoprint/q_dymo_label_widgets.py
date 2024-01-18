@@ -62,7 +62,9 @@ class BaseDymoLabelWidget(QWidget):
         try:
             return self.render_label_impl()
         except BaseException as err:
-            QMessageBox.warning(self, "Render fail!", f"{err}\n\n\n{traceback.format_exc()}")
+            QMessageBox.warning(
+                self, "Render fail!", f"{err}\n\n\n{traceback.format_exc()}"
+            )
             return self.render_engine.render_empty()
 
 
@@ -363,8 +365,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                 align=self.align.currentText(),
             )
         return self.render_engine.render_barcode(
-            self.label.text(),
-            self.barcode_type.currentText()
+            self.label.text(), self.barcode_type.currentText()
         )
 
 

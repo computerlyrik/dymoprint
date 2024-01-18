@@ -30,7 +30,7 @@ def font_filename(flag):
 
 
 def available_fonts():
-    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == '.ttf']
+    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == ".ttf"]
     fonts.extend(Path(f) for f in font_manager.findSystemFonts())
     return sorted(fonts, key=lambda f: f.stem.lower())
 

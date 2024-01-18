@@ -177,7 +177,10 @@ class DymoPrintWindow(QWidget):
             if self.label_bitmap is None:
                 raise RuntimeError("No label to print! Call update_label_render first.")
             print_label(
-                self.detected_device, self.label_bitmap, self.margin.value(), self.tape_size.currentData()
+                self.detected_device,
+                self.label_bitmap,
+                self.margin.value(),
+                self.tape_size.currentData(),
             )
         except (RuntimeError, USBError) as err:
             print(traceback.format_exc())
@@ -196,7 +199,9 @@ class DymoPrintWindow(QWidget):
         self.error_label.setVisible(not is_enabled)
         self.print_button.setVisible(is_enabled)
         self.print_button.setEnabled(is_enabled)
-        self.print_button.setCursor(Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor)
+        self.print_button.setCursor(
+            Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor
+        )
 
 
 def main():
