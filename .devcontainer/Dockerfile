@@ -10,14 +10,18 @@ ARG deps="\
     libxcb-shape0 \
     libxkbcommon-x11-0 \
     "
-
 RUN apt-get update \
     && apt-get install -y ${deps} \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/lib/apt/lists/*
 
+ARG pip_deps="\
+    pre-commit \
+    ruff \
+    tox \
+    "
 RUN pip install --upgrade pip \
-    && pip install pre-commit ruff
+    && pip install ${pip_deps}
 
 # Preinstall the dependencies (extremely hacky)
 COPY ../pyproject.toml /tmp/temp-project/pyproject.toml
