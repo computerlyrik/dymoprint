@@ -27,7 +27,7 @@ class DetectedDevice(NamedTuple):
 
 def device_info(dev: usb.core.Device) -> str:
     try:
-        dev.manufacturer  # noqa: B018
+        _ = dev.manufacturer
     except ValueError:
         instruct_on_access_denied(dev)
     res = ""
