@@ -34,6 +34,7 @@ class DymoPrintWindow(QWidget):
         super().__init__()
         self.render_engine = DymoRenderEngine(12)
         self.label_bitmap = None
+        self.detected_device = None
 
         self.window_layout = QVBoxLayout()
         self.label_list = QDymoLabelList(self.render_engine)

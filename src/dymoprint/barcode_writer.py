@@ -45,11 +45,9 @@ class BarcodeImageWriter(BaseWriter):
             self._callbacks["initialize"](code)
         ypos = self.vertical_margin
         for cc, line in enumerate(code):
-            """
-            Pack line to list give better gfx result, otherwise in can
-            result in aliasing gaps
-            '11010111' -> [2, -1, 1, -1, 3]
-            """
+            # Pack line to list give better gfx result, otherwise in can
+            # result in aliasing gaps
+            # '11010111' -> [2, -1, 1, -1, 3]
             line += " "
             c = 1
             mlist = []

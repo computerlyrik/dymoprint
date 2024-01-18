@@ -27,7 +27,7 @@ from .font_config import parse_fonts
 
 class FontStyle(QComboBox):
     def __init__(self):
-        super(FontStyle, self).__init__()
+        super().__init__()
         # Populate font_style
         for name, font_path in parse_fonts():
             self.addItem(name, font_path)
@@ -67,9 +67,8 @@ class BaseDymoLabelWidget(QWidget):
         try:
             return self.render_label_impl()
         except BaseException as err:
-            QMessageBox.warning(self, f"Render fail!", f"{err}\n\n\n{traceback.format_exc()}")
+            QMessageBox.warning(self, "Render fail!", f"{err}\n\n\n{traceback.format_exc()}")
             return self.render_engine.render_empty()
-
 
 
 class TextDymoLabelWidget(BaseDymoLabelWidget):
@@ -350,10 +349,10 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                 font_size_ratio=self.font_size.value() / 100.0,
                 align=self.align.currentText(),
             )
-        else:
-            return self.render_engine.render_barcode(
-                self.label.text(), self.barcode_type.currentText()
-            )
+        return self.render_engine.render_barcode(
+            self.label.text(),
+            self.barcode_type.currentText()
+        )
 
 
 class ImageDymoLabelWidget(BaseDymoLabelWidget):

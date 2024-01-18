@@ -22,8 +22,8 @@ def font_filename(flag):
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if "FONTS" not in conf.sections():
-            die('! config file "%s" not valid. Please change or remove.' % CONFIG_FILE)
-        for style in style_to_file.keys():
+            die(f'! config file "{CONFIG_FILE}" not valid. Please change or remove.')
+        for style in style_to_file:
             style_to_file[style] = conf.get("FONTS", style)
 
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]

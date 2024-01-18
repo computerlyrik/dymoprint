@@ -20,10 +20,8 @@ def die(message=None) -> NoReturn:
     sys.exit(1)
 
 
-""" scaling pixel up, input: (x,y),scale-factor """
-
-
 def scaling(pix, sc):
+    """ scaling pixel up, input: (x,y),scale-factor """
     return [(pix[0] + i, pix[1] + j) for i in range(sc) for j in range(sc)]
 
 

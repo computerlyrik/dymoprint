@@ -82,7 +82,7 @@ def detect_device() -> DetectedDevice:
             print("Device configuration set.")
         except usb.core.USBError as e:
             if e.errno == 13:
-                raise RuntimeError("Access denied")
+                raise RuntimeError("Access denied") from e
             if e.errno == 16:
                 print("Device is busy, but this is okay.")
             else:

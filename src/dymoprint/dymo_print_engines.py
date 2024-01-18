@@ -83,8 +83,8 @@ class DymoRenderEngine:
         with draw_image(code_bitmap) as label_draw:
             # write the qr-code into the empty image
             for i, line in enumerate(qr_text):
-                for j in range(len(line)):
-                    if line[j] == "1":
+                for j, char in enumerate(line):
+                    if char == "1":
                         pix = scaling(
                             (j * qr_scale, i * qr_scale + qr_offset), qr_scale
                         )
@@ -329,9 +329,9 @@ def print_label(
     # Regather the bytes into rows
     label_stream_row_length = int(math.ceil(label_bitmap.height / 8))
     if len(labelstream) // label_stream_row_length != label_bitmap.width:
-        die("An internal problem was encountered while processing the label " "bitmap!")
+        die("An internal problem was encountered while processing the label bitmap!")
     label_rows: list[bytes] = [
-        labelstream[i : i + label_stream_row_length]
+        labelstream[i: i + label_stream_row_length]
         for i in range(0, len(labelstream), label_stream_row_length)
     ]
 

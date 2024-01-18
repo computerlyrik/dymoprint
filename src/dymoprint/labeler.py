@@ -61,7 +61,7 @@ class DymoLabeler:
         """Send the already built command to the LabelManager. (MLF)"""
 
         if len(self.cmd) == 0:
-            return
+            return None
 
         while len(self.cmd) > 0:
             if self.synwait is None:
@@ -81,7 +81,7 @@ class DymoLabeler:
                 while synCount < self.synwait:
                     try:
                         # Increment pos to the index of the next SYN character
-                        pos += self.cmd[pos + 1 :].index(SYN) + 1
+                        pos += self.cmd[pos + 1:].index(SYN) + 1
                         synCount += 1
                     except ValueError:
                         # No more SYN characters in cmd
@@ -100,7 +100,7 @@ class DymoLabeler:
 
         self.cmd = []  # This looks redundant.
         if not self.response:
-            return
+            return None
         self.response = False
         responseBin = self.devin.read(8)
         response = array.array("B", responseBin).tolist()
@@ -145,7 +145,6 @@ class DymoLabeler:
     def bytesPerLine(self, value: int):
         """Set the number of bytes sent in the following lines. (MLF)"""
 
-        self.tape_size_mm
         if value == self.bytesPerLine_:
             return
         cmd = [ESC, ord("D"), value]
@@ -205,8 +204,8 @@ class DymoLabeler:
         larger than maxLines)"""
 
         while len(lines) > self.maxLines + 1:
-            self.rawPrintLabel(lines[0 : self.maxLines], margin_px=0)
-            del lines[0 : self.maxLines]
+            self.rawPrintLabel(lines[0: self.maxLines], margin_px=0)
+            del lines[0: self.maxLines]
         self.rawPrintLabel(lines, margin_px=margin_px)
 
     def rawPrintLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):

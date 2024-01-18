@@ -196,7 +196,7 @@ def main():
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
-        die("Error: %s" % e_qrcode)
+        die(f"Error: {e_qrcode}")
 
     if args.barcode and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
@@ -279,10 +279,10 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
         if args.browser:
-            fp = NamedTemporaryFile(suffix='.png', delete=False)
-            ImageOps.invert(label_image).save(fp)
-            webbrowser.open(f'file://{fp.name}')
-        
+            with NamedTemporaryFile(suffix='.png', delete=False) as fp:
+                ImageOps.invert(label_image).save(fp)
+                webbrowser.open(f'file://{fp.name}')
+
     else:
         detected_device = detect_device()
         print_label(detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t)
