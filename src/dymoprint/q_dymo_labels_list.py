@@ -151,6 +151,6 @@ class QDymoLabelList(QListWidget):
             try:
                 item = self.itemAt(event.pos())
                 self.takeItem(self.indexFromItem(item).row())  # self.update()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"No item selected {e}")
         self.render_label()

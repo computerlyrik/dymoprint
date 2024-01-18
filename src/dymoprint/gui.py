@@ -193,7 +193,7 @@ class DymoPrintWindow(QWidget):
         try:
             self.detected_device = detect_device()
             is_enabled = True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.error_label.setVisible(not is_enabled)
