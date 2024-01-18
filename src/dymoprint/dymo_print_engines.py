@@ -122,7 +122,7 @@ class DymoRenderEngine:
         font_size_ratio=0.9,
         align="center",
     ):
-        """Renders a barcode image with the text below it.
+        """Render a barcode image with the text below it.
 
         Args:
         ----
@@ -132,6 +132,7 @@ class DymoRenderEngine:
             frame_width (int): The width of the frame around the text.
             font_size_ratio (float): The ratio of font size to line height. Default
                 is 1.
+            align (str): The alignment of the text. Default is "center".
 
         Returns:
         -------

@@ -57,7 +57,7 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     def dropEvent(self, e) -> None:
-        """Overrides the default drop event to update the label rendering.
+        """Override the default drop event to update the label rendering.
 
         Args:
         ----
@@ -67,7 +67,7 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     def update_params(self, render_engine, min_payload_len_px=0, justify="center"):
-        """Updates the render engine used for rendering the label.
+        """Update the render engine used for rendering the label.
 
         Args:
         ----
@@ -102,7 +102,7 @@ class QDymoLabelList(QListWidget):
         self.renderSignal.emit(label_bitmap)
 
     def contextMenuEvent(self, event):
-        """Overrides the default context menu event to add or delete label widgets.
+        """Override the default context menu event to add or delete label widgets.
 
         Args:
         ----

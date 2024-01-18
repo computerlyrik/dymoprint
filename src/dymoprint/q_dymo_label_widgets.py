@@ -35,6 +35,7 @@ class FontStyle(QComboBox):
 
 class BaseDymoLabelWidget(QWidget):
     """A base class for creating Dymo label widgets.
+
     Signals:
     --------
     itemRenderSignal : PyQtSignal
@@ -51,7 +52,7 @@ class BaseDymoLabelWidget(QWidget):
     itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
     def content_changed(self):
-        """Emits the itemRenderSignal when the content of the label is changed."""
+        """Emit the itemRenderSignal when the content of the label is changed."""
         self.itemRenderSignal.emit()
 
     def render_label_impl(self):
@@ -136,15 +137,17 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.setLayout(layout)
 
     def content_changed(self):
-        """Updates the height of the label and emits the itemRenderSignal when the
-        content of the label changes.
+        """Manage changes to the label contents.
+
+        In particular, update the height of the label and emit the itemRenderSignal
+        when the content of the label changes.
         """
         self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
         self.setFixedHeight(self.label.height() + 10)
         self.itemRenderSignal.emit()
 
     def render_label_impl(self):
-        """Renders the label using the current settings.
+        """Render the label using the current settings.
 
         Returns
         -------
@@ -176,7 +179,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
     """
 
     def __init__(self, render_engine, parent=None):
-        """Initializes the QrDymoLabelWidget.
+        """Initialize the QrDymoLabelWidget.
 
         Args:
         ----
@@ -198,7 +201,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         self.setLayout(layout)
 
     def render_label_impl(self):
-        """Renders the QR code on the Dymo label.
+        """Render the QR code on the Dymo label.
 
         Returns
         -------
@@ -345,7 +348,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.content_changed()  # Trigger rerender
 
     def render_label_impl(self):
-        """Renders the labels with barcode and text below it using the current settings.
+        """Render the labels with barcode and text below it using the current settings.
 
         Returns
         -------
@@ -379,7 +382,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
     """
 
     def __init__(self, render_engine, parent=None):
-        """Initializes the ImageDymoLabelWidget.
+        """Initialize the ImageDymoLabelWidget.
 
         Args:
         ----
@@ -412,7 +415,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         self.setLayout(layout)
 
     def render_label_impl(self):
-        """Renders the label using the render engine and the selected image file.
+        """Render the label using the render engine and the selected image file.
 
         Returns
         -------

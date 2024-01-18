@@ -186,8 +186,9 @@ class DymoLabeler:
         print(response)
 
     def printLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
-        """Print the label described by lines. (Automatically split label if
-        larger than maxLines).
+        """Print the label described by lines.
+
+        Automatically split the label if it's larger than maxLines.
         """
         while len(lines) > self.maxLines + 1:
             self.rawPrintLabel(lines[0 : self.maxLines], margin_px=0)
