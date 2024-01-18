@@ -99,6 +99,8 @@ class BarcodeImageWriter(BaseWriter):
         self._draw.rectangle(size, outline=color, fill=color)
 
     def _finish(self):
+        # although Image mode set to "1", draw function writes white as 255
+        self._image = self._image.point(lambda x: 1 if x > 0 else 0, mode="1")
         return self._image
 
     def save(self, filename, output):
