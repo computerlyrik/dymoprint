@@ -56,10 +56,6 @@ version-file = "src/dymoprint/_version.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/dymoprint"]
 
-[tool.isort]
-src_paths = ["src"]
-profile = "black"
-
 [tool.tox]
 legacy_tox_ini = """
 [tox]
