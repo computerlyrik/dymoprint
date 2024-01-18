@@ -78,7 +78,7 @@ pipx install --force dymoprint
 
 To install a particular release version, specify `dymoprint==x.y.z` instead of `dymoprint` in the above command.
 
-## Development
+## Development and code style
 
 To install for development, fork and clone this repository, and run (ideally within a venv):
 
