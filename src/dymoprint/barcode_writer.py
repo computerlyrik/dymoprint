@@ -33,8 +33,9 @@ class BarcodeImageWriter(BaseWriter):
         return int(mm2px(width, dpi)), int(mm2px(height, dpi))
 
     def render(self, code):
-        """Renders the barcode to whatever the inheriting writer provides,
-        using the registered callbacks.
+        """Render the barcode.
+
+        Uses whichever inheriting writer is provided via the registered callbacks.
 
         :parameters:
             code : List
