@@ -122,10 +122,10 @@ class DymoRenderEngine:
         font_size_ratio=0.9,
         align="center",
     ):
-        """
-        Renders a barcode image with the text below it.
+        """Renders a barcode image with the text below it.
 
         Args:
+        ----
             barcode_input_text (str): The input text to be encoded in the barcode.
             bar_code_type (str): The type of barcode to be rendered.
             font_file_name (str): The name of the font file to be used.
@@ -134,6 +134,7 @@ class DymoRenderEngine:
                 is 1.
 
         Returns:
+        -------
             Image: A barcode with text image.
         """
         assert align in ("left", "center", "right")

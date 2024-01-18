@@ -11,15 +11,20 @@ from .q_dymo_label_widgets import (
 
 
 class QDymoLabelList(QListWidget):
-    """
-    A custom QListWidget for displaying and managing Dymo label widgets.
+    """A custom QListWidget for displaying and managing Dymo label widgets.
+
     Args:
+    ----
         render_engine (RenderEngine): The render engine to use for rendering the label.
         parent (QWidget): The parent widget of this QListWidget.
+
     Attributes:
+    ----------
         renderSignal (QtCore.pyqtSignal): A signal emitted when the label is rendered.
         render_engine (RenderEngine): The render engine used for rendering the label.
+
     Methods:
+    -------
         __init__(self, render_engine, parent=None): Initializes the QListWidget
             with the given render engine and parent.
         dropEvent(self, e) -> None: Overrides the default drop event to update
@@ -52,18 +57,20 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     def dropEvent(self, e) -> None:
-        """
-        Overrides the default drop event to update the label rendering.
+        """Overrides the default drop event to update the label rendering.
+
         Args:
+        ----
             e (QDropEvent): The drop event.
         """
         super().dropEvent(e)
         self.render_label()
 
     def update_params(self, render_engine, min_payload_len_px=0, justify="center"):
-        """
-        Updates the render engine used for rendering the label.
+        """Updates the render engine used for rendering the label.
+
         Args:
+        ----
             justify: justification [center,left,right]
             min_payload_len_px: minimum payload size
             render_engine (RenderEngine): The new render engine to use.
@@ -77,8 +84,7 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     def render_label(self):
-        """
-        Renders the label using the current render engine and emits the renderSignal.
+        """Renders the label using the current render engine and emits the renderSignal.
         """
         bitmaps = []
         for i in range(self.count()):
@@ -97,9 +103,10 @@ class QDymoLabelList(QListWidget):
         self.renderSignal.emit(label_bitmap)
 
     def contextMenuEvent(self, event):
-        """
-        Overrides the default context menu event to add or delete label widgets.
+        """Overrides the default context menu event to add or delete label widgets.
+
         Args:
+        ----
             event (QContextMenuEvent): The context menu event.
         """
         contextMenu = QMenu(self)

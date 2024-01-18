@@ -3,9 +3,9 @@ from pathlib import Path
 
 from platformdirs import user_config_dir
 
+from ._vendor.matplotlib import font_manager
 from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
-from ._vendor.matplotlib import font_manager
 
 
 def font_filename(flag):

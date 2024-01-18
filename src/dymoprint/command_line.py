@@ -23,7 +23,7 @@ from .constants import (
 )
 from .detect import detect_device
 from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import font_filename, available_fonts
+from .font_config import available_fonts, font_filename
 from .metadata import our_metadata
 from .unicode_blocks import image_to_unicode
 from .utils import die
@@ -171,7 +171,8 @@ def mm_to_payload_px(mm, margin):
     """Convert a length in mm to a number of pixels of payload
 
     The print resolution is 7 pixels/mm, and margin is subtracted
-    from each side."""
+    from each side.
+    """
     return (mm * PIXELS_PER_MM) - margin * 2
 
 
