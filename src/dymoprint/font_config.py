@@ -3,9 +3,9 @@ from pathlib import Path
 
 from platformdirs import user_config_dir
 
+from ._vendor.matplotlib import font_manager
 from .constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 from .utils import die
-from ._vendor.matplotlib import font_manager
 
 
 def font_filename(flag):
@@ -22,15 +22,15 @@ def font_filename(flag):
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if "FONTS" not in conf.sections():
-            die('! config file "%s" not valid. Please change or remove.' % CONFIG_FILE)
-        for style in style_to_file.keys():
+            die(f'! config file "{CONFIG_FILE}" not valid. Please change or remove.')
+        for style in style_to_file:
             style_to_file[style] = conf.get("FONTS", style)
 
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
 
 def available_fonts():
-    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == '.ttf']
+    fonts = [f for f in DEFAULT_FONT_DIR.iterdir() if f.suffix == ".ttf"]
     fonts.extend(Path(f) for f in font_manager.findSystemFonts())
     return sorted(fonts, key=lambda f: f.stem.lower())
 

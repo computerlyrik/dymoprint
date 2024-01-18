@@ -23,7 +23,7 @@ from .constants import (
 )
 from .detect import detect_device
 from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import font_filename, available_fonts
+from .font_config import available_fonts, font_filename
 from .metadata import our_metadata
 from .unicode_blocks import image_to_unicode
 from .utils import die
@@ -105,10 +105,7 @@ def parse_args():
         ),
     )
     parser.add_argument(
-        "-u",
-        "--font",
-        nargs="?",
-        help='Set user font, overrides "-s" parameter'
+        "-u", "--font", nargs="?", help='Set user font, overrides "-s" parameter'
     )
     parser.add_argument(
         "-n",
@@ -168,10 +165,10 @@ def parse_args():
 
 
 def mm_to_payload_px(mm, margin):
-    """Convert a length in mm to a number of pixels of payload
+    """Convert a length in mm to a number of pixels of payload.
 
-    The print resolution is 7 pixels/mm, and margin is subtracted
-    from each side."""
+    The print resolution is 7 pixels/mm, and margin is subtracted from each side.
+    """
     return (mm * PIXELS_PER_MM) - margin * 2
 
 
@@ -189,14 +186,16 @@ def main():
             FONT_FILENAME = args.font
         else:
             try:
-                FONT_FILENAME = next(f.absolute() for f in available_fonts() if args.font == f.stem)
+                FONT_FILENAME = next(
+                    f.absolute() for f in available_fonts() if args.font == f.stem
+                )
             except StopIteration:
-                fonts = ','.join(f.stem for f in available_fonts())
+                fonts = ",".join(f.stem for f in available_fonts())
                 die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
-        die("Error: %s" % e_qrcode)
+        die(f"Error: {e_qrcode}")
 
     if args.barcode and args.qr:
         die("Error: can not print both QR and Barcode on the same label (yet)")
@@ -270,7 +269,7 @@ def main():
         print("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
-            "L", (margin + label_bitmap.width + margin, label_bitmap.height)
+            "1", (margin + label_bitmap.width + margin, label_bitmap.height)
         )
         label_image.paste(label_bitmap, (margin, 0))
         if args.preview or args.preview_inverted:
@@ -279,10 +278,12 @@ def main():
         if args.imagemagick:
             ImageOps.invert(label_image).show()
         if args.browser:
-            fp = NamedTemporaryFile(suffix='.png', delete=False)
-            ImageOps.invert(label_image).save(fp)
-            webbrowser.open(f'file://{fp.name}')
-        
+            with NamedTemporaryFile(suffix=".png", delete=False) as fp:
+                ImageOps.invert(label_image).save(fp)
+                webbrowser.open(f"file://{fp.name}")
+
     else:
         detected_device = detect_device()
-        print_label(detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+        print_label(
+            detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t
+        )

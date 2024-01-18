@@ -14,16 +14,16 @@ assert NB == "\N{NO-BREAK SPACE}"
 
 dict_unicode = {
     (0, 0): FB,
-    (255, 0): LH,
-    (0, 255): UH,
-    (255, 255): NB,
+    (1, 0): LH,
+    (0, 1): UH,
+    (1, 1): NB,
 }
 
 dict_unicode_inverted = {
     (0, 0): NB,
-    (255, 0): UH,
-    (0, 255): LH,
-    (255, 255): FB,
+    (1, 0): UH,
+    (0, 1): LH,
+    (1, 1): FB,
 }
 
 

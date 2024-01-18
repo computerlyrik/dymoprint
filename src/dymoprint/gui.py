@@ -34,6 +34,7 @@ class DymoPrintWindow(QWidget):
         super().__init__()
         self.render_engine = DymoRenderEngine(12)
         self.label_bitmap = None
+        self.detected_device = None
 
         self.window_layout = QVBoxLayout()
         self.label_list = QDymoLabelList(self.render_engine)
@@ -56,7 +57,7 @@ class DymoPrintWindow(QWidget):
 
     def init_elements(self):
         self.setWindowTitle("DymoPrint GUI")
-        self.setWindowIcon(QIcon(str(ICON_DIR / "gui_icon.png")))
+        self.setWindowIcon(QIcon(str(ICON_DIR.joinpath("gui_icon.png"))))
         self.setGeometry(200, 200, 1100, 400)
         self.error_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         printer_icon = QIcon.fromTheme("printer")
@@ -176,7 +177,10 @@ class DymoPrintWindow(QWidget):
             if self.label_bitmap is None:
                 raise RuntimeError("No label to print! Call update_label_render first.")
             print_label(
-                self.detected_device, self.label_bitmap, self.margin.value(), self.tape_size.currentData()
+                self.detected_device,
+                self.label_bitmap,
+                self.margin.value(),
+                self.tape_size.currentData(),
             )
         except (RuntimeError, USBError) as err:
             print(traceback.format_exc())
@@ -189,13 +193,15 @@ class DymoPrintWindow(QWidget):
         try:
             self.detected_device = detect_device()
             is_enabled = True
-        except Exception as e:
+        except USBError as e:
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.error_label.setVisible(not is_enabled)
         self.print_button.setVisible(is_enabled)
         self.print_button.setEnabled(is_enabled)
-        self.print_button.setCursor(Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor)
+        self.print_button.setCursor(
+            Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor
+        )
 
 
 def main():

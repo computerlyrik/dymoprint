@@ -27,11 +27,11 @@ class DetectedDevice(NamedTuple):
 
 def device_info(dev: usb.core.Device) -> str:
     try:
-        dev.manufacturer
+        _ = dev.manufacturer
     except ValueError:
         instruct_on_access_denied(dev)
     res = ""
-    res += f"{repr(dev)}\n"
+    res += f"{dev!r}\n"
     res += f"  manufacturer: {dev.manufacturer}\n"
     res += f"  product: {dev.product}\n"
     res += f"  serial: {dev.serial_number}\n"
@@ -39,12 +39,12 @@ def device_info(dev: usb.core.Device) -> str:
     if configs:
         res += "  configurations:\n"
         for cfg in configs:
-            res += f"  - {repr(cfg)}\n"
+            res += f"  - {cfg!r}\n"
             intfs = cfg.interfaces()
             if intfs:
                 res += "    interfaces:\n"
                 for intf in intfs:
-                    res += f"    - {repr(intf)}\n"
+                    res += f"    - {intf!r}\n"
     return res
 
 
@@ -82,7 +82,7 @@ def detect_device() -> DetectedDevice:
             print("Device configuration set.")
         except usb.core.USBError as e:
             if e.errno == 13:
-                raise RuntimeError("Access denied")
+                raise RuntimeError("Access denied") from e
             if e.errno == 16:
                 print("Device is busy, but this is okay.")
             else:
@@ -92,13 +92,13 @@ def detect_device() -> DetectedDevice:
         dev.get_active_configuration(), bInterfaceClass=PRINTER_INTERFACE_CLASS
     )
     if intf is not None:
-        print(f"Opened printer interface: {repr(intf)}")
+        print(f"Opened printer interface: {intf!r}")
     else:
         intf = usb.util.find_descriptor(
             dev.get_active_configuration(), bInterfaceClass=HID_INTERFACE_CLASS
         )
         if intf is not None:
-            print(f"Opened HID interface: {repr(intf)}")
+            print(f"Opened HID interface: {intf!r}")
         else:
             die("Could not open a valid interface.")
     assert isinstance(intf, usb.core.Interface)

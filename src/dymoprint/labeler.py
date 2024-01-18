@@ -45,8 +45,7 @@ class DymoLabeler:
     devin: usb.core.Endpoint
 
     def __init__(self, devout, devin, synwait=None, tape_size_mm=12):
-        """Initialize the LabelManager object. (HLF)"""
-
+        """Initialize the LabelManager object (HLF)."""
         self.tape_size_mm = tape_size_mm
         self.cmd: List[int] = []
         self.response = False
@@ -58,10 +57,9 @@ class DymoLabeler:
         self.synwait = synwait
 
     def sendCommand(self):
-        """Send the already built command to the LabelManager. (MLF)"""
-
+        """Send the already built command to the LabelManager (MLF)."""
         if len(self.cmd) == 0:
-            return
+            return None
 
         while len(self.cmd) > 0:
             if self.synwait is None:
@@ -100,33 +98,29 @@ class DymoLabeler:
 
         self.cmd = []  # This looks redundant.
         if not self.response:
-            return
+            return None
         self.response = False
         responseBin = self.devin.read(8)
         response = array.array("B", responseBin).tolist()
         return response
 
     def resetCommand(self):
-        """Remove a partially built command. (MLF)"""
-
+        """Remove a partially built command (MLF)."""
         self.cmd = []
         self.response = False
 
     def buildCommand(self, cmd):
-        """Add the next instruction to the command. (MLF)"""
-
+        """Add the next instruction to the command (MLF)."""
         self.cmd += cmd
 
     def statusRequest(self):
-        """Set instruction to get the device's status. (MLF)"""
-
+        """Set instruction to get the device's status (MLF)."""
         cmd = [ESC, ord("A")]
         self.buildCommand(cmd)
         self.response = True
 
     def dotTab(self, value):
-        """Set the bias text height, in bytes. (MLF)"""
-
+        """Set the bias text height, in bytes (MLF)."""
         if value < 0 or value > self.max_bytes_per_line(self.tape_size_mm):
             raise ValueError
         cmd = [ESC, ord("B"), value]
@@ -135,17 +129,14 @@ class DymoLabeler:
         self.bytesPerLine_ = None
 
     def tapeColor(self, value):
-        """Set the tape color. (MLF)"""
-
+        """Set the tape color (MLF)."""
         if value < 0:
             raise ValueError
         cmd = [ESC, ord("C"), value]
         self.buildCommand(cmd)
 
     def bytesPerLine(self, value: int):
-        """Set the number of bytes sent in the following lines. (MLF)"""
-
-        self.tape_size_mm
+        """Set the number of bytes sent in the following lines (MLF)."""
         if value == self.bytesPerLine_:
             return
         cmd = [ESC, ord("D"), value]
@@ -153,28 +144,24 @@ class DymoLabeler:
         self.bytesPerLine_ = value
 
     def cut(self):
-        """Set instruction to trigger cutting of the tape. (MLF)"""
-
+        """Set instruction to trigger cutting of the tape (MLF)."""
         cmd = [ESC, ord("E")]
         self.buildCommand(cmd)
 
     def line(self, value):
-        """Set next printed line. (MLF)"""
-
+        """Set next printed line (MLF)."""
         self.bytesPerLine(len(value))
-        cmd = [SYN] + value
+        cmd = [SYN, *value]
         self.buildCommand(cmd)
 
     def chainMark(self):
-        """Set Chain Mark. (MLF)"""
-
+        """Set Chain Mark (MLF)."""
         self.dotTab(0)
         self.bytesPerLine(self.max_bytes_per_line(self.tape_size_mm))
         self.line([0x99] * self.max_bytes_per_line(self.tape_size_mm))
 
     def skipLines(self, value):
-        """Set number of lines of white to print. (MLF)"""
-
+        """Set number of lines of white to print (MLF)."""
         if value <= 0:
             raise ValueError
         self.bytesPerLine(0)
@@ -182,36 +169,34 @@ class DymoLabeler:
         self.buildCommand(cmd)
 
     def initLabel(self):
-        """Set the label initialization sequence. (MLF)
+        """Set the label initialization sequence (MLF).
 
         This was in the original dymoprint by S. Bronner but was never invoked.
         (There was a self.initLabel without parentheses.)
         I see no mention of it in the technical reference, so this seems to be
         dead code.
         """
-
         cmd = [0x00] * 8
         self.buildCommand(cmd)
 
     def getStatus(self):
-        """Ask for and return the device's status. (HLF)"""
-
+        """Ask for and return the device's status (HLF)."""
         self.statusRequest()
         response = self.sendCommand()
         print(response)
 
     def printLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
-        """Print the label described by lines. (Automatically split label if
-        larger than maxLines)"""
+        """Print the label described by lines.
 
+        Automatically split the label if it's larger than maxLines.
+        """
         while len(lines) > self.maxLines + 1:
             self.rawPrintLabel(lines[0 : self.maxLines], margin_px=0)
             del lines[0 : self.maxLines]
         self.rawPrintLabel(lines, margin_px=margin_px)
 
     def rawPrintLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
-        """Print the label described by lines. (HLF)"""
-
+        """Print the label described by lines (HLF)."""
         # Here used to be a matrix optimization code that caused problems in issue #87
         self.tapeColor(0)
         for line in lines:

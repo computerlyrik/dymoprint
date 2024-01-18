@@ -16,19 +16,18 @@ from .utils import die, draw_image, scaling
 
 
 class DymoRenderEngine:
-    tape_size_mm: int
+    label_height_px: int
 
     def __init__(self, tape_size_mm: int = 12) -> None:
         """Initialize a DymoRenderEngine object with a specified tape size."""
-        self.tape_size_mm = tape_size_mm
+        self.label_height_px = DymoLabeler.max_bytes_per_line(tape_size_mm) * 8
 
     def render_empty(self, label_len: int = 1) -> Image.Image:
         """Render an empty label image."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
-        return Image.new("1", (label_len, label_height))
+        return Image.new("1", (label_len, self.label_height_px))
 
     def render_test(self, width: int = 100) -> Image.Image:
-        """Render a test pattern"""
+        """Render a test pattern."""
         canvas = Image.new("1", (10 + width + 2 + 40, width))
 
         # 5 vertical lines
@@ -61,17 +60,16 @@ class DymoRenderEngine:
 
     def render_qr(self, qr_input_text: str) -> Image.Image:
         """Render a QR code image from the input text."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(qr_input_text) == 0:
-            return Image.new("1", (1, label_height))
+            return Image.new("1", (1, self.label_height_px))
 
         # create QR object from first string
         code = QRCode(qr_input_text, error="M")
         qr_text = code.text(quiet_zone=1).split()
 
         # create an empty label image
-        qr_scale = label_height // len(qr_text)
-        qr_offset = (label_height - len(qr_text) * qr_scale) // 2
+        qr_scale = self.label_height_px // len(qr_text)
+        qr_offset = (self.label_height_px - len(qr_text) * qr_scale) // 2
         label_width = len(qr_text) * qr_scale
 
         if not qr_scale:
@@ -80,26 +78,25 @@ class DymoRenderEngine:
                 "are smaller than the device resolution"
             )
 
-        code_bitmap = Image.new("1", (label_width, label_height))
+        code_bitmap = Image.new("1", (label_width, self.label_height_px))
 
         with draw_image(code_bitmap) as label_draw:
             # write the qr-code into the empty image
             for i, line in enumerate(qr_text):
-                for j in range(len(line)):
-                    if line[j] == "1":
+                for j, char in enumerate(line):
+                    if char == "1":
                         pix = scaling(
                             (j * qr_scale, i * qr_scale + qr_offset), qr_scale
                         )
-                        label_draw.point(pix, 255)
+                        label_draw.point(pix, 1)
         return code_bitmap
 
     def render_barcode(
         self, barcode_input_text: str, bar_code_type: str
     ) -> Image.Image:
         """Render a barcode image from the input text and barcode type."""
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
         if len(barcode_input_text) == 0:
-            return Image.new("1", (1, label_height))
+            return Image.new("1", (1, self.label_height_px))
 
         code = barcode_module.get(
             bar_code_type, barcode_input_text, writer=BarcodeImageWriter()
@@ -108,9 +105,7 @@ class DymoRenderEngine:
             {
                 "font_size": 0,
                 "vertical_margin": 8,
-                "module_height": (
-                    DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8 - 16
-                ),
+                "module_height": self.label_height_px - 16,
                 "module_width": 2,
                 "background": "black",
                 "foreground": "white",
@@ -127,18 +122,20 @@ class DymoRenderEngine:
         font_size_ratio=0.9,
         align="center",
     ):
-        """
-        Renders a barcode image with the text below it.
+        """Render a barcode image with the text below it.
 
         Args:
+        ----
             barcode_input_text (str): The input text to be encoded in the barcode.
             bar_code_type (str): The type of barcode to be rendered.
             font_file_name (str): The name of the font file to be used.
             frame_width (int): The width of the frame around the text.
             font_size_ratio (float): The ratio of font size to line height. Default
                 is 1.
+            align (str): The alignment of the text. Default is "center".
 
         Returns:
+        -------
             Image: A barcode with text image.
         """
         assert align in ("left", "center", "right")
@@ -192,7 +189,7 @@ class DymoRenderEngine:
 
         # create an empty label image
         if label_height_px is None:
-            label_height_px = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
+            label_height_px = self.label_height_px
         line_height = float(label_height_px) / len(text_lines)
         font_size_px = int(round(line_height * font_size_ratio))
 
@@ -211,7 +208,7 @@ class DymoRenderEngine:
             # draw frame into empty image
             if frame_width_px:
                 label_draw.rectangle(
-                    ((0, 4), (label_width_px - 1, label_height_px - 4)), fill=255
+                    ((0, 4), (label_width_px - 1, label_height_px - 4)), fill=1
                 )
                 label_draw.rectangle(
                     (
@@ -232,27 +229,25 @@ class DymoRenderEngine:
                 align=align,
                 anchor="mm",
                 font=font,
-                fill=255,
+                fill=1,
             )
         return text_bitmap
 
     def render_picture(self, picture_path: str) -> Image.Image:
         if len(picture_path):
             if Path(picture_path).exists():
-                label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
                 with Image.open(picture_path) as img:
-                    if img.height > label_height:
-                        ratio = label_height / img.height
+                    if img.height > self.label_height_px:
+                        ratio = self.label_height_px / img.height
                         img = img.resize(
-                            (int(math.ceil(img.width * ratio)), label_height)
+                            (int(math.ceil(img.width * ratio)), self.label_height_px)
                         )
 
                     img = img.convert("L", palette=Image.AFFINE)
                     return ImageOps.invert(img).convert("1")
             else:
                 die(f"picture path:{picture_path}  doesn't exist ")
-        label_height = DymoLabeler.max_bytes_per_line(self.tape_size_mm) * 8
-        return Image.new("1", (1, label_height))
+        return Image.new("1", (1, self.label_height_px))
 
     def merge_render(
         self,
@@ -265,17 +260,19 @@ class DymoRenderEngine:
         """Merge multiple images into a single image."""
         if len(bitmaps) > 1:
             padding = 4
+            label_height = max(b.height for b in bitmaps)
             label_bitmap = Image.new(
                 "1",
                 (
                     sum(b.width for b in bitmaps) + padding * (len(bitmaps) - 1),
-                    bitmaps[0].height,
+                    label_height,
                 ),
             )
-            offset = 0
+            x_offset = 0
             for bitmap in bitmaps:
-                label_bitmap.paste(bitmap, box=(offset, 0))
-                offset += bitmap.width + padding
+                y_offset = (label_height - bitmap.size[1]) // 2
+                label_bitmap.paste(bitmap, box=(x_offset, y_offset))
+                x_offset += bitmap.width + padding
         elif len(bitmaps) == 0:
             label_bitmap = self.render_empty(max(min_payload_len_px, 1))
         else:
@@ -334,7 +331,7 @@ def print_label(
     # Regather the bytes into rows
     label_stream_row_length = int(math.ceil(label_bitmap.height / 8))
     if len(labelstream) // label_stream_row_length != label_bitmap.width:
-        die("An internal problem was encountered while processing the label " "bitmap!")
+        die("An internal problem was encountered while processing the label bitmap!")
     label_rows: list[bytes] = [
         labelstream[i : i + label_stream_row_length]
         for i in range(0, len(labelstream), label_stream_row_length)

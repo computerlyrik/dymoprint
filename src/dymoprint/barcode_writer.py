@@ -33,8 +33,9 @@ class BarcodeImageWriter(BaseWriter):
         return int(mm2px(width, dpi)), int(mm2px(height, dpi))
 
     def render(self, code):
-        """Renders the barcode to whatever the inheriting writer provides,
-        using the registered callbacks.
+        """Render the barcode.
+
+        Uses whichever inheriting writer is provided via the registered callbacks.
 
         :parameters:
             code : List
@@ -45,11 +46,9 @@ class BarcodeImageWriter(BaseWriter):
             self._callbacks["initialize"](code)
         ypos = self.vertical_margin
         for cc, line in enumerate(code):
-            """
-            Pack line to list give better gfx result, otherwise in can
-            result in aliasing gaps
-            '11010111' -> [2, -1, 1, -1, 3]
-            """
+            # Pack line to list give better gfx result, otherwise in can
+            # result in aliasing gaps
+            # '11010111' -> [2, -1, 1, -1, 3]
             line += " "
             c = 1
             mlist = []
@@ -100,6 +99,8 @@ class BarcodeImageWriter(BaseWriter):
         self._draw.rectangle(size, outline=color, fill=color)
 
     def _finish(self):
+        # although Image mode set to "1", draw function writes white as 255
+        self._image = self._image.point(lambda x: 1 if x > 0 else 0, mode="1")
         return self._image
 
     def save(self, filename, output):

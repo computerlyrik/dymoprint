@@ -19,8 +19,10 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"eamodio.gitlens",
 				"ms-azuretools.vscode-docker",
-				"tamasfe.even-better-toml"
+				"tamasfe.even-better-toml",
+				"zhoufeng.pyqt-integration"
 			]
 		}
 	},
