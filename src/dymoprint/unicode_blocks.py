@@ -21,9 +21,9 @@ dict_unicode = {
 
 dict_unicode_inverted = {
     (0, 0): NB,
-    (255, 0): UH,
-    (0, 255): LH,
-    (255, 255): FB,
+    (1, 0): UH,
+    (0, 1): LH,
+    (1, 1): FB,
 }
 
 

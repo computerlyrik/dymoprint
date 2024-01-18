@@ -88,7 +88,7 @@ class DymoRenderEngine:
                         pix = scaling(
                             (j * qr_scale, i * qr_scale + qr_offset), qr_scale
                         )
-                        label_draw.point(pix, 255)
+                        label_draw.point(pix, 1)
         return code_bitmap
 
     def render_barcode(
@@ -258,17 +258,19 @@ class DymoRenderEngine:
         """Merge multiple images into a single image."""
         if len(bitmaps) > 1:
             padding = 4
+            label_height = max(b.height for b in bitmaps)
             label_bitmap = Image.new(
                 "1",
                 (
                     sum(b.width for b in bitmaps) + padding * (len(bitmaps) - 1),
-                    bitmaps[0].height,
+                    label_height,
                 ),
             )
-            offset = 0
+            x_offset = 0
             for bitmap in bitmaps:
-                label_bitmap.paste(bitmap, box=(offset, 0))
-                offset += bitmap.width + padding
+                y_offset = (label_height - bitmap.size[1]) // 2
+                label_bitmap.paste(bitmap, box=(x_offset, y_offset))
+                x_offset += bitmap.width + padding
         elif len(bitmaps) == 0:
             label_bitmap = self.render_empty(max(min_payload_len_px, 1))
         else:
