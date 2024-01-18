@@ -27,7 +27,7 @@ class DymoRenderEngine:
         return Image.new("1", (label_len, self.label_height_px))
 
     def render_test(self, width: int = 100) -> Image.Image:
-        """Render a test pattern"""
+        """Render a test pattern."""
         canvas = Image.new("1", (10 + width + 2 + 40, width))
 
         # 5 vertical lines

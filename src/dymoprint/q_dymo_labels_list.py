@@ -84,8 +84,7 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     def render_label(self):
-        """Renders the label using the current render engine and emits the renderSignal.
-        """
+        """Render the label using the current render engine and emit renderSignal."""
         bitmaps = []
         for i in range(self.count()):
             item = self.item(i)

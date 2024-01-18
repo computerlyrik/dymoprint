@@ -51,13 +51,11 @@ class BaseDymoLabelWidget(QWidget):
     itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
     def content_changed(self):
-        """Emits the itemRenderSignal when the content of the label is changed.
-        """
+        """Emits the itemRenderSignal when the content of the label is changed."""
         self.itemRenderSignal.emit()
 
     def render_label_impl(self):
-        """Abstract method to be implemented by subclasses for rendering the label.
-        """
+        """Abstract method to be implemented by subclasses for rendering the label."""
         pass
 
     def render_label(self):

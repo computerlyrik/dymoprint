@@ -168,7 +168,7 @@ def parse_args():
 
 
 def mm_to_payload_px(mm, margin):
-    """Convert a length in mm to a number of pixels of payload
+    """Convert a length in mm to a number of pixels of payload.
 
     The print resolution is 7 pixels/mm, and margin is subtracted
     from each side.

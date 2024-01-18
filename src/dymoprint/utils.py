@@ -21,7 +21,7 @@ def die(message=None) -> NoReturn:
 
 
 def scaling(pix, sc):
-    """Scaling pixel up, input: (x,y),scale-factor"""
+    """Scaling pixel up, input: (x,y),scale-factor."""
     return [(pix[0] + i, pix[1] + j) for i in range(sc) for j in range(sc)]
 
 
