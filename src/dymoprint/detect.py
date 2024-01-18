@@ -2,6 +2,7 @@ import platform
 from typing import NamedTuple, NoReturn
 
 import usb
+
 from dymoprint.utils import die
 
 from .constants import (

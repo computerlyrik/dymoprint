@@ -2,8 +2,6 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from dymoprint.constants import ICON_DIR
-from dymoprint.dymo_print_engines import DymoRenderEngine
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
@@ -19,6 +17,9 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QWidget,
 )
+
+from dymoprint.constants import ICON_DIR
+from dymoprint.dymo_print_engines import DymoRenderEngine
 
 from .constants import AVAILABLE_BARCODES
 from .font_config import parse_fonts
