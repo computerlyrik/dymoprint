@@ -16,7 +16,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install pre-commit ruff
+RUN pip install --upgrade pip \
+    && pip install pre-commit ruff
 
 # Preinstall the dependencies (extremely hacky)
 COPY ../pyproject.toml /tmp/temp-project/pyproject.toml
