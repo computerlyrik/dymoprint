@@ -270,7 +270,7 @@ def main():
         print("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
-            "L", (margin + label_bitmap.width + margin, label_bitmap.height)
+            "1", (margin + label_bitmap.width + margin, label_bitmap.height)
         )
         label_image.paste(label_bitmap, (margin, 0))
         if args.preview or args.preview_inverted:

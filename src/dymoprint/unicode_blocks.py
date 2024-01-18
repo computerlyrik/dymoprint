@@ -14,9 +14,9 @@ assert NB == "\N{NO-BREAK SPACE}"
 
 dict_unicode = {
     (0, 0): FB,
-    (255, 0): LH,
-    (0, 255): UH,
-    (255, 255): NB,
+    (1, 0): LH,
+    (0, 1): UH,
+    (1, 1): NB,
 }
 
 dict_unicode_inverted = {

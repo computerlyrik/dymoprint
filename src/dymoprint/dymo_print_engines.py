@@ -206,7 +206,7 @@ class DymoRenderEngine:
             # draw frame into empty image
             if frame_width_px:
                 label_draw.rectangle(
-                    ((0, 4), (label_width_px - 1, label_height_px - 4)), fill=255
+                    ((0, 4), (label_width_px - 1, label_height_px - 4)), fill=1
                 )
                 label_draw.rectangle(
                     (
@@ -227,7 +227,7 @@ class DymoRenderEngine:
                 align=align,
                 anchor="mm",
                 font=font,
-                fill=255,
+                fill=1,
             )
         return text_bitmap
 
