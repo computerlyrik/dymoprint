@@ -48,6 +48,10 @@ def device_info(dev: usb.core.Device) -> str:
     return res
 
 
+class DeviceDetectionError(RuntimeError):
+    pass
+
+
 def detect_device() -> DetectedDevice:
     dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))
     if len(dymo_devs) == 0:
@@ -57,7 +61,7 @@ def detect_device() -> DetectedDevice:
                 f"- Vendor ID: {hex(dev.idVendor):6}  "
                 f"Product ID: {hex(dev.idProduct)}"
             )
-        die("Unable to open device.")
+        raise DeviceDetectionError("No Dymo devices found.")
     if len(dymo_devs) > 1:
         print("Found multiple Dymo devices:")
         for dev in dymo_devs:

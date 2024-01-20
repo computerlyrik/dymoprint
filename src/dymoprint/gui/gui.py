@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
 from usb.core import NoBackendError, USBError
 
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
-from dymoprint.lib.detect import detect_device
+from dymoprint.lib.detect import DeviceDetectionError, detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 
 from .q_dymo_labels_list import QDymoLabelList
@@ -194,7 +194,7 @@ class DymoPrintWindow(QWidget):
         try:
             self.detected_device = detect_device()
             is_enabled = True
-        except (NoBackendError, USBError) as e:
+        except (DeviceDetectionError, NoBackendError, USBError) as e:
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.error_label.setVisible(not is_enabled)
