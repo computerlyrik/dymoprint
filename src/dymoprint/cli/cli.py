@@ -13,20 +13,20 @@ from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageOps
 
-from . import __version__
-from .constants import (
+from dymoprint import __version__
+from dymoprint.constants import (
     AVAILABLE_BARCODES,
     DEFAULT_MARGIN_PX,
     PIXELS_PER_MM,
     USE_QR,
     e_qrcode,
 )
-from .detect import detect_device
-from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import available_fonts, font_filename
-from .metadata import our_metadata
-from .unicode_blocks import image_to_unicode
-from .utils import die
+from dymoprint.detect import detect_device
+from dymoprint.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.font_config import available_fonts, font_filename
+from dymoprint.metadata import our_metadata
+from dymoprint.unicode_blocks import image_to_unicode
+from dymoprint.utils import die
 
 
 def parse_args():
