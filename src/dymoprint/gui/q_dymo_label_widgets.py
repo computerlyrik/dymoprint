@@ -20,15 +20,17 @@ from PyQt6.QtWidgets import (
 
 from dymoprint.lib.constants import AVAILABLE_BARCODES, ICON_DIR
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine
-from dymoprint.lib.font_config import parse_fonts
+from dymoprint.lib.font_config import FontConfig
 
 
 class FontStyle(QComboBox):
     def __init__(self):
         super().__init__()
         # Populate font_style
-        for name, font_path in parse_fonts():
-            self.addItem(name, font_path)
+        for font_path in FontConfig.available_fonts():
+            name = font_path.stem
+            absolute_path = font_path.absolute()
+            self.addItem(name, absolute_path)
             self.setCurrentText("Carlito-Regular")
 
 

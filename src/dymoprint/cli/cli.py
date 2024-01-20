@@ -8,7 +8,6 @@
 
 import argparse
 import webbrowser
-from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageOps
@@ -23,10 +22,17 @@ from dymoprint.lib.constants import (
 )
 from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
-from dymoprint.lib.font_config import available_fonts, get_font_filename
+from dymoprint.lib.font_config import FontConfig, FontStyle
 from dymoprint.lib.unicode_blocks import image_to_unicode
 from dymoprint.lib.utils import die
 from dymoprint.metadata import our_metadata
+
+FLAG_TO_STYLE = {
+    "r": FontStyle.REGULAR,
+    "b": FontStyle.BOLD,
+    "i": FontStyle.ITALIC,
+    "n": FontStyle.NARROW,
+}
 
 
 def parse_args():
@@ -178,21 +184,11 @@ def main():
     render_engine = DymoRenderEngine(args.t)
 
     # read config file
-    font_filename = get_font_filename(args.style)
+    style = FLAG_TO_STYLE.get(args.style)
+    font_config = FontConfig(font=args.font, style=style)
+    font_filename = font_config.path
 
     labeltext = args.text
-
-    if args.font is not None:
-        if Path(args.font).is_file():
-            font_filename = args.font
-        else:
-            try:
-                font_filename = next(
-                    f.absolute() for f in available_fonts() if args.font == f.stem
-                )
-            except StopIteration:
-                fonts = ",".join(f.stem for f in available_fonts())
-                die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
