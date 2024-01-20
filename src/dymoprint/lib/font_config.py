@@ -7,10 +7,10 @@ from dymoprint._vendor.matplotlib import font_manager
 from dymoprint.lib.config_file import ConfigFile
 
 
-class NoFontFound(Exception):
+class NoFontFound(ValueError):
     def __init__(self, name):
         msg = f"No font named {name} found"
-        super(self, NoFontFound).__init__(msg)
+        super().__init__(msg)
 
 
 class FontStyle(Enum):
