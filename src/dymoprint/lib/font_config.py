@@ -61,10 +61,11 @@ class FontConfig:
 
     @classmethod
     def _path_from_name(cls, name):
-        try:
-            return next(f.absolute() for f in cls.available_fonts() if name == f.stem)
-        except StopIteration:
-            raise NoFontFound(name) from None
+        available_fonts = cls.available_fonts()
+        matching_fonts = [f for f in available_fonts if name.lower() == f.stem.lower()]
+        if len(matching_fonts) == 0:
+            raise NoFontFound(name)
+        return matching_fonts[0]
 
     @classmethod
     def available_fonts(cls):
