@@ -170,7 +170,7 @@ class DymoRenderEngine:
     def render_text(
         self,
         text_lines: str | list[str],
-        font_file_name: str,
+        font_file_name: Path | str,
         frame_width_px: int,
         font_size_ratio: float = 0.9,
         align: str = "left",
@@ -199,7 +199,7 @@ class DymoRenderEngine:
             frame_width_px = min(frame_width_px, font_offset_px)
             frame_width_px = min(frame_width_px, 3)
 
-        font = ImageFont.truetype(font_file_name, font_size_px)
+        font = ImageFont.truetype(str(font_file_name), font_size_px)
         boxes = (font.getbbox(line) for line in text_lines)
         line_widths = (right - left for left, _, right, _ in boxes)
         label_width_px = max(line_widths) + (font_offset_px * 2)
