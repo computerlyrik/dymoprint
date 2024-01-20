@@ -2,7 +2,6 @@
 .Python
 env/
 bin/
-lib/
 lib64/
 parts/
 var/

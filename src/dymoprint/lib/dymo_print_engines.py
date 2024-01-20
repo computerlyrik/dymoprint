@@ -8,11 +8,11 @@ import barcode as barcode_module
 import usb
 from PIL import Image, ImageFont, ImageOps
 
-from . import DymoLabeler
-from .barcode_writer import BarcodeImageWriter
-from .constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
-from .detect import DetectedDevice
-from .utils import die, draw_image, scaling
+from dymoprint import DymoLabeler
+from dymoprint.lib.barcode_writer import BarcodeImageWriter
+from dymoprint.lib.constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
+from dymoprint.lib.detect import DetectedDevice
+from dymoprint.lib.utils import die, draw_image, scaling
 
 
 class DymoRenderEngine:
@@ -170,7 +170,7 @@ class DymoRenderEngine:
     def render_text(
         self,
         text_lines: str | list[str],
-        font_file_name: str,
+        font_file_name: Path | str,
         frame_width_px: int,
         font_size_ratio: float = 0.9,
         align: str = "left",
@@ -199,7 +199,7 @@ class DymoRenderEngine:
             frame_width_px = min(frame_width_px, font_offset_px)
             frame_width_px = min(frame_width_px, 3)
 
-        font = ImageFont.truetype(font_file_name, font_size_px)
+        font = ImageFont.truetype(str(font_file_name), font_size_px)
         boxes = (font.getbbox(line) for line in text_lines)
         line_widths = (right - left for left, _, right, _ in boxes)
         label_width_px = max(line_widths) + (font_offset_px * 2)

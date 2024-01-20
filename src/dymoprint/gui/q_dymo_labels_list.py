@@ -1,13 +1,17 @@
+from typing import Optional
+
 from PIL import Image
 from PyQt6 import QtCore
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMenu
 
-from .q_dymo_label_widgets import (
+from dymoprint.gui.q_dymo_label_widgets import (
     BarcodeDymoLabelWidget,
     ImageDymoLabelWidget,
     QrDymoLabelWidget,
     TextDymoLabelWidget,
 )
+from dymoprint.lib.dymo_print_engines import DymoRenderEngine
 
 
 class QDymoLabelList(QListWidget):
@@ -38,6 +42,8 @@ class QDymoLabelList(QListWidget):
     """
 
     renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
+    render_engine: DymoRenderEngine
+    itemWidget: TextDymoLabelWidget
 
     def __init__(
         self, render_engine, min_payload_len_px=0, justify="center", parent=None
@@ -66,7 +72,9 @@ class QDymoLabelList(QListWidget):
         super().dropEvent(e)
         self.render_label()
 
-    def update_params(self, render_engine, min_payload_len_px=0, justify="center"):
+    def update_params(
+        self, render_engine: DymoRenderEngine, min_payload_len_px=0, justify="center"
+    ):
         """Update the render engine used for rendering the label.
 
         Args:
@@ -109,11 +117,11 @@ class QDymoLabelList(QListWidget):
             event (QContextMenuEvent): The context menu event.
         """
         contextMenu = QMenu(self)
-        add_text = contextMenu.addAction("Add Text")
-        add_qr = contextMenu.addAction("Add QR")
-        add_barcode = contextMenu.addAction("Add Barcode")
-        add_img = contextMenu.addAction("Add Image")
-        delete = contextMenu.addAction("Delete")
+        add_text: Optional[QAction] = contextMenu.addAction("Add Text")
+        add_qr: Optional[QAction] = contextMenu.addAction("Add QR")
+        add_barcode: Optional[QAction] = contextMenu.addAction("Add Barcode")
+        add_img: Optional[QAction] = contextMenu.addAction("Add Image")
+        delete: Optional[QAction] = contextMenu.addAction("Delete")
         menu_click = contextMenu.exec(event.globalPos())
 
         if menu_click == add_text:
@@ -149,8 +157,8 @@ class QDymoLabelList(QListWidget):
             item_widget.itemRenderSignal.connect(self.render_label)
         if menu_click == delete:
             try:
-                item = self.itemAt(event.pos())
-                self.takeItem(self.indexFromItem(item).row())  # self.update()
+                item_to_delete = self.itemAt(event.pos())
+                self.takeItem(self.indexFromItem(item_to_delete).row())  # self.update()
             except Exception as e:  # noqa: BLE001
                 print(f"No item selected {e}")
         self.render_label()

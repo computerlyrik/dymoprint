@@ -41,7 +41,7 @@ source = "https://github.com/computerlyrik/dymoprint"
 tracker = "https://github.com/computerlyrik/dymoprint/issues"
 
 [project.scripts]
-dymoprint = "dymoprint.command_line:main"
+dymoprint = "dymoprint.cli.cli:main"
 dymoprint_gui = "dymoprint.gui.gui:main"
 
 [tool.hatch.version]
@@ -183,3 +183,9 @@ ignore = [
     "ISC002", # multi-line-implicit-string-concatenation
 ]
 target-version = "py38"
+
+[tool.mypy]
+exclude = ["_vendor"]
+ignore_missing_imports = true
+check_untyped_defs = true
+install_types = true

@@ -18,17 +18,19 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from dymoprint.constants import AVAILABLE_BARCODES, ICON_DIR
-from dymoprint.dymo_print_engines import DymoRenderEngine
-from dymoprint.font_config import parse_fonts
+from dymoprint.lib.constants import AVAILABLE_BARCODES, ICON_DIR
+from dymoprint.lib.dymo_print_engines import DymoRenderEngine
+from dymoprint.lib.font_config import FontConfig
 
 
 class FontStyle(QComboBox):
     def __init__(self):
         super().__init__()
         # Populate font_style
-        for name, font_path in parse_fonts():
-            self.addItem(name, font_path)
+        for font_path in FontConfig.available_fonts():
+            name = font_path.stem
+            absolute_path = font_path.absolute()
+            self.addItem(name, absolute_path)
             self.setCurrentText("Carlito-Regular")
 
 
@@ -47,6 +49,8 @@ class BaseDymoLabelWidget(QWidget):
     render_label()
         Abstract method to be implemented by subclasses for rendering the label.
     """
+
+    render_engine: DymoRenderEngine
 
     itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
@@ -88,7 +92,6 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         itemRenderSignal: A signal emitted when the content of the label changes.
     """
 
-    render_engine: DymoRenderEngine
     align: QComboBox
     label: QPlainTextEdit
     font_style: FontStyle
@@ -243,7 +246,6 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             and barcode type.
     """
 
-    render_engine: DymoRenderEngine
     label: QLineEdit
     barcode_type_label: QLabel
     barcode_type: QComboBox

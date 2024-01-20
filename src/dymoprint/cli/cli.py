@@ -7,26 +7,33 @@
 # === END LICENSE STATEMENT ===
 
 import argparse
+import sys
 import webbrowser
-from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageOps
 
-from . import __version__
-from .constants import (
+from dymoprint import __version__
+from dymoprint.lib.constants import (
     AVAILABLE_BARCODES,
     DEFAULT_MARGIN_PX,
     PIXELS_PER_MM,
     USE_QR,
     e_qrcode,
 )
-from .detect import detect_device
-from .dymo_print_engines import DymoRenderEngine, print_label
-from .font_config import available_fonts, font_filename
-from .metadata import our_metadata
-from .unicode_blocks import image_to_unicode
-from .utils import die
+from dymoprint.lib.detect import detect_device
+from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
+from dymoprint.lib.unicode_blocks import image_to_unicode
+from dymoprint.lib.utils import die
+from dymoprint.metadata import our_metadata
+
+FLAG_TO_STYLE = {
+    "r": FontStyle.REGULAR,
+    "b": FontStyle.BOLD,
+    "i": FontStyle.ITALIC,
+    "n": FontStyle.NARROW,
+}
 
 
 def parse_args():
@@ -48,6 +55,7 @@ def parse_args():
     )
     parser.add_argument(
         "-s",
+        "--style",
         choices=["r", "b", "i", "n"],
         default="r",
         help="Set fonts style (regular,bold,italic,narrow)",
@@ -177,21 +185,20 @@ def main():
     render_engine = DymoRenderEngine(args.t)
 
     # read config file
-    FONT_FILENAME = font_filename(args.s)
+    style = FLAG_TO_STYLE.get(args.style)
+    try:
+        font_config = FontConfig(font=args.font, style=style)
+    except NoFontFound as e:
+        valid_font_names = [f.stem for f in FontConfig.available_fonts()]
+        print(
+            f"Valid fonts are: {', '.join(valid_font_names)}.",
+            file=sys.stderr,
+        )
+        raise e
+
+    font_filename = font_config.path
 
     labeltext = args.text
-
-    if args.font is not None:
-        if Path(args.font).is_file():
-            FONT_FILENAME = args.font
-        else:
-            try:
-                FONT_FILENAME = next(
-                    f.absolute() for f in available_fonts() if args.font == f.stem
-                )
-            except StopIteration:
-                fonts = ",".join(f.stem for f in available_fonts())
-                die(f"Error: file '{args.font}' not found. Available fonts: {fonts}")
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
@@ -222,7 +229,7 @@ def main():
     elif args.barcode_text:
         bitmaps.append(
             render_engine.render_barcode_with_text(
-                labeltext.pop(0), args.barcode_text, FONT_FILENAME, args.f
+                labeltext.pop(0), args.barcode_text, font_filename, args.f
             )
         )
 
@@ -230,7 +237,7 @@ def main():
         bitmaps.append(
             render_engine.render_text(
                 text_lines=labeltext,
-                font_file_name=FONT_FILENAME,
+                font_file_name=font_filename,
                 frame_width_px=args.f,
                 font_size_ratio=int(args.scale) / 100.0,
                 align=args.a,

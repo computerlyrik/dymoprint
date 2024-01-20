@@ -22,7 +22,9 @@
 				"eamodio.gitlens",
 				"ms-azuretools.vscode-docker",
 				"tamasfe.even-better-toml",
-				"zhoufeng.pyqt-integration"
+				"zhoufeng.pyqt-integration",
+				"charliermarsh.ruff",
+				"ms-python.mypy-type-checker"
 			]
 		}
 	},

@@ -19,6 +19,7 @@ ARG pip_deps="\
     pre-commit \
     ruff \
     tox \
+    mypy \
     "
 RUN pip install --upgrade pip \
     && pip install ${pip_deps}

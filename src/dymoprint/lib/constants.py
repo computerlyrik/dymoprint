@@ -63,22 +63,12 @@ SYN = 0x16
 
 FONT_SIZERATIO = 7 / 8
 
-DEFAULT_FONT_STYLE = "regular"
-
 DEFAULT_MARGIN_PX = 56
-
-FLAG_TO_STYLE = {
-    "r": "regular",
-    "b": "bold",
-    "i": "italic",
-    "n": "narrow",
-}
 
 DPI = 180
 MM_PER_INCH = 25.4
 PIXELS_PER_MM = DPI / MM_PER_INCH
 
-DEFAULT_FONT_DIR = Path(dymoprint.resources.fonts.__file__).parent
 ICON_DIR = Path(dymoprint.resources.icons.__file__).parent
 
 AVAILABLE_BARCODES = [

@@ -89,17 +89,19 @@ class BarcodeImageWriter(BaseWriter):
         self._draw = ImageDraw.Draw(self._image)
 
     def _paint_module(self, xpos, ypos, width, color):
-        size = [
+        size = (
             (mm2px(xpos, self.dpi), mm2px(ypos, self.dpi)),
             (
                 mm2px(xpos + width, self.dpi),
                 mm2px(ypos + self.module_height, self.dpi),
             ),
-        ]
+        )
+        assert self._draw is not None
         self._draw.rectangle(size, outline=color, fill=color)
 
     def _finish(self):
         # although Image mode set to "1", draw function writes white as 255
+        assert self._image is not None
         self._image = self._image.point(lambda x: 1 if x > 0 else 0, mode="1")
         return self._image
 
