@@ -62,6 +62,7 @@ class BaseDymoLabelWidget(QWidget):
         try:
             return self.render_label_impl()
         except BaseException as err:  # noqa: BLE001
+            traceback.print_exc()
             QMessageBox.warning(
                 self, "Render fail!", f"{err}\n\n\n{traceback.format_exc()}"
             )
