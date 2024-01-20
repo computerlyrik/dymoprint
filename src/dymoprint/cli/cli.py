@@ -7,6 +7,7 @@
 # === END LICENSE STATEMENT ===
 
 import argparse
+import sys
 import webbrowser
 from tempfile import NamedTemporaryFile
 
@@ -22,7 +23,7 @@ from dymoprint.lib.constants import (
 )
 from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
-from dymoprint.lib.font_config import FontConfig, FontStyle
+from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
 from dymoprint.lib.unicode_blocks import image_to_unicode
 from dymoprint.lib.utils import die
 from dymoprint.metadata import our_metadata
@@ -185,7 +186,16 @@ def main():
 
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
-    font_config = FontConfig(font=args.font, style=style)
+    try:
+        font_config = FontConfig(font=args.font, style=style)
+    except NoFontFound as e:
+        valid_font_names = [f.stem for f in FontConfig.available_fonts()]
+        print(
+            f"Valid fonts are: {', '.join(valid_font_names)}.",
+            file=sys.stderr,
+        )
+        raise e
+
     font_filename = font_config.path
 
     labeltext = args.text
