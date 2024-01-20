@@ -14,19 +14,19 @@ from tempfile import NamedTemporaryFile
 from PIL import Image, ImageOps
 
 from dymoprint import __version__
-from dymoprint.constants import (
+from dymoprint.lib.constants import (
     AVAILABLE_BARCODES,
     DEFAULT_MARGIN_PX,
     PIXELS_PER_MM,
     USE_QR,
     e_qrcode,
 )
-from dymoprint.detect import detect_device
-from dymoprint.dymo_print_engines import DymoRenderEngine, print_label
-from dymoprint.font_config import available_fonts, font_filename
+from dymoprint.lib.detect import detect_device
+from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.font_config import available_fonts, font_filename
+from dymoprint.lib.unicode_blocks import image_to_unicode
+from dymoprint.lib.utils import die
 from dymoprint.metadata import our_metadata
-from dymoprint.unicode_blocks import image_to_unicode
-from dymoprint.utils import die
 
 
 def parse_args():

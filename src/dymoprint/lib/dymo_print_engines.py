@@ -8,11 +8,11 @@ import barcode as barcode_module
 import usb
 from PIL import Image, ImageFont, ImageOps
 
-from . import DymoLabeler
-from .barcode_writer import BarcodeImageWriter
-from .constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
-from .detect import DetectedDevice
-from .utils import die, draw_image, scaling
+from dymoprint import DymoLabeler
+from dymoprint.lib.barcode_writer import BarcodeImageWriter
+from dymoprint.lib.constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
+from dymoprint.lib.detect import DetectedDevice
+from dymoprint.lib.utils import die, draw_image, scaling
 
 
 class DymoRenderEngine:

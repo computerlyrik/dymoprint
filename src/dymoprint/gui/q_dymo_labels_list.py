@@ -2,7 +2,7 @@ from PIL import Image
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMenu
 
-from .q_dymo_label_widgets import (
+from dymoprint.gui.q_dymo_label_widgets import (
     BarcodeDymoLabelWidget,
     ImageDymoLabelWidget,
     QrDymoLabelWidget,

@@ -3,7 +3,7 @@ from typing import NamedTuple, NoReturn
 
 import usb
 
-from dymoprint.utils import die
+from dymoprint.lib.utils import die
 
 from .constants import (
     DEV_VENDOR,
