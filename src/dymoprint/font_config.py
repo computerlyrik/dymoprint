@@ -17,14 +17,13 @@ def font_filename(flag):
         "narrow": str(DEFAULT_FONT_DIR / "Carlito-BoldItalic.ttf"),
     }
 
-    conf = ConfigParser(style_to_file)
+    conf = ConfigParser(defaults=style_to_file)
     CONFIG_FILE = Path(user_config_dir()).joinpath("dymoprint.ini")
     if conf.read(CONFIG_FILE):
         # reading FONTS section
         if "FONTS" not in conf.sections():
             die(f'! config file "{CONFIG_FILE}" not valid. Please change or remove.')
-        for style in style_to_file:
-            style_to_file[style] = conf.get("FONTS", style)
+        style_to_file = dict(conf["FONTS"])
 
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
