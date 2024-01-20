@@ -48,6 +48,7 @@ def parse_args():
     )
     parser.add_argument(
         "-s",
+        "--style",
         choices=["r", "b", "i", "n"],
         default="r",
         help="Set fonts style (regular,bold,italic,narrow)",
@@ -177,7 +178,7 @@ def main():
     render_engine = DymoRenderEngine(args.t)
 
     # read config file
-    FONT_FILENAME = font_filename(args.s)
+    FONT_FILENAME = font_filename(args.style)
 
     labeltext = args.text
 
