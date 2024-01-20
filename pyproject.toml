@@ -1,8 +1,5 @@
 [build-system]
-requires = [
-    "hatchling >=1.11.1,<2.0.0",
-    "hatch-vcs >=0.3.0,<0.4",
-]
+requires = ["hatchling >=1.11.1,<2.0.0", "hatch-vcs >=0.3.0,<0.4"]
 build-backend = "hatchling.build"
 
 [project]
@@ -10,8 +7,10 @@ name = "dymoprint"
 description = "Linux Software to print with LabelManager PnP from Dymo"
 readme = "README.md"
 url = "https://github.com/computerlyrik/dymoprint"
-authors = [{name = "Sebastian J. Bronner", email = "waschtl@sbronner.com"}]
-maintainers = [{name = "Ben Mares", email = "services-dymoprint@tensorial.com"}]
+authors = [{ name = "Sebastian J. Bronner", email = "waschtl@sbronner.com" }]
+maintainers = [
+    { name = "Ben Mares", email = "services-dymoprint@tensorial.com" },
+]
 license = "Apache-2.0"
 license-file = "LICENSE"
 dependencies = [
@@ -31,7 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Printing"
+    "Topic :: Printing",
 ]
 dynamic = ["version"]
 requires-python = ">=3.8,<4"
@@ -43,12 +42,12 @@ tracker = "https://github.com/computerlyrik/dymoprint/issues"
 
 [project.scripts]
 dymoprint = "dymoprint.command_line:main"
-dymoprint_gui = "dymoprint.gui:main"
+dymoprint_gui = "dymoprint.gui.gui:main"
 
 [tool.hatch.version]
 source = "vcs"
 # See configuration details in https://github.com/pypa/setuptools_scm
-raw-options = {version_scheme = "no-guess-dev"}
+raw-options = { version_scheme = "no-guess-dev" }
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/dymoprint/_version.py"
@@ -123,10 +122,7 @@ commands =
 destination = "src/dymoprint/_vendor"
 namespace = "dymoprint._vendor"
 requirements = "vendoring/vendor.txt"
-protected-files = [
-    "vendoring/README.md",
-    "vendoring/vendor.txt",
-]
+protected-files = ["vendoring/README.md", "vendoring/vendor.txt"]
 patches-dir = "vendoring/patches"
 
 [tool.vendoring.transformations]
@@ -143,47 +139,47 @@ line-length = 88
 extend-exclude = ["_vendor"]
 src = ["src"]
 select = [
-    "D",  # pydocstyle
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # Pyflakes
-    "I",  # isort
+    "D",   # pydocstyle
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
     "C4",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "B",   # flake8-bugbear
     "UP",  # pyupgrade
-    "RUF",  # Ruff-specific rules
-    "TID",  # flake8-tidy-imports
-    "BLE",  # flake8-blind-except
-    "PTH",  # flake8-pathlib
-    "A",  # flake8-builtins
+    "RUF", # Ruff-specific rules
+    "TID", # flake8-tidy-imports
+    "BLE", # flake8-blind-except
+    "PTH", # flake8-pathlib
+    "A",   # flake8-builtins
 ]
 ignore = [
-    "C408",  # unnecessary-collection-call (allow dict(a=1, b=2); clarity over speed!)
-    "D203",  # one-blank-line-before-class (must ignore this or D211)
-    "D213",  # multi-line-summary-second-line (must ignore this or D212)
-    "D100",  # Missing docstring in public module
-    "D101",  # Missing docstring in public class
-    "D102",  # Missing docstring in public method
-    "D103",  # Missing docstring in public function
-    "D104",  # Missing docstring in public package
-    "D105",  # Missing docstring in magic method
-    "D107",  # Missing docstring in __init__
-    "D415",  # ends-in-punctuation (redundant with D400 ends-in-period)
+    "C408", # unnecessary-collection-call (allow dict(a=1, b=2); clarity over speed!)
+    "D203", # one-blank-line-before-class (must ignore this or D211)
+    "D213", # multi-line-summary-second-line (must ignore this or D212)
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+    "D415", # ends-in-punctuation (redundant with D400 ends-in-period)
     # The following list is recommended to disable these when using ruff's formatter.
     # (Not all of the following are actually enabled.)
-    "W191",  # tab-indentation
-    "E111",  # indentation-with-invalid-multiple
-    "E114",  # indentation-with-invalid-multiple-comment
-    "E117",  # over-indented
-    "D206",  # indent-with-spaces
-    "D300",  # triple-single-quotes
-    "Q000",  # bad-quotes-inline-string
-    "Q001",  # bad-quotes-multiline-string
-    "Q002",  # bad-quotes-docstring
-    "Q003",  # avoidable-escaped-quote
-    "COM812",  # missing-trailing-comma
-    "COM819",  # prohibited-trailing-comma
-    "ISC001",  # single-line-implicit-string-concatenation
-    "ISC002",  # multi-line-implicit-string-concatenation
+    "W191",   # tab-indentation
+    "E111",   # indentation-with-invalid-multiple
+    "E114",   # indentation-with-invalid-multiple-comment
+    "E117",   # over-indented
+    "D206",   # indent-with-spaces
+    "D300",   # triple-single-quotes
+    "Q000",   # bad-quotes-inline-string
+    "Q001",   # bad-quotes-multiline-string
+    "Q002",   # bad-quotes-docstring
+    "Q003",   # avoidable-escaped-quote
+    "COM812", # missing-trailing-comma
+    "COM819", # prohibited-trailing-comma
+    "ISC001", # single-line-implicit-string-concatenation
+    "ISC002", # multi-line-implicit-string-concatenation
 ]
 target-version = "py38"
