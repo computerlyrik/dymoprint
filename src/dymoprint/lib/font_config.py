@@ -1,29 +1,22 @@
-from configparser import ConfigParser
 from pathlib import Path
 
-from platformdirs import user_config_dir
-
 from dymoprint._vendor.matplotlib import font_manager
+from dymoprint.lib.config_file import ConfigFile
 from dymoprint.lib.constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
-from dymoprint.lib.utils import die
 
 
 def font_filename(flag):
-    # Default values
-    style_to_file = {
-        "regular": str(DEFAULT_FONT_DIR / "Carlito-Regular.ttf"),
-        "bold": str(DEFAULT_FONT_DIR / "Carlito-Bold.ttf"),
-        "italic": str(DEFAULT_FONT_DIR / "Carlito-Italic.ttf"),
-        "narrow": str(DEFAULT_FONT_DIR / "Carlito-BoldItalic.ttf"),
-    }
-
-    conf = ConfigParser(defaults=style_to_file)
-    CONFIG_FILE = Path(user_config_dir()).joinpath("dymoprint.ini")
-    if conf.read(CONFIG_FILE):
-        # reading FONTS section
-        if "FONTS" not in conf.sections():
-            die(f'! config file "{CONFIG_FILE}" not valid. Please change or remove.')
-        style_to_file = dict(conf["FONTS"])
+    config_fonts = ConfigFile().fonts_section
+    if config_fonts:
+        style_to_file = config_fonts
+    else:
+        # Default values
+        style_to_file = {
+            "regular": str(DEFAULT_FONT_DIR / "Carlito-Regular.ttf"),
+            "bold": str(DEFAULT_FONT_DIR / "Carlito-Bold.ttf"),
+            "italic": str(DEFAULT_FONT_DIR / "Carlito-Italic.ttf"),
+            "narrow": str(DEFAULT_FONT_DIR / "Carlito-BoldItalic.ttf"),
+        }
 
     return style_to_file[FLAG_TO_STYLE.get(flag, DEFAULT_FONT_STYLE)]
 
