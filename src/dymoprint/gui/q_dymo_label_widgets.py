@@ -50,6 +50,8 @@ class BaseDymoLabelWidget(QWidget):
         Abstract method to be implemented by subclasses for rendering the label.
     """
 
+    render_engine: DymoRenderEngine
+
     itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
     def content_changed(self):
@@ -90,7 +92,6 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         itemRenderSignal: A signal emitted when the content of the label changes.
     """
 
-    render_engine: DymoRenderEngine
     align: QComboBox
     label: QPlainTextEdit
     font_style: FontStyle
@@ -245,7 +246,6 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             and barcode type.
     """
 
-    render_engine: DymoRenderEngine
     label: QLineEdit
     barcode_type_label: QLabel
     barcode_type: QComboBox

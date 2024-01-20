@@ -183,3 +183,9 @@ ignore = [
     "ISC002", # multi-line-implicit-string-concatenation
 ]
 target-version = "py38"
+
+[tool.mypy]
+exclude = ["_vendor"]
+ignore_missing_imports = true
+check_untyped_defs = true
+install_types = true
