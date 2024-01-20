@@ -42,7 +42,7 @@ tracker = "https://github.com/computerlyrik/dymoprint/issues"
 
 [project.scripts]
 dymoprint = "dymoprint.command_line:main"
-dymoprint_gui = "dymoprint.gui:main"
+dymoprint_gui = "dymoprint.gui.gui:main"
 
 [tool.hatch.version]
 source = "vcs"

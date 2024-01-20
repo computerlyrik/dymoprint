@@ -21,9 +21,10 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import NoBackendError, USBError
 
-from .constants import DEFAULT_MARGIN_PX, ICON_DIR
-from .detect import detect_device
-from .dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.constants import DEFAULT_MARGIN_PX, ICON_DIR
+from dymoprint.detect import detect_device
+from dymoprint.dymo_print_engines import DymoRenderEngine, print_label
+
 from .q_dymo_labels_list import QDymoLabelList
 
 

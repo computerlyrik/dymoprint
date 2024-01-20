@@ -18,11 +18,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from dymoprint.constants import ICON_DIR
+from dymoprint.constants import AVAILABLE_BARCODES, ICON_DIR
 from dymoprint.dymo_print_engines import DymoRenderEngine
-
-from .constants import AVAILABLE_BARCODES
-from .font_config import parse_fonts
+from dymoprint.font_config import parse_fonts
 
 
 class FontStyle(QComboBox):
