@@ -23,7 +23,7 @@ from dymoprint.lib.constants import (
 )
 from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
-from dymoprint.lib.font_config import available_fonts, font_filename
+from dymoprint.lib.font_config import available_fonts, get_font_filename
 from dymoprint.lib.unicode_blocks import image_to_unicode
 from dymoprint.lib.utils import die
 from dymoprint.metadata import our_metadata
@@ -178,16 +178,16 @@ def main():
     render_engine = DymoRenderEngine(args.t)
 
     # read config file
-    FONT_FILENAME = font_filename(args.style)
+    font_filename = get_font_filename(args.style)
 
     labeltext = args.text
 
     if args.font is not None:
         if Path(args.font).is_file():
-            FONT_FILENAME = args.font
+            font_filename = args.font
         else:
             try:
-                FONT_FILENAME = next(
+                font_filename = next(
                     f.absolute() for f in available_fonts() if args.font == f.stem
                 )
             except StopIteration:
@@ -223,7 +223,7 @@ def main():
     elif args.barcode_text:
         bitmaps.append(
             render_engine.render_barcode_with_text(
-                labeltext.pop(0), args.barcode_text, FONT_FILENAME, args.f
+                labeltext.pop(0), args.barcode_text, font_filename, args.f
             )
         )
 
@@ -231,7 +231,7 @@ def main():
         bitmaps.append(
             render_engine.render_text(
                 text_lines=labeltext,
-                font_file_name=FONT_FILENAME,
+                font_file_name=font_filename,
                 frame_width_px=args.f,
                 font_size_ratio=int(args.scale) / 100.0,
                 align=args.a,

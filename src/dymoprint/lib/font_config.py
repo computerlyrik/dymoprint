@@ -5,7 +5,7 @@ from dymoprint.lib.config_file import ConfigFile
 from dymoprint.lib.constants import DEFAULT_FONT_DIR, DEFAULT_FONT_STYLE, FLAG_TO_STYLE
 
 
-def font_filename(flag):
+def get_font_filename(flag):
     config_fonts = ConfigFile().fonts_section
     if config_fonts:
         style_to_file = config_fonts
