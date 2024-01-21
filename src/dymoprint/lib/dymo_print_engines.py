@@ -70,7 +70,7 @@ class DymoRenderEngine:
         # create an empty label image
         qr_scale = self.label_height_px // len(qr_text_lines)
         qr_offset = (self.label_height_px - len(qr_text_lines) * qr_scale) // 2
-        label_width = len(qr_text_lines) * qr_scale
+        label_width_px = len(qr_text_lines[0]) * qr_scale
 
         if not qr_scale:
             die(
@@ -78,7 +78,7 @@ class DymoRenderEngine:
                 "are smaller than the device resolution"
             )
 
-        code_bitmap = Image.new("1", (label_width, self.label_height_px))
+        code_bitmap = Image.new("1", (label_width_px, self.label_height_px))
 
         with draw_image(code_bitmap) as label_draw:
             # write the qr-code into the empty image
