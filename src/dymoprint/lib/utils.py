@@ -7,10 +7,13 @@
 # === END LICENSE STATEMENT ===
 
 import contextlib
+import math
 import sys
 from typing import NoReturn
 
 from PIL import ImageDraw
+
+from dymoprint.lib.constants import PIXELS_PER_MM
 
 
 def die(message=None) -> NoReturn:
@@ -33,3 +36,9 @@ def draw_image(bitmap):
         yield drawobj
     finally:
         del drawobj
+
+
+def px_to_mm(px):
+    mm = px / PIXELS_PER_MM
+    # Round up to nearest 0.1mm
+    return math.ceil(mm * 10) / 10

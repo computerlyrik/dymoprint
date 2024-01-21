@@ -10,9 +10,9 @@ from PIL import Image, ImageFont, ImageOps
 
 from dymoprint import DymoLabeler
 from dymoprint.lib.barcode_writer import BarcodeImageWriter
-from dymoprint.lib.constants import DEFAULT_MARGIN_PX, PIXELS_PER_MM, QRCode
+from dymoprint.lib.constants import DEFAULT_MARGIN_PX, QRCode
 from dymoprint.lib.detect import DetectedDevice
-from dymoprint.lib.utils import die, draw_image, scaling
+from dymoprint.lib.utils import die, draw_image, px_to_mm, scaling
 
 
 class DymoRenderEngine:
@@ -280,12 +280,10 @@ class DymoRenderEngine:
 
         if max_payload_len_px is not None and label_bitmap.width > max_payload_len_px:
             excess_px = label_bitmap.width - max_payload_len_px
-            excess_mm = excess_px / PIXELS_PER_MM
-            # Round up to nearest 0.1mm
-            excess_mm = math.ceil(excess_mm * 10) / 10
             die(
-                f"Error: Label exceeds allowed length by "
-                f"exceeds allowed length of {excess_mm:.1f} mm."
+                f"Error: Label width {px_to_mm(label_bitmap.width):.1f}mm "
+                f"exceeds allowed length of {px_to_mm(max_payload_len_px):.1f}mm "
+                f"(by {px_to_mm(excess_px):.1f} mm)."
             )
 
         if min_payload_len_px > label_bitmap.width:
