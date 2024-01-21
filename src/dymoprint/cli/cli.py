@@ -50,6 +50,7 @@ def parse_args():
     )
     parser.add_argument(
         "-f",
+        "--frame-width-px",
         action="count",
         help="Draw frame around the text, more arguments for thicker frame",
     )
@@ -62,6 +63,7 @@ def parse_args():
     )
     parser.add_argument(
         "-a",
+        "--align",
         choices=[
             "left",
             "center",
@@ -101,6 +103,7 @@ def parse_args():
 
     length_options.add_argument(
         "-j",
+        "--justify",
         choices=[
             "left",
             "center",
@@ -155,6 +158,7 @@ def parse_args():
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument(
         "-m",
+        "--margin-px",
         type=int,
         default=DEFAULT_MARGIN_PX,
         help=f"Margin in px (default is {DEFAULT_MARGIN_PX})",
@@ -164,6 +168,7 @@ def parse_args():
     )
     parser.add_argument(
         "-t",
+        "--tape-size-mm",
         type=int,
         choices=[6, 9, 12, 19],
         default=12,
@@ -182,7 +187,7 @@ def mm_to_payload_px(mm, margin):
 
 def main():
     args = parse_args()
-    render_engine = DymoRenderEngine(args.t)
+    render_engine = DymoRenderEngine(args.tape_size_mm)
 
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
@@ -229,7 +234,7 @@ def main():
     elif args.barcode_text:
         bitmaps.append(
             render_engine.render_barcode_with_text(
-                labeltext.pop(0), args.barcode_text, font_filename, args.f
+                labeltext.pop(0), args.barcode_text, font_filename, args.frame_width_px
             )
         )
 
@@ -238,17 +243,17 @@ def main():
             render_engine.render_text(
                 text_lines=labeltext,
                 font_file_name=font_filename,
-                frame_width_px=args.f,
+                frame_width_px=args.frame_width_px,
                 font_size_ratio=int(args.scale) / 100.0,
-                align=args.a,
+                align=args.align,
             )
         )
 
     if args.picture:
         bitmaps.append(render_engine.render_picture(args.picture))
 
-    margin = args.m
-    justify = args.j
+    margin = args.margin_px
+    justify = args.justify
 
     if args.fixed_length is not None:
         min_label_mm_len = args.fixed_length
@@ -292,5 +297,8 @@ def main():
     else:
         detected_device = detect_device()
         print_label(
-            detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t
+            detected_device,
+            label_bitmap,
+            margin_px=args.margin_px,
+            tape_size_mm=args.tape_size_mm,
         )
