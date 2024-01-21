@@ -182,7 +182,7 @@ def mm_to_payload_px(mm, margin):
 
     The print resolution is 7 pixels/mm, and margin is subtracted from each side.
     """
-    return (mm * PIXELS_PER_MM) - margin * 2
+    return max(0, (mm * PIXELS_PER_MM) - margin * 2)
 
 
 def main():
@@ -260,7 +260,7 @@ def main():
         max_label_mm_len = args.max_length
 
     margin = args.margin_px
-    min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
+    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin)
     max_payload_len_px = (
         mm_to_payload_px(max_label_mm_len, margin)
         if max_label_mm_len is not None
