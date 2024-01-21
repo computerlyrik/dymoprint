@@ -65,12 +65,12 @@ class DymoRenderEngine:
 
         # create QR object from first string
         code = QRCode(qr_input_text, error="M")
-        qr_text = code.text(quiet_zone=1).split()
+        qr_text_lines = code.text(quiet_zone=1).split()
 
         # create an empty label image
-        qr_scale = self.label_height_px // len(qr_text)
-        qr_offset = (self.label_height_px - len(qr_text) * qr_scale) // 2
-        label_width = len(qr_text) * qr_scale
+        qr_scale = self.label_height_px // len(qr_text_lines)
+        qr_offset = (self.label_height_px - len(qr_text_lines) * qr_scale) // 2
+        label_width = len(qr_text_lines) * qr_scale
 
         if not qr_scale:
             die(
@@ -82,13 +82,13 @@ class DymoRenderEngine:
 
         with draw_image(code_bitmap) as label_draw:
             # write the qr-code into the empty image
-            for i, line in enumerate(qr_text):
+            for i, line in enumerate(qr_text_lines):
                 for j, char in enumerate(line):
                     if char == "1":
-                        pix = scaling(
+                        qr_pixels = scaling(
                             (j * qr_scale, i * qr_scale + qr_offset), qr_scale
                         )
-                        label_draw.point(pix, 1)
+                        label_draw.point(qr_pixels, 1)
         return code_bitmap
 
     def render_barcode(
@@ -261,7 +261,7 @@ class DymoRenderEngine:
         if len(bitmaps) > 1:
             padding = 4
             label_height = max(b.height for b in bitmaps)
-            label_bitmap = Image.new(
+            merged_bitmap = Image.new(
                 "1",
                 (
                     sum(b.width for b in bitmaps) + padding * (len(bitmaps) - 1),
@@ -271,38 +271,38 @@ class DymoRenderEngine:
             x_offset = 0
             for bitmap in bitmaps:
                 y_offset = (label_height - bitmap.size[1]) // 2
-                label_bitmap.paste(bitmap, box=(x_offset, y_offset))
+                merged_bitmap.paste(bitmap, box=(x_offset, y_offset))
                 x_offset += bitmap.width + padding
         elif len(bitmaps) == 0:
-            label_bitmap = self.render_empty(max(min_payload_len_px, 1))
+            merged_bitmap = self.render_empty(max(min_payload_len_px, 1))
         else:
-            label_bitmap = bitmaps[0]
+            merged_bitmap = bitmaps[0]
 
-        if max_payload_len_px is not None and label_bitmap.width > max_payload_len_px:
-            excess_px = label_bitmap.width - max_payload_len_px
+        if max_payload_len_px is not None and merged_bitmap.width > max_payload_len_px:
+            excess_px = merged_bitmap.width - max_payload_len_px
             die(
-                f"Error: Label width {px_to_mm(label_bitmap.width):.1f}mm "
+                f"Error: Label width {px_to_mm(merged_bitmap.width):.1f}mm "
                 f"exceeds allowed length of {px_to_mm(max_payload_len_px):.1f}mm "
                 f"(by {px_to_mm(excess_px):.1f} mm)."
             )
 
-        if min_payload_len_px > label_bitmap.width:
+        if min_payload_len_px > merged_bitmap.width:
             offset = 0
             if justify == "center":
-                offset = max(0, int((min_payload_len_px - label_bitmap.width) / 2))
+                offset = max(0, int((min_payload_len_px - merged_bitmap.width) / 2))
             if justify == "right":
-                offset = max(0, int(min_payload_len_px - label_bitmap.width))
-            out_label_bitmap = Image.new(
+                offset = max(0, int(min_payload_len_px - merged_bitmap.width))
+            expanded_merged_bitmap = Image.new(
                 "1",
                 (
                     min_payload_len_px,
-                    label_bitmap.height,
+                    merged_bitmap.height,
                 ),
             )
-            out_label_bitmap.paste(label_bitmap, box=(offset, 0))
-            return out_label_bitmap
+            expanded_merged_bitmap.paste(merged_bitmap, box=(offset, 0))
+            return expanded_merged_bitmap
 
-        return label_bitmap
+        return merged_bitmap
 
 
 def print_label(
