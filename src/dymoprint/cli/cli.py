@@ -252,9 +252,6 @@ def main():
     if args.picture:
         bitmaps.append(render_engine.render_picture(args.picture))
 
-    margin = args.margin_px
-    justify = args.justify
-
     if args.fixed_length is not None:
         min_label_mm_len = args.fixed_length
         max_label_mm_len = args.fixed_length
@@ -262,6 +259,7 @@ def main():
         min_label_mm_len = args.min_length
         max_label_mm_len = args.max_length
 
+    margin = args.margin_px
     min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
     max_payload_len_px = (
         mm_to_payload_px(max_label_mm_len, margin)
@@ -273,7 +271,7 @@ def main():
         bitmaps=bitmaps,
         min_payload_len_px=min_payload_len_px,
         max_payload_len_px=max_payload_len_px,
-        justify=justify,
+        justify=args.justify,
     )
 
     # print or show the label
