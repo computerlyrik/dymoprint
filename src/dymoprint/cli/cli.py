@@ -5,7 +5,6 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
-
 import argparse
 import sys
 import webbrowser
@@ -25,7 +24,7 @@ from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
 from dymoprint.lib.unicode_blocks import image_to_unicode
-from dymoprint.lib.utils import die
+from dymoprint.lib.utils import is_debug_mode, print_exception
 from dymoprint.metadata import our_metadata
 
 FLAG_TO_STYLE = {
@@ -34,6 +33,10 @@ FLAG_TO_STYLE = {
     "i": FontStyle.ITALIC,
     "n": FontStyle.NARROW,
 }
+
+
+class CommandLineUsageError(Exception):
+    pass
 
 
 def parse_args():
@@ -185,7 +188,7 @@ def mm_to_payload_px(mm, margin):
     return max(0, (mm * PIXELS_PER_MM) - margin * 2)
 
 
-def main():
+def run():
     args = parse_args()
     render_engine = DymoRenderEngine(args.tape_size_mm)
 
@@ -195,11 +198,8 @@ def main():
         font_config = FontConfig(font=args.font, style=style)
     except NoFontFound as e:
         valid_font_names = [f.stem for f in FontConfig.available_fonts()]
-        print(
-            f"Valid fonts are: {', '.join(valid_font_names)}.",
-            file=sys.stderr,
-        )
-        raise e
+        msg = f"{e}. Valid fonts are: {', '.join(valid_font_names)}"
+        raise CommandLineUsageError(msg) from None
 
     font_filename = font_config.path
 
@@ -207,18 +207,24 @@ def main():
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
-        die(f"Error: {e_qrcode}")
+        raise CommandLineUsageError(
+            "QR code cannot be used without QR support " "installed"
+        ) from e_qrcode
 
     if args.barcode and args.qr:
-        die("Error: can not print both QR and Barcode on the same label (yet)")
+        raise CommandLineUsageError(
+            "Can not print both QR and Barcode on the same " "label (yet)"
+        )
 
     if args.fixed_length is not None and (
         args.min_length != 0 or args.max_length is not None
     ):
-        die("Error: can't specify min/max and fixed length at the same time")
+        raise CommandLineUsageError(
+            "Cannot't specify min/max and fixed length at the " "same time"
+        )
 
     if args.max_length is not None and args.max_length < args.min_length:
-        die("Error: maximum length is less than minimum length")
+        raise CommandLineUsageError("Maximum length is less than minimum length")
 
     bitmaps = []
 
@@ -300,3 +306,14 @@ def main():
             margin_px=args.margin_px,
             tape_size_mm=args.tape_size_mm,
         )
+
+
+def main():
+    try:
+        run()
+    except Exception as e:  # noqa: BLE001
+        if is_debug_mode():
+            raise
+        else:
+            print_exception(e)
+        sys.exit(1)

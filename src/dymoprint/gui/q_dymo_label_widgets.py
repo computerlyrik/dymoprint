@@ -1,4 +1,3 @@
-import traceback
 from pathlib import Path
 from typing import Optional
 
@@ -11,13 +10,13 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
     QWidget,
 )
 
+from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import AVAILABLE_BARCODES, ICON_DIR
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine
 from dymoprint.lib.font_config import FontConfig
@@ -66,10 +65,7 @@ class BaseDymoLabelWidget(QWidget):
         try:
             return self.render_label_impl()
         except BaseException as err:  # noqa: BLE001
-            traceback.print_exc()
-            QMessageBox.warning(
-                self, "Render fail!", f"{err}\n\n\n{traceback.format_exc()}"
-            )
+            crash_msg_box(self, "Render Failed!", err)
             return self.render_engine.render_empty()
 
 

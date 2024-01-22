@@ -3,8 +3,6 @@ from typing import NamedTuple, NoReturn
 
 import usb
 
-from dymoprint.lib.utils import die
-
 from .constants import (
     DEV_VENDOR,
     HID_INTERFACE_CLASS,
@@ -14,6 +12,10 @@ from .constants import (
 )
 
 GITHUB_LINK = "<https://github.com/computerlyrik/dymoprint/pull/56>"
+
+
+class DymoUSBError(RuntimeError):
+    pass
 
 
 class DetectedDevice(NamedTuple):
@@ -48,10 +50,6 @@ def device_info(dev: usb.core.Device) -> str:
     return res
 
 
-class DeviceDetectionError(RuntimeError):
-    pass
-
-
 def detect_device() -> DetectedDevice:
     dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))
     if len(dymo_devs) == 0:
@@ -61,7 +59,7 @@ def detect_device() -> DetectedDevice:
                 f"- Vendor ID: {hex(dev.idVendor):6}  "
                 f"Product ID: {hex(dev.idProduct)}"
             )
-        raise DeviceDetectionError("No Dymo devices found.")
+        raise DymoUSBError("No Dymo devices found")
     if len(dymo_devs) > 1:
         print("Found multiple Dymo devices:")
         for dev in dymo_devs:
@@ -86,7 +84,7 @@ def detect_device() -> DetectedDevice:
             print("Device configuration set.")
         except usb.core.USBError as e:
             if e.errno == 13:
-                raise RuntimeError("Access denied") from e
+                raise DymoUSBError("Access denied") from e
             if e.errno == 16:
                 print("Device is busy, but this is okay.")
             else:
@@ -104,7 +102,7 @@ def detect_device() -> DetectedDevice:
         if intf is not None:
             print(f"Opened HID interface: {intf!r}")
         else:
-            die("Could not open a valid interface.")
+            raise DymoUSBError("Could not open a valid interface")
     assert isinstance(intf, usb.core.Interface)
 
     try:
@@ -129,7 +127,7 @@ def detect_device() -> DetectedDevice:
     )
 
     if not devout or not devin:
-        die("The device endpoints not be found.")
+        raise DymoUSBError("The device endpoints not be found")
     return DetectedDevice(
         id=dev.idProduct, dev=dev, intf=intf, devout=devout, devin=devin
     )
@@ -140,19 +138,19 @@ def instruct_on_access_denied(dev: usb.core.Device) -> NoReturn:
     if system == "Linux":
         instruct_on_access_denied_linux(dev)
     elif system == "Windows":
-        raise RuntimeError(
+        raise DymoUSBError(
             "Couldn't access the device. Please make sure that the "
             "device driver is set to WinUSB. This can be accomplished "
             "with Zadig <https://zadig.akeo.ie/>."
         )
     elif system == "Darwin":
-        raise RuntimeError(
+        raise DymoUSBError(
             f"Could not access {dev}. Thanks for bravely trying this on a Mac. You "
             f"are in uncharted territory. It would be appreciated if you share the "
             f"results of your experimentation at {GITHUB_LINK}."
         )
     else:
-        raise RuntimeError(f"Unknown platform {system}")
+        raise DymoUSBError(f"Unknown platform {system}")
 
 
 def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
@@ -215,4 +213,4 @@ def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
         f"or if you have any information or ideas, please post them at "
         f"that link."
     )
-    raise RuntimeError("\n\n" + "\n".join(lines) + "\n")
+    raise DymoUSBError("\n\n" + "\n".join(lines) + "\n")

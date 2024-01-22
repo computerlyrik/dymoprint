@@ -8,19 +8,12 @@
 
 import contextlib
 import math
+import os
 import sys
-from typing import NoReturn
 
 from PIL import ImageDraw
 
 from dymoprint.lib.constants import PIXELS_PER_MM
-
-
-def die(message=None) -> NoReturn:
-    if message:
-        print(message, file=sys.stderr)
-        raise RuntimeError(message)
-    sys.exit(1)
 
 
 def scaling(pix, sc):
@@ -42,3 +35,11 @@ def px_to_mm(px):
     mm = px / PIXELS_PER_MM
     # Round up to nearest 0.1mm
     return math.ceil(mm * 10) / 10
+
+
+def is_debug_mode():
+    return any(env_var in os.environ for env_var in ("DEBUG", "VERBOSE"))
+
+
+def print_exception(e):
+    print(f"Error: {e}", file=sys.stderr)

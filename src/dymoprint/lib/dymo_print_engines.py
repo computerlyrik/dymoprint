@@ -12,7 +12,32 @@ from dymoprint import DymoLabeler
 from dymoprint.lib.barcode_writer import BarcodeImageWriter
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, QRCode
 from dymoprint.lib.detect import DetectedDevice
-from dymoprint.lib.utils import die, draw_image, px_to_mm, scaling
+from dymoprint.lib.utils import draw_image, px_to_mm, scaling
+
+
+class DymoRenderEngineException(Exception):
+    pass
+
+
+class QrTooBigError(DymoRenderEngineException):
+    def __init__(self):
+        msg = (
+            "too much information to store in the QR code, points are smaller than "
+            "the device resolution"
+        )
+        super().__init__(msg)
+
+
+class LabelTooBigError(DymoRenderEngineException):
+    def __init__(self, label_width_px, allowed_width_px):
+        label_width_mm = px_to_mm(label_width_px)
+        allowed_width_mm = px_to_mm(allowed_width_px)
+        msg = (
+            f"Label width {label_width_mm:.1f}mm "
+            f"exceeds allowed length of {allowed_width_mm:.1f}mm "
+            f"(by {label_width_mm - allowed_width_mm:.1f} mm)"
+        )
+        super().__init__(msg)
 
 
 class DymoRenderEngine:
@@ -73,10 +98,7 @@ class DymoRenderEngine:
         label_width_px = len(qr_text_lines[0]) * qr_scale
 
         if not qr_scale:
-            die(
-                "Error: too much information to store in the QR code, points "
-                "are smaller than the device resolution"
-            )
+            raise QrTooBigError()
 
         code_bitmap = Image.new("1", (label_width_px, self.label_height_px))
 
@@ -246,7 +268,7 @@ class DymoRenderEngine:
                     img = img.convert("L", palette=Image.AFFINE)
                     return ImageOps.invert(img).convert("1")
             else:
-                die(f"picture path:{picture_path}  doesn't exist ")
+                raise FileNotFoundError(f"Picture path does not exist: {picture_path}")
         return Image.new("1", (1, self.label_height_px))
 
     def merge_render(
@@ -279,12 +301,7 @@ class DymoRenderEngine:
             merged_bitmap = bitmaps[0]
 
         if max_payload_len_px is not None and merged_bitmap.width > max_payload_len_px:
-            excess_px = merged_bitmap.width - max_payload_len_px
-            die(
-                f"Error: Label width {px_to_mm(merged_bitmap.width):.1f}mm "
-                f"exceeds allowed length of {px_to_mm(max_payload_len_px):.1f}mm "
-                f"(by {px_to_mm(excess_px):.1f} mm)."
-            )
+            raise LabelTooBigError(merged_bitmap.width, max_payload_len_px)
 
         if min_payload_len_px > merged_bitmap.width:
             offset = 0
@@ -329,7 +346,9 @@ def print_label(
     # Regather the bytes into rows
     label_stream_row_length = int(math.ceil(label_bitmap.height / 8))
     if len(labelstream) // label_stream_row_length != label_bitmap.width:
-        die("An internal problem was encountered while processing the label bitmap!")
+        raise RuntimeError(
+            "An internal problem was encountered while processing the " "label bitmap!"
+        )
     label_rows: list[bytes] = [
         labelstream[i : i + label_stream_row_length]
         for i in range(0, len(labelstream), label_stream_row_length)

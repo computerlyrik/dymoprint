@@ -1,5 +1,4 @@
 import sys
-import traceback
 from typing import Optional
 
 from PIL import Image, ImageOps, ImageQt
@@ -12,7 +11,6 @@ from PyQt6.QtWidgets import (
     QGraphicsDropShadowEffect,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QPushButton,
     QSpinBox,
     QToolBar,
@@ -21,8 +19,9 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import NoBackendError, USBError
 
+from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
-from dymoprint.lib.detect import DeviceDetectionError, detect_device
+from dymoprint.lib.detect import DymoUSBError, detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 
 from .q_dymo_labels_list import QDymoLabelList
@@ -183,18 +182,15 @@ class DymoPrintWindow(QWidget):
                 self.margin.value(),
                 self.tape_size.currentData(),
             )
-        except (RuntimeError, USBError) as err:
-            print(traceback.format_exc())
-            QMessageBox.warning(
-                self, "Printing Failed!", f"{err}\n\n{traceback.format_exc()}"
-            )
+        except (DymoUSBError, USBError) as err:
+            crash_msg_box(self, "Printing Failed!", err)
 
     def check_status(self):
         is_enabled = False
         try:
             self.detected_device = detect_device()
             is_enabled = True
-        except (DeviceDetectionError, NoBackendError, USBError) as e:
+        except (DymoUSBError, NoBackendError, USBError) as e:
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.error_label.setVisible(not is_enabled)
