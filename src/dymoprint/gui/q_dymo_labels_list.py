@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from PIL import Image
@@ -12,6 +13,8 @@ from dymoprint.gui.q_dymo_label_widgets import (
     TextDymoLabelWidget,
 )
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine
+
+LOG = logging.getLogger(__name__)
 
 
 class QDymoLabelList(QListWidget):
@@ -160,5 +163,5 @@ class QDymoLabelList(QListWidget):
                 item_to_delete = self.itemAt(event.pos())
                 self.takeItem(self.indexFromItem(item_to_delete).row())  # self.update()
             except Exception as e:  # noqa: BLE001
-                print(f"No item selected {e}")
+                LOG.warning(f"No item selected {e}")
         self.render_label()

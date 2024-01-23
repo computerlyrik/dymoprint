@@ -6,6 +6,7 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 import argparse
+import logging
 import sys
 import webbrowser
 from tempfile import NamedTemporaryFile
@@ -23,9 +24,11 @@ from dymoprint.lib.constants import (
 from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
+from dymoprint.lib.logger import configure_logging, print_exception, set_verbose
 from dymoprint.lib.unicode_blocks import image_to_unicode
-from dymoprint.lib.utils import is_debug_mode, print_exception
 from dymoprint.metadata import our_metadata
+
+LOG = logging.getLogger(__name__)
 
 FLAG_TO_STYLE = {
     "r": FontStyle.REGULAR,
@@ -177,6 +180,12 @@ def parse_args():
         default=12,
         help="Tape size: 6,9,12,19 mm, default=12mm",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Increase logging verbosity",
+    )
     return parser.parse_args()
 
 
@@ -204,6 +213,9 @@ def run():
     font_filename = font_config.path
 
     labeltext = args.text
+
+    if args.verbose:
+        set_verbose()
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
@@ -282,7 +294,7 @@ def run():
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
-        print("Demo mode: showing label..")
+        LOG.debug("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
             "1", (margin + label_bitmap.width + margin, label_bitmap.height)
@@ -310,10 +322,8 @@ def run():
 
 def main():
     try:
+        configure_logging()
         run()
     except Exception as e:  # noqa: BLE001
-        if is_debug_mode():
-            raise
-        else:
-            print_exception(e)
+        print_exception(e)
         sys.exit(1)

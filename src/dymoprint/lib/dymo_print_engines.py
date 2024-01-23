@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import array
+import logging
 import math
 from pathlib import Path
 
@@ -13,6 +14,8 @@ from dymoprint.lib.barcode_writer import BarcodeImageWriter
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, QRCode
 from dymoprint.lib.detect import DetectedDevice
 from dymoprint.lib.utils import draw_image, px_to_mm, scaling
+
+LOG = logging.getLogger(__name__)
 
 
 class DymoRenderEngineException(Exception):
@@ -366,8 +369,8 @@ def print_label(
         tape_size_mm=tape_size_mm,
     )
 
-    print("Printing label..")
+    LOG.debug("Printing label..")
     lm.printLabel(label_matrix, margin_px=margin_px)
-    print("Done printing.")
+    LOG.debug("Done printing.")
     usb.util.dispose_resources(detected_device.dev)
-    print("Cleaned up.")
+    LOG.debug("Cleaned up.")

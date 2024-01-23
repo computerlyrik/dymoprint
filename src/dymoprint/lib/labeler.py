@@ -6,11 +6,14 @@
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
 import array
+import logging
 from typing import List, Optional
 
 import usb
 
 from .constants import DEFAULT_MARGIN_PX, ESC, SYN
+
+LOG = logging.getLogger(__name__)
 
 
 class DymoLabeler:
@@ -87,7 +90,7 @@ class DymoLabeler:
                         break
                 cmd_to_send = self.cmd[:pos]
                 cmd_rest = self.cmd[pos:]
-                print(f"Sending chunk of {len(cmd_to_send)} bytes")
+                LOG.debug(f"Sending chunk of {len(cmd_to_send)} bytes")
 
             # Remove the computed chunk from the command to be processed
             self.cmd = cmd_rest
@@ -183,7 +186,7 @@ class DymoLabeler:
         """Ask for and return the device's status (HLF)."""
         self.statusRequest()
         response = self.sendCommand()
-        print(response)
+        LOG.debug(response)
 
     def printLabel(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines.
@@ -205,4 +208,4 @@ class DymoLabeler:
             self.skipLines(margin_px * 2)
         self.statusRequest()
         response = self.sendCommand()
-        print(f"Post-send response: {response}")
+        LOG.debug(f"Post-send response: {response}")

@@ -1,3 +1,4 @@
+import logging
 import platform
 from typing import NamedTuple, NoReturn
 
@@ -11,6 +12,7 @@ from .constants import (
     UNCONFIRMED_MESSAGE,
 )
 
+LOG = logging.getLogger(__name__)
 GITHUB_LINK = "<https://github.com/computerlyrik/dymoprint/pull/56>"
 
 
@@ -53,40 +55,40 @@ def device_info(dev: usb.core.Device) -> str:
 def detect_device() -> DetectedDevice:
     dymo_devs = list(usb.core.find(idVendor=DEV_VENDOR, find_all=True))
     if len(dymo_devs) == 0:
-        print(f"No Dymo devices found (expected vendor {hex(DEV_VENDOR)})")
+        LOG.debug(f"No Dymo devices found (expected vendor {hex(DEV_VENDOR)})")
         for dev in usb.core.find(find_all=True):
-            print(
+            LOG.debug(
                 f"- Vendor ID: {hex(dev.idVendor):6}  "
                 f"Product ID: {hex(dev.idProduct)}"
             )
         raise DymoUSBError("No Dymo devices found")
     if len(dymo_devs) > 1:
-        print("Found multiple Dymo devices:")
+        LOG.debug("Found multiple Dymo devices:")
         for dev in dymo_devs:
-            print(device_info(dev))
-        print("Using first device.")
+            LOG.debug(device_info(dev))
+        LOG.debug("Using first device.")
         dev = dymo_devs[0]
     else:
         dev = dymo_devs[0]
-        print(f"Found one Dymo device: {device_info(dev)}")
+        LOG.debug(f"Found one Dymo device: {device_info(dev)}")
     dev = dymo_devs[0]
     if dev.idProduct in SUPPORTED_PRODUCTS:
-        print(f"Recognized device as {SUPPORTED_PRODUCTS[dev.idProduct]}")
+        LOG.debug(f"Recognized device as {SUPPORTED_PRODUCTS[dev.idProduct]}")
     else:
-        print(f"Unrecognized device: {hex(dev.idProduct)}. {UNCONFIRMED_MESSAGE}")
+        LOG.debug(f"Unrecognized device: {hex(dev.idProduct)}. {UNCONFIRMED_MESSAGE}")
 
     try:
         dev.get_active_configuration()
-        print("Active device configuration already found.")
+        LOG.debug("Active device configuration already found.")
     except usb.core.USBError:
         try:
             dev.set_configuration()
-            print("Device configuration set.")
+            LOG.debug("Device configuration set.")
         except usb.core.USBError as e:
             if e.errno == 13:
                 raise DymoUSBError("Access denied") from e
             if e.errno == 16:
-                print("Device is busy, but this is okay.")
+                LOG.debug("Device is busy, but this is okay.")
             else:
                 raise
 
@@ -94,23 +96,23 @@ def detect_device() -> DetectedDevice:
         dev.get_active_configuration(), bInterfaceClass=PRINTER_INTERFACE_CLASS
     )
     if intf is not None:
-        print(f"Opened printer interface: {intf!r}")
+        LOG.debug(f"Opened printer interface: {intf!r}")
     else:
         intf = usb.util.find_descriptor(
             dev.get_active_configuration(), bInterfaceClass=HID_INTERFACE_CLASS
         )
         if intf is not None:
-            print(f"Opened HID interface: {intf!r}")
+            LOG.debug(f"Opened HID interface: {intf!r}")
         else:
             raise DymoUSBError("Could not open a valid interface")
     assert isinstance(intf, usb.core.Interface)
 
     try:
         if dev.is_kernel_driver_active(intf.bInterfaceNumber):
-            print(f"Detaching kernel driver from interface {intf.bInterfaceNumber}")
+            LOG.debug(f"Detaching kernel driver from interface {intf.bInterfaceNumber}")
             dev.detach_kernel_driver(intf.bInterfaceNumber)
     except NotImplementedError:
-        print(f"Kernel driver detaching not necessary on " f"{platform.system()}.")
+        LOG.debug(f"Kernel driver detaching not necessary on " f"{platform.system()}.")
     devout = usb.util.find_descriptor(
         intf,
         custom_match=(

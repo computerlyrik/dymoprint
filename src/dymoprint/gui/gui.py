@@ -1,9 +1,10 @@
+import logging
 import sys
 from typing import Optional
 
 from PIL import Image, ImageOps, ImageQt
 from PyQt6 import QtCore
-from PyQt6.QtCore import QSize, Qt, QTimer
+from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QSize, Qt, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -23,8 +24,11 @@ from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
 from dymoprint.lib.detect import DymoUSBError, detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.logger import configure_logging, set_verbose
 
 from .q_dymo_labels_list import QDymoLabelList
+
+LOG = logging.getLogger(__name__)
 
 
 class DymoPrintWindow(QWidget):
@@ -201,8 +205,24 @@ class DymoPrintWindow(QWidget):
         )
 
 
+def parse(app):
+    """Parse the arguments and options of the given app object."""
+    parser = QCommandLineParser()
+    parser.addHelpOption()
+
+    verbose_option = QCommandLineOption(["v", "verbose"], "Verbose output.")
+    parser.addOption(verbose_option)
+    parser.process(app)
+
+    is_verbose = parser.isSet(verbose_option)
+    if is_verbose:
+        set_verbose()
+
+
 def main():
+    configure_logging()
     app = QApplication(sys.argv)
+    parse(app)
     window = DymoPrintWindow()
     window.show()
     sys.exit(app.exec())
