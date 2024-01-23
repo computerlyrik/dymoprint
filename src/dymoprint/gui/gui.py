@@ -25,6 +25,7 @@ from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
 from dymoprint.lib.detect import DymoUSBError, detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.utils import px_to_mm
 
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -51,6 +52,7 @@ class DymoPrintWindow(QWidget):
         self.background_color = QComboBox()
         self.min_label_len = QSpinBox()
         self.justify = QComboBox()
+        self.info_label = QLabel()
 
         self.init_elements()
         self.init_timers()
@@ -130,13 +132,21 @@ class DymoPrintWindow(QWidget):
         settings_widget.addWidget(self.background_color)
 
         render_widget = QWidget(self)
+        label_render_widget = QWidget(render_widget)
+
         render_layout = QHBoxLayout(render_widget)
-        render_layout.addWidget(self.label_render)
+        label_render_layout = QVBoxLayout(label_render_widget)
+        label_render_layout.addWidget(
+            self.label_render, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        label_render_layout.addWidget(
+            self.info_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        render_layout.addWidget(
+            label_render_widget, alignment=QtCore.Qt.AlignmentFlag.AlignRight
+        )
         render_layout.addWidget(self.error_label)
         render_layout.addWidget(self.print_button)
-        render_layout.setAlignment(
-            self.label_render, QtCore.Qt.AlignmentFlag.AlignCenter
-        )
 
         self.window_layout.addWidget(settings_widget)
         self.window_layout.addWidget(self.label_list)
@@ -175,6 +185,7 @@ class DymoPrintWindow(QWidget):
 
         self.label_render.setPixmap(q_image)
         self.label_render.adjustSize()
+        self.info_label.setText(f"← {px_to_mm(label_image.size[0])} mm →")
 
     def print_label(self):
         try:
