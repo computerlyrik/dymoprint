@@ -215,6 +215,7 @@ class DymoPrintWindow(QWidget):
             self.detected_device = detect_device()
             is_enabled = True
         except (DymoUSBError, NoBackendError, USBError) as e:
+            LOG.error(e)
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.print_button.setEnabled(is_enabled)
