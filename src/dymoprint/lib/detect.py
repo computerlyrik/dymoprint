@@ -176,13 +176,6 @@ def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
     # else:
     #     restart_udev_command = None
 
-    lines = []
-    lines.append(
-        "You do not have sufficient access to the "
-        "device. You probably want to add the a udev rule in "
-        "/etc/udev/rules.d with the following command:"
-    )
-    lines.append("")
     udev_rule = ", ".join(
         [
             'ACTION=="add"',
@@ -192,27 +185,26 @@ def instruct_on_access_denied_linux(dev: usb.core.Device) -> NoReturn:
             'MODE="0666"',
         ]
     )
-    lines.append(
-        f"  echo '{udev_rule}' "
-        f"| sudo tee /etc/udev/rules.d/91-dymo-{dev.idProduct:x}.rules"
-    )
-    lines.append("")
-    lines.append("Next refresh udev with:")
-    lines.append("")
-    lines.append("  sudo udevadm control --reload-rules")
-    lines.append('  sudo udevadm trigger --attr-match=idVendor="0922"')
-    lines.append("")
-    lines.append(
-        "Finally, turn your device off and back "
-        "on again to activate the new permissions."
-    )
-    lines.append("")
-    lines.append(
-        f"If this still does not resolve the problem, you might need to reboot. "
-        f"In case rebooting is necessary, please report this at {GITHUB_LINK}. "
-        f"We are still trying to figure out a simple procedure which works "
-        f"for everyone. In case you still cannot connect, "
-        f"or if you have any information or ideas, please post them at "
-        f"that link."
-    )
-    raise DymoUSBError("\n\n" + "\n".join(lines) + "\n")
+
+    msg = f"""
+    You do not have sufficient access to the device. You probably want to add the a udev
+    rule in /etc/udev/rules.d with the following command:
+
+      echo '{udev_rule}' | sudo tee /etc/udev/rules.d/91-dymo-{dev.idProduct:x}.rules"
+
+    Next, refresh udev with:
+
+      sudo udevadm control --reload-rules
+      sudo udevadm trigger --attr-match=idVendor="0922"
+
+    Finally, turn your device off and back on again to activate the new permissions.
+
+    If this still does not resolve the problem, you might need to reboot.
+    In case rebooting is necessary, please report this at {GITHUB_LINK}.
+    We are still trying to figure out a simple procedure which works for everyone.
+    In case you still cannot connect, or if you have any information or ideas, please
+    post them at that link.
+
+    """
+    LOG.error(msg)
+    raise DymoUSBError("Insufficient access to the device")
