@@ -65,7 +65,6 @@ class DymoPrintWindow(QWidget):
         self.setWindowTitle("DymoPrint GUI")
         self.setWindowIcon(QIcon(str(ICON_DIR / "gui_icon.png")))
         self.setGeometry(200, 200, 1100, 400)
-        self.error_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         printer_icon = QIcon.fromTheme("printer")
         self.print_button.setIcon(printer_icon)
         self.print_button.setFixedSize(64, 64)
@@ -133,20 +132,29 @@ class DymoPrintWindow(QWidget):
 
         render_widget = QWidget(self)
         label_render_widget = QWidget(render_widget)
+        print_render_widget = QWidget(render_widget)
 
         render_layout = QHBoxLayout(render_widget)
         label_render_layout = QVBoxLayout(label_render_widget)
+        print_render_layout = QVBoxLayout(print_render_widget)
         label_render_layout.addWidget(
             self.label_render, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
         )
         label_render_layout.addWidget(
             self.info_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
         )
+        print_render_layout.addWidget(
+            self.print_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight
+        )
+        print_render_layout.addWidget(
+            self.error_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
         render_layout.addWidget(
             label_render_widget, alignment=QtCore.Qt.AlignmentFlag.AlignRight
         )
-        render_layout.addWidget(self.error_label)
-        render_layout.addWidget(self.print_button)
+        render_layout.addWidget(
+            print_render_widget, alignment=QtCore.Qt.AlignmentFlag.AlignRight
+        )
 
         self.window_layout.addWidget(settings_widget)
         self.window_layout.addWidget(self.label_list)
@@ -209,7 +217,6 @@ class DymoPrintWindow(QWidget):
             self.error_label.setText(f"Error: {e}")
             self.detected_device = None
         self.error_label.setVisible(not is_enabled)
-        self.print_button.setVisible(is_enabled)
         self.print_button.setEnabled(is_enabled)
         self.print_button.setCursor(
             Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor
