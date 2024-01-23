@@ -5,14 +5,15 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
-
 import contextlib
 import logging
 import math
+import sys
 
 from PIL import ImageDraw
 
 from dymoprint.lib.constants import PIXELS_PER_MM
+from dymoprint.lib.logger import print_exception
 
 LOG = logging.getLogger(__name__)
 
@@ -36,3 +37,12 @@ def px_to_mm(px):
     mm = px / PIXELS_PER_MM
     # Round up to nearest 0.1mm
     return math.ceil(mm * 10) / 10
+
+
+@contextlib.contextmanager
+def system_run():
+    try:
+        yield
+    except Exception as e:  # noqa: BLE001
+        print_exception(e)
+        sys.exit(1)

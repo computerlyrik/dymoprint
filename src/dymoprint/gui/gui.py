@@ -25,7 +25,7 @@ from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
 from dymoprint.lib.detect import DymoUSBError, detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 from dymoprint.lib.logger import configure_logging, set_verbose
-from dymoprint.lib.utils import px_to_mm
+from dymoprint.lib.utils import px_to_mm, system_run
 
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -238,9 +238,10 @@ def parse(app):
 
 
 def main():
-    configure_logging()
-    app = QApplication(sys.argv)
-    parse(app)
-    window = DymoPrintWindow()
-    window.show()
-    sys.exit(app.exec())
+    with system_run():
+        configure_logging()
+        app = QApplication(sys.argv)
+        parse(app)
+        window = DymoPrintWindow()
+        window.show()
+        sys.exit(app.exec())

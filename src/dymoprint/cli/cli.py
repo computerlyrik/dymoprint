@@ -7,7 +7,6 @@
 # === END LICENSE STATEMENT ===
 import argparse
 import logging
-import sys
 import webbrowser
 from tempfile import NamedTemporaryFile
 
@@ -24,8 +23,9 @@ from dymoprint.lib.constants import (
 from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
-from dymoprint.lib.logger import configure_logging, print_exception, set_verbose
+from dymoprint.lib.logger import configure_logging, set_verbose
 from dymoprint.lib.unicode_blocks import image_to_unicode
+from dymoprint.lib.utils import system_run
 from dymoprint.metadata import our_metadata
 
 LOG = logging.getLogger(__name__)
@@ -321,9 +321,6 @@ def run():
 
 
 def main():
-    try:
+    with system_run():
         configure_logging()
         run()
-    except Exception as e:  # noqa: BLE001
-        print_exception(e)
-        sys.exit(1)
