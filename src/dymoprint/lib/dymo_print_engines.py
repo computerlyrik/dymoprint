@@ -370,7 +370,7 @@ def print_label(
     )
 
     LOG.debug("Printing label..")
-    lm.printLabel(label_matrix, margin_px=margin_px)
+    lm.print_label(label_matrix, margin_px=margin_px)
     LOG.debug("Done printing.")
     usb.util.dispose_resources(detected_device.dev)
     LOG.debug("Cleaned up.")
