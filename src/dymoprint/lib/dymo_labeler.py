@@ -52,11 +52,20 @@ class DymoLabeler:
     # (1000) and the transfer speeds available in the descriptors somewhere, a
     # sensible timeout can also be calculated dynamically.
     synwait: Optional[int]
+    bytesPerLine_: Optional[int]
     devout: usb.core.Endpoint
     devin: usb.core.Endpoint
 
-    def __init__(self, devout, devin, synwait=None, tape_size_mm=12):
+    def __init__(
+        self,
+        devout: usb.core.Endpoint,
+        devin: usb.core.Endpoint,
+        synwait: Optional[int] = None,
+        tape_size_mm: Optional[int] = None,
+    ):
         """Initialize the LabelManager object (HLF)."""
+        if not tape_size_mm:
+            tape_size_mm = self.DEFAULT_TAP_SIZE_MM
         self.tape_size_mm = tape_size_mm
         self.cmd: List[int] = []
         self.response = False
