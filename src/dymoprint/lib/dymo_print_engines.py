@@ -48,7 +48,7 @@ class DymoRenderEngine:
 
     def __init__(self, tape_size_mm: int = 12) -> None:
         """Initialize a DymoRenderEngine object with a specified tape size."""
-        self.label_height_px = DymoLabeler.max_bytes_per_line(tape_size_mm) * 8
+        self.label_height_px = DymoLabeler.height_px(tape_size_mm)
 
     def render_empty(self, label_len: int = 1) -> Image.Image:
         """Render an empty label image."""

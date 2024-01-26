@@ -31,11 +31,19 @@ class DymoLabeler:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
+    DEFAULT_TAP_SIZE_MM = 12
+
     tape_size_mm: int
 
-    @staticmethod
-    def max_bytes_per_line(tape_size_mm: int = 12) -> int:
+    @classmethod
+    def max_bytes_per_line(cls, tape_size_mm: Optional[int] = None) -> int:
+        if not tape_size_mm:
+            tape_size_mm = cls.DEFAULT_TAP_SIZE_MM
         return int(8 * tape_size_mm / 12)
+
+    @classmethod
+    def height_px(cls, tape_size_mm: Optional[int] = None):
+        return cls.max_bytes_per_line(tape_size_mm) * 8
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
