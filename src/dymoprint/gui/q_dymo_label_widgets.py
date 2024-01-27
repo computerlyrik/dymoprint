@@ -83,7 +83,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         label (QPlainTextEdit): The text label to be rendered on the Dymo label.
         font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
-        frame_width (QSpinBox): The frame width selection spinner.
+        frame_width_px (QSpinBox): The frame width selection spinner.
     Signals:
         itemRenderSignal: A signal emitted when the content of the label changes.
     """
@@ -92,7 +92,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     label: QPlainTextEdit
     font_style: FontStyle
     font_size: QSpinBox
-    frame_width: QSpinBox
+    frame_width_px: QSpinBox
 
     def __init__(
         self, render_engine: DymoRenderEngine, parent: Optional[QWidget] = None
@@ -109,7 +109,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.font_size.setMinimum(0)
         self.font_size.setSingleStep(1)
         self.font_size.setValue(90)
-        self.frame_width = QSpinBox()
+        self.frame_width_px = QSpinBox()
         self.align = QComboBox()
 
         self.align.addItems(["left", "center", "right"])
@@ -125,11 +125,11 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         layout.addWidget(QLabel("Size [%]:"))
         layout.addWidget(self.font_size)
         layout.addWidget(QLabel("Frame Width:"))
-        layout.addWidget(self.frame_width)
+        layout.addWidget(self.frame_width_px)
         layout.addWidget(QLabel("Alignment:"))
         layout.addWidget(self.align)
         self.label.textChanged.connect(self.content_changed)
-        self.frame_width.valueChanged.connect(self.content_changed)
+        self.frame_width_px.valueChanged.connect(self.content_changed)
         self.font_size.valueChanged.connect(self.content_changed)
         self.font_style.currentTextChanged.connect(self.content_changed)
         self.align.currentTextChanged.connect(self.content_changed)
@@ -161,7 +161,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         return self.render_engine.render_text(
             text_lines=self.label.toPlainText().splitlines(),
             font_file_name=self.font_style.currentData(),
-            frame_width_px=self.frame_width.value(),
+            frame_width_px=self.frame_width_px.value(),
             font_size_ratio=self.font_size.value() / 100.0,
             align=selected_alignment,
         )
@@ -230,7 +230,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
             to render.
         font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
-        frame_width (QSpinBox): The frame width selection spinner.
+        frame_width_px (QSpinBox): The frame width selection spinner.
     Signals:
         content_changed(): Emitted when the content of the label or the selected
             barcode type changes.
@@ -249,7 +249,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     show_text_checkbox: QCheckBox
     font_style: FontStyle
     font_size: QSpinBox
-    frame_width: QSpinBox
+    frame_width_px: QSpinBox
     font_label: QLabel
     size_label: QLabel
     frame_label: QLabel
@@ -272,7 +272,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.font_size.setSingleStep(1)
         self.font_size.setValue(90)
         self.frame_label = QLabel("Frame Width:")
-        self.frame_width = QSpinBox()
+        self.frame_width_px = QSpinBox()
         self.align_label = QLabel("Alignment:")
         self.align = QComboBox()
         self.item_icon = QLabel()
@@ -309,12 +309,12 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         layout.addWidget(self.size_label)
         layout.addWidget(self.font_size)
         layout.addWidget(self.frame_label)
-        layout.addWidget(self.frame_width)
+        layout.addWidget(self.frame_width_px)
         layout.addWidget(self.align_label)
         layout.addWidget(self.align)
 
         self.label.textChanged.connect(self.content_changed)
-        self.frame_width.valueChanged.connect(self.content_changed)
+        self.frame_width_px.valueChanged.connect(self.content_changed)
         self.font_size.valueChanged.connect(self.content_changed)
         self.font_style.currentTextChanged.connect(self.content_changed)
         self.align.currentTextChanged.connect(self.content_changed)
@@ -328,7 +328,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.size_label.setVisible(visible)
         self.font_size.setVisible(visible)
         self.frame_label.setVisible(visible)
-        self.frame_width.setVisible(visible)
+        self.frame_width_px.setVisible(visible)
         self.align_label.setVisible(visible)
         self.align.setVisible(visible)
         if visible:
@@ -361,7 +361,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
                 barcode_input_text=self.label.text(),
                 bar_code_type=self.barcode_type.currentText(),
                 font_file_name=self.font_style.currentData(),
-                frame_width=self.frame_width.value(),
+                frame_width_px=self.frame_width_px.value(),
                 font_size_ratio=self.font_size.value() / 100.0,
                 align=self.align.currentText(),
             )
