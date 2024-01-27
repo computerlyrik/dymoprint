@@ -5,9 +5,10 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
+from __future__ import annotations
+
 import array
 import logging
-from typing import List, Optional
 
 import usb
 
@@ -36,13 +37,13 @@ class DymoLabeler:
     tape_size_mm: int
 
     @classmethod
-    def _max_bytes_per_line(cls, tape_size_mm: Optional[int] = None) -> int:
+    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
         if not tape_size_mm:
             tape_size_mm = cls.DEFAULT_TAP_SIZE_MM
         return int(8 * tape_size_mm / 12)
 
     @classmethod
-    def height_px(cls, tape_size_mm: Optional[int] = None):
+    def height_px(cls, tape_size_mm: int | None = None):
         return cls._max_bytes_per_line(tape_size_mm) * 8
 
     # Max number of print lines to send before waiting for a response. This helps
@@ -51,8 +52,8 @@ class DymoLabeler:
     # 110] Connection timed out" with long labels. Using dev.default_timeout
     # (1000) and the transfer speeds available in the descriptors somewhere, a
     # sensible timeout can also be calculated dynamically.
-    _synwait: Optional[int]
-    _bytesPerLine: Optional[int]
+    _synwait: int | None
+    _bytesPerLine: int | None
     _devout: usb.core.Endpoint
     _devin: usb.core.Endpoint
 
@@ -60,14 +61,14 @@ class DymoLabeler:
         self,
         devout: usb.core.Endpoint,
         devin: usb.core.Endpoint,
-        synwait: Optional[int] = None,
-        tape_size_mm: Optional[int] = None,
+        synwait: int | None = None,
+        tape_size_mm: int | None = None,
     ):
         """Initialize the LabelManager object (HLF)."""
         if not tape_size_mm:
             tape_size_mm = self.DEFAULT_TAP_SIZE_MM
         self._tape_size_mm = tape_size_mm
-        self._cmd: List[int] = []
+        self._cmd: list[int] = []
         self._response = False
         self._bytesPerLine = None
         self._dotTab = 0
@@ -205,7 +206,7 @@ class DymoLabeler:
         response = self._send_command()
         LOG.debug(response)
 
-    def print_label(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
+    def print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines.
 
         Automatically split the label if it's larger than maxLines.
@@ -215,7 +216,7 @@ class DymoLabeler:
             del lines[0 : self._maxLines]
         self._raw_print_label(lines, margin_px=margin_px)
 
-    def _raw_print_label(self, lines: List[List[int]], margin_px=DEFAULT_MARGIN_PX):
+    def _raw_print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines (HLF)."""
         # Here used to be a matrix optimization code that caused problems in issue #87
         self._tape_color(0)
