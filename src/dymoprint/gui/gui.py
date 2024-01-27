@@ -23,8 +23,10 @@ from usb.core import NoBackendError, USBError
 from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
 from dymoprint.lib.detect import DymoUSBError, detect_device
-from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.dymo_labeler import DymoLabeler
+from dymoprint.lib.labeler_device import print_label
 from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.render_engines import RenderContext
 from dymoprint.lib.utils import px_to_mm, system_run
 
 from .q_dymo_labels_list import QDymoLabelList
@@ -33,16 +35,21 @@ LOG = logging.getLogger(__name__)
 
 
 class DymoPrintWindow(QWidget):
+    SUPPORTED_TAPE_SIZE_MM = (19, 12, 9, 6)
+    DEFAULT_TAPE_SIZE_MM_INDEX = 1
+
     label_bitmap: Optional[Image.Image]
 
     def __init__(self):
         super().__init__()
-        self.render_engine = DymoRenderEngine(12)
         self.label_bitmap = None
         self.detected_device = None
 
         self.window_layout = QVBoxLayout()
-        self.label_list = QDymoLabelList(self.render_engine)
+        tape_size_mm = self.SUPPORTED_TAPE_SIZE_MM[self.DEFAULT_TAPE_SIZE_MM_INDEX]
+        self.render_context = RenderContext()
+        self.update_render_context(tape_size_mm)
+        self.label_list = QDymoLabelList(self.render_context)
         self.label_render = QLabel()
         self.error_label = QLabel()
         self.print_button = QPushButton()
@@ -77,11 +84,9 @@ class DymoPrintWindow(QWidget):
         self.margin_px.setMinimum(20)
         self.margin_px.setMaximum(1000)
         self.margin_px.setValue(DEFAULT_MARGIN_PX)
-        self.tape_size_mm.addItem("19", 19)
-        self.tape_size_mm.addItem("12", 12)
-        self.tape_size_mm.addItem("9", 9)
-        self.tape_size_mm.addItem("6", 6)
-        self.tape_size_mm.setCurrentIndex(1)
+        for tape_size_mm in self.SUPPORTED_TAPE_SIZE_MM:
+            self.tape_size_mm.addItem(str(tape_size_mm), tape_size_mm)
+        self.tape_size_mm.setCurrentIndex(self.DEFAULT_TAPE_SIZE_MM_INDEX)
         self.min_label_len_mm.setMinimum(0)
         self.min_label_len_mm.setMaximum(1000)
         self.justify.addItems(["center", "left", "right"])
@@ -161,12 +166,16 @@ class DymoPrintWindow(QWidget):
         self.window_layout.addWidget(render_widget)
         self.setLayout(self.window_layout)
 
+    def update_render_context(self, tape_size_mm):
+        self.render_context.height_px = DymoLabeler.height_px(tape_size_mm)
+
     def update_params(self):
-        self.render_engine = DymoRenderEngine(self.tape_size_mm.currentData())
+        tape_size_mm = self.tape_size_mm.currentData()
+        self.update_render_context(tape_size_mm)
         justify = self.justify.currentText()
         min_label_mm_len: int = self.min_label_len_mm.value()
         min_payload_len_px = max(0, (min_label_mm_len * 7) - self.margin_px.value() * 2)
-        self.label_list.update_params(self.render_engine, min_payload_len_px, justify)
+        self.label_list.update_params(self.render_context, min_payload_len_px, justify)
 
     def update_label_render(self, label_bitmap):
         self.label_bitmap = label_bitmap

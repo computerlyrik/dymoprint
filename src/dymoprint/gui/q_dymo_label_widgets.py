@@ -18,8 +18,18 @@ from PyQt6.QtWidgets import (
 
 from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import AVAILABLE_BARCODES, ICON_DIR
-from dymoprint.lib.dymo_print_engines import DymoRenderEngine
 from dymoprint.lib.font_config import FontConfig
+from dymoprint.lib.render_engines import (
+    BarcodeRenderEngine,
+    BarcodeWithTextRenderEngine,
+    EmptyRenderEngine,
+    NoContentError,
+    NoPictureFilePath,
+    PictureRenderEngine,
+    QrRenderEngine,
+    RenderContext,
+    TextRenderEngine,
+)
 
 
 class FontStyle(QComboBox):
@@ -49,7 +59,7 @@ class BaseDymoLabelWidget(QWidget):
         Abstract method to be implemented by subclasses for rendering the label.
     """
 
-    render_engine: DymoRenderEngine
+    render_context: RenderContext
 
     itemRenderSignal = QtCore.pyqtSignal(name="itemRenderSignal")
 
@@ -57,16 +67,18 @@ class BaseDymoLabelWidget(QWidget):
         """Emit the itemRenderSignal when the content of the label is changed."""
         self.itemRenderSignal.emit()
 
-    def render_label_impl(self):
-        """Abstract method to be implemented by subclasses for rendering the label."""
+    @property
+    def render_engine_impl(self):
+        """Abstract method for getting the render engine of the label."""
         pass
 
-    def render_label(self):
+    @property
+    def render_engine(self):
         try:
-            return self.render_label_impl()
+            return self.render_engine_impl
         except BaseException as err:  # noqa: BLE001
-            crash_msg_box(self, "Render Failed!", err)
-            return self.render_engine.render_empty()
+            crash_msg_box(self, "Render Engine Failed!", err)
+            return EmptyRenderEngine()
 
 
 class TextDymoLabelWidget(BaseDymoLabelWidget):
@@ -74,12 +86,12 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
 
     Args:
     ----
-        render_engine (RenderEngine): The rendering engine to use.
+        render_context (RenderContext): The rendering context to use.
         parent (QWidget): The parent widget of this widget.
 
     Attributes:
     ----------
-        render_engine (RenderEngine): The rendering engine used by this widget.
+        render_context (RenderContext): The rendering context used by this widget.
         label (QPlainTextEdit): The text label to be rendered on the Dymo label.
         font_style (FontStyle): The font style selection dropdown.
         font_size (QSpinBox): The font size selection spinner.
@@ -94,11 +106,9 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
     font_size: QSpinBox
     frame_width_px: QSpinBox
 
-    def __init__(
-        self, render_engine: DymoRenderEngine, parent: Optional[QWidget] = None
-    ):
+    def __init__(self, render_context: RenderContext, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.render_engine = render_engine
+        self.render_context = render_context
 
         self.label = QPlainTextEdit("text")
         self.label.setFixedHeight(15 * (len(self.label.toPlainText().splitlines()) + 2))
@@ -145,20 +155,17 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         self.setFixedHeight(self.label.height() + 10)
         self.itemRenderSignal.emit()
 
-    def render_label_impl(self):
-        """Render the label using the current settings.
+    @property
+    def render_engine_impl(self):
+        """Get the render engine for the text label using the current settings.
 
         Returns
         -------
-            QImage: The rendered label image.
-
-        Raises
-        ------
-            QMessageBox.warning: If the rendering fails.
+            TextRenderEngine: The rendered engine.
         """
         selected_alignment = self.align.currentText()
         assert selected_alignment in ("left", "center", "right")
-        return self.render_engine.render_text(
+        return TextRenderEngine(
             text_lines=self.label.toPlainText().splitlines(),
             font_file_name=self.font_style.currentData(),
             frame_width_px=self.frame_width_px.value(),
@@ -172,22 +179,22 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
 
     Args:
     ----
-        render_engine (RenderEngine): The render engine to use for rendering
+        render_context (RenderContext): The render context to use for rendering
             the QR code.
         parent (QWidget, optional): The parent widget. Defaults to None.
     """
 
-    def __init__(self, render_engine, parent=None):
+    def __init__(self, render_context, parent=None):
         """Initialize the QrDymoLabelWidget.
 
         Args:
         ----
-            render_engine (RenderEngine): The render engine to use for rendering
+            render_context (RenderContext): The render context to use for rendering
                 the QR code.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
         super().__init__(parent)
-        self.render_engine = render_engine
+        self.render_context = render_context
 
         self.label = QLineEdit("")
         layout = QHBoxLayout()
@@ -199,18 +206,18 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         self.label.textChanged.connect(self.content_changed)
         self.setLayout(layout)
 
-    def render_label_impl(self):
-        """Render the QR code on the Dymo label.
+    @property
+    def render_engine_impl(self):
+        """Get the render engine for the QR label using the current settings.
 
         Returns
         -------
-            bytes: The rendered QR code as bytes.
-
-        Raises
-        ------
-            QMessageBox.warning: If the rendering fails.
+            QrRenderEngine: The render engine.
         """
-        return self.render_engine.render_qr(self.label.text())
+        try:
+            return QrRenderEngine(content=self.label.text())
+        except NoContentError:
+            return EmptyRenderEngine()
 
 
 class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
@@ -218,12 +225,12 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
 
     Args:
     ----
-        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
+        render_context (RenderContext): An instance of the RenderContext class.
         parent (QWidget): The parent widget of this widget.
 
     Attributes:
     ----------
-        render_engine (DymoRenderEngine): An instance of the DymoRenderEngine class.
+        render_context (RenderContext): An instance of the RenderContext class.
         label (QLineEdit): A QLineEdit widget for entering the content of the
             barcode label.
         Type (QComboBox): A QComboBox widget for selecting the type of barcode
@@ -237,8 +244,8 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
 
     Methods:
     -------
-        __init__(self, render_engine, parent=None): Initializes the widget.
-        render_label(self): Renders the barcode label using the current content
+        __init__(self, render_context, parent=None): Initializes the widget.
+        render_label_impl(self): Renders the barcode label using the current content
             and barcode type.
     """
 
@@ -256,9 +263,9 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
     align_label: QLabel
     align: QComboBox
 
-    def __init__(self, render_engine, parent=None):
+    def __init__(self, render_context, parent=None):
         super().__init__(parent)
-        self.render_engine = render_engine
+        self.render_context = render_context
 
         self.label = QLineEdit("")
 
@@ -345,29 +352,30 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         self.set_text_fields_visibility(is_checked)
         self.content_changed()  # Trigger rerender
 
-    def render_label_impl(self):
-        """Render the labels with barcode and text below it using the current settings.
+    @property
+    def render_engine_impl(self):
+        """Get the render engine for the barcode label using the current settings.
 
         Returns
         -------
-            QImage: The rendered label image.
-
-        Raises
-        ------
-            QMessageBox.warning: If the rendering fails.
+            RenderEngine: The rendered engine (either BarcodeRenderEngine or
+            BarcodeWithTextRenderEngine).
         """
         if self.show_text_checkbox.isChecked():
-            return self.render_engine.render_barcode_with_text(
-                barcode_input_text=self.label.text(),
-                bar_code_type=self.barcode_type.currentText(),
+            render_engine = BarcodeWithTextRenderEngine(
+                content=self.label.text(),
+                barcode_type=self.barcode_type.currentText(),
                 font_file_name=self.font_style.currentData(),
                 frame_width_px=self.frame_width_px.value(),
                 font_size_ratio=self.font_size.value() / 100.0,
                 align=self.align.currentText(),
             )
-        return self.render_engine.render_barcode(
-            self.label.text(), self.barcode_type.currentText()
-        )
+        else:
+            render_engine = BarcodeRenderEngine(
+                content=self.label.text(),
+                barcode_type=self.barcode_type.currentText(),
+            )
+        return render_engine
 
 
 class ImageDymoLabelWidget(BaseDymoLabelWidget):
@@ -375,21 +383,21 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
 
     Args:
     ----
-        render_engine (RenderEngine): The render engine to use for rendering the label.
+        context (RenderContext): The render context to use for rendering the label.
         parent (QWidget, optional): The parent widget. Defaults to None.
     """
 
-    def __init__(self, render_engine, parent=None):
+    def __init__(self, render_context, parent=None):
         """Initialize the ImageDymoLabelWidget.
 
         Args:
         ----
-            render_engine (RenderEngine): The render engine to use for rendering
+            render_context (RenderContext): The render context to use for rendering
                 the label.
             parent (QWidget, optional): The parent widget. Defaults to None.
         """
         super().__init__(parent)
-        self.render_engine = render_engine
+        self.render_context = render_context
 
         self.label = QLineEdit("")
         layout = QHBoxLayout()
@@ -412,11 +420,15 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         self.label.textChanged.connect(self.content_changed)
         self.setLayout(layout)
 
-    def render_label_impl(self):
-        """Render the label using the render engine and the selected image file.
+    @property
+    def render_engine_impl(self):
+        """Get the render engine for the image label using the current settings.
 
         Returns
         -------
-            QPixmap: The rendered label as a QPixmap.
+            PictureRenderEngine: The rendered engine.
         """
-        return self.render_engine.render_picture(self.label.text())
+        try:
+            return PictureRenderEngine(picture_path=self.label.text())
+        except NoPictureFilePath:
+            return EmptyRenderEngine()

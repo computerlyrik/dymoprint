@@ -21,9 +21,20 @@ from dymoprint.lib.constants import (
     e_qrcode,
 )
 from dymoprint.lib.detect import detect_device
-from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.dymo_labeler import DymoLabeler
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
+from dymoprint.lib.labeler_device import print_label
 from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.render_engines import (
+    BarcodeRenderEngine,
+    BarcodeWithTextRenderEngine,
+    HorizontallyCombinedRenderEngine,
+    PictureRenderEngine,
+    QrRenderEngine,
+    RenderContext,
+    TestPatternRenderEngine,
+    TextRenderEngine,
+)
 from dymoprint.lib.unicode_blocks import image_to_unicode
 from dymoprint.lib.utils import system_run
 from dymoprint.metadata import our_metadata
@@ -199,7 +210,6 @@ def mm_to_payload_px(mm, margin):
 
 def run():
     args = parse_args()
-    render_engine = DymoRenderEngine(args.tape_size_mm)
 
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
@@ -238,27 +248,27 @@ def run():
     if args.max_length is not None and args.max_length < args.min_length:
         raise CommandLineUsageError("Maximum length is less than minimum length")
 
-    bitmaps = []
+    render_engines = []
 
     if args.test_pattern:
-        bitmaps.append(render_engine.render_test(args.test_pattern))
+        render_engines.append(TestPatternRenderEngine(args.test_pattern))
 
     if args.qr:
-        bitmaps.append(render_engine.render_qr(labeltext.pop(0)))
+        render_engines.append(QrRenderEngine(labeltext.pop(0)))
 
     elif args.barcode:
-        bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.barcode))
+        render_engines.append(BarcodeRenderEngine(labeltext.pop(0), args.barcode))
 
     elif args.barcode_text:
-        bitmaps.append(
-            render_engine.render_barcode_with_text(
+        render_engines.append(
+            BarcodeWithTextRenderEngine(
                 labeltext.pop(0), args.barcode_text, font_filename, args.frame_width_px
             )
         )
 
     if labeltext:
-        bitmaps.append(
-            render_engine.render_text(
+        render_engines.append(
+            TextRenderEngine(
                 text_lines=labeltext,
                 font_file_name=font_filename,
                 frame_width_px=args.frame_width_px,
@@ -268,7 +278,7 @@ def run():
         )
 
     if args.picture:
-        bitmaps.append(render_engine.render_picture(args.picture))
+        render_engines.append(PictureRenderEngine(args.picture))
 
     if args.fixed_length is not None:
         min_label_mm_len = args.fixed_length
@@ -285,12 +295,16 @@ def run():
         else None
     )
 
-    label_bitmap = render_engine.merge_render(
-        bitmaps=bitmaps,
+    render = HorizontallyCombinedRenderEngine(
+        render_engines,
         min_payload_len_px=min_payload_len_px,
         max_payload_len_px=max_payload_len_px,
         justify=args.justify,
     )
+
+    height_px = DymoLabeler.height_px(args.tape_size_mm)
+    render_context = RenderContext(height_px=height_px)
+    label_bitmap = render.render(render_context)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
