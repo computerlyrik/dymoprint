@@ -5,19 +5,17 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
-
 import contextlib
+import logging
+import math
 import sys
-from typing import NoReturn
 
 from PIL import ImageDraw
 
+from dymoprint.lib.constants import PIXELS_PER_MM
+from dymoprint.lib.logger import print_exception
 
-def die(message=None) -> NoReturn:
-    if message:
-        print(message, file=sys.stderr)
-        raise RuntimeError(message)
-    sys.exit(1)
+LOG = logging.getLogger(__name__)
 
 
 def scaling(pix, sc):
@@ -33,3 +31,18 @@ def draw_image(bitmap):
         yield drawobj
     finally:
         del drawobj
+
+
+def px_to_mm(px):
+    mm = px / PIXELS_PER_MM
+    # Round up to nearest 0.1mm
+    return math.ceil(mm * 10) / 10
+
+
+@contextlib.contextmanager
+def system_run():
+    try:
+        yield
+    except Exception as e:  # noqa: BLE001
+        print_exception(e)
+        sys.exit(1)

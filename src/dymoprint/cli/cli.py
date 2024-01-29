@@ -5,9 +5,8 @@
 # permitted in any medium without royalty provided the copyright notice and
 # this notice are preserved.
 # === END LICENSE STATEMENT ===
-
 import argparse
-import sys
+import logging
 import webbrowser
 from tempfile import NamedTemporaryFile
 
@@ -22,11 +21,25 @@ from dymoprint.lib.constants import (
     e_qrcode,
 )
 from dymoprint.lib.detect import detect_device
-from dymoprint.lib.dymo_print_engines import DymoRenderEngine, print_label
+from dymoprint.lib.dymo_labeler import DymoLabeler
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
+from dymoprint.lib.labeler_device import print_label
+from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.render_engines import (
+    BarcodeRenderEngine,
+    BarcodeWithTextRenderEngine,
+    HorizontallyCombinedRenderEngine,
+    PictureRenderEngine,
+    QrRenderEngine,
+    RenderContext,
+    TestPatternRenderEngine,
+    TextRenderEngine,
+)
 from dymoprint.lib.unicode_blocks import image_to_unicode
-from dymoprint.lib.utils import die
+from dymoprint.lib.utils import system_run
 from dymoprint.metadata import our_metadata
+
+LOG = logging.getLogger(__name__)
 
 FLAG_TO_STYLE = {
     "r": FontStyle.REGULAR,
@@ -34,6 +47,10 @@ FLAG_TO_STYLE = {
     "i": FontStyle.ITALIC,
     "n": FontStyle.NARROW,
 }
+
+
+class CommandLineUsageError(Exception):
+    pass
 
 
 def parse_args():
@@ -50,6 +67,7 @@ def parse_args():
     )
     parser.add_argument(
         "-f",
+        "--frame-width-px",
         action="count",
         help="Draw frame around the text, more arguments for thicker frame",
     )
@@ -62,6 +80,7 @@ def parse_args():
     )
     parser.add_argument(
         "-a",
+        "--align",
         choices=[
             "left",
             "center",
@@ -101,6 +120,7 @@ def parse_args():
 
     length_options.add_argument(
         "-j",
+        "--justify",
         choices=[
             "left",
             "center",
@@ -155,6 +175,7 @@ def parse_args():
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument(
         "-m",
+        "--margin-px",
         type=int,
         default=DEFAULT_MARGIN_PX,
         help=f"Margin in px (default is {DEFAULT_MARGIN_PX})",
@@ -164,10 +185,17 @@ def parse_args():
     )
     parser.add_argument(
         "-t",
+        "--tape-size-mm",
         type=int,
         choices=[6, 9, 12, 19],
         default=12,
         help="Tape size: 6,9,12,19 mm, default=12mm",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Increase logging verbosity",
     )
     return parser.parse_args()
 
@@ -177,12 +205,11 @@ def mm_to_payload_px(mm, margin):
 
     The print resolution is 7 pixels/mm, and margin is subtracted from each side.
     """
-    return (mm * PIXELS_PER_MM) - margin * 2
+    return max(0, (mm * PIXELS_PER_MM) - margin * 2)
 
 
-def main():
+def run():
     args = parse_args()
-    render_engine = DymoRenderEngine(args.t)
 
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
@@ -190,65 +217,68 @@ def main():
         font_config = FontConfig(font=args.font, style=style)
     except NoFontFound as e:
         valid_font_names = [f.stem for f in FontConfig.available_fonts()]
-        print(
-            f"Valid fonts are: {', '.join(valid_font_names)}.",
-            file=sys.stderr,
-        )
-        raise e
+        msg = f"{e}. Valid fonts are: {', '.join(valid_font_names)}"
+        raise CommandLineUsageError(msg) from None
 
     font_filename = font_config.path
 
     labeltext = args.text
 
+    if args.verbose:
+        set_verbose()
+
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
-        die(f"Error: {e_qrcode}")
+        raise CommandLineUsageError(
+            "QR code cannot be used without QR support " "installed"
+        ) from e_qrcode
 
     if args.barcode and args.qr:
-        die("Error: can not print both QR and Barcode on the same label (yet)")
+        raise CommandLineUsageError(
+            "Can not print both QR and Barcode on the same " "label (yet)"
+        )
 
     if args.fixed_length is not None and (
         args.min_length != 0 or args.max_length is not None
     ):
-        die("Error: can't specify min/max and fixed length at the same time")
+        raise CommandLineUsageError(
+            "Cannot't specify min/max and fixed length at the " "same time"
+        )
 
     if args.max_length is not None and args.max_length < args.min_length:
-        die("Error: maximum length is less than minimum length")
+        raise CommandLineUsageError("Maximum length is less than minimum length")
 
-    bitmaps = []
+    render_engines = []
 
     if args.test_pattern:
-        bitmaps.append(render_engine.render_test(args.test_pattern))
+        render_engines.append(TestPatternRenderEngine(args.test_pattern))
 
     if args.qr:
-        bitmaps.append(render_engine.render_qr(labeltext.pop(0)))
+        render_engines.append(QrRenderEngine(labeltext.pop(0)))
 
     elif args.barcode:
-        bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.barcode))
+        render_engines.append(BarcodeRenderEngine(labeltext.pop(0), args.barcode))
 
     elif args.barcode_text:
-        bitmaps.append(
-            render_engine.render_barcode_with_text(
-                labeltext.pop(0), args.barcode_text, font_filename, args.f
+        render_engines.append(
+            BarcodeWithTextRenderEngine(
+                labeltext.pop(0), args.barcode_text, font_filename, args.frame_width_px
             )
         )
 
     if labeltext:
-        bitmaps.append(
-            render_engine.render_text(
+        render_engines.append(
+            TextRenderEngine(
                 text_lines=labeltext,
                 font_file_name=font_filename,
-                frame_width_px=args.f,
+                frame_width_px=args.frame_width_px,
                 font_size_ratio=int(args.scale) / 100.0,
-                align=args.a,
+                align=args.align,
             )
         )
 
     if args.picture:
-        bitmaps.append(render_engine.render_picture(args.picture))
-
-    margin = args.m
-    justify = args.j
+        render_engines.append(PictureRenderEngine(args.picture))
 
     if args.fixed_length is not None:
         min_label_mm_len = args.fixed_length
@@ -257,23 +287,28 @@ def main():
         min_label_mm_len = args.min_length
         max_label_mm_len = args.max_length
 
-    min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
+    margin = args.margin_px
+    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin)
     max_payload_len_px = (
         mm_to_payload_px(max_label_mm_len, margin)
         if max_label_mm_len is not None
         else None
     )
 
-    label_bitmap = render_engine.merge_render(
-        bitmaps=bitmaps,
+    render = HorizontallyCombinedRenderEngine(
+        render_engines,
         min_payload_len_px=min_payload_len_px,
         max_payload_len_px=max_payload_len_px,
-        justify=justify,
+        justify=args.justify,
     )
+
+    height_px = DymoLabeler.height_px(args.tape_size_mm)
+    render_context = RenderContext(height_px=height_px)
+    label_bitmap = render.render(render_context)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
-        print("Demo mode: showing label..")
+        LOG.debug("Demo mode: showing label..")
         # fix size, adding print borders
         label_image = Image.new(
             "1", (margin + label_bitmap.width + margin, label_bitmap.height)
@@ -292,5 +327,14 @@ def main():
     else:
         detected_device = detect_device()
         print_label(
-            detected_device, label_bitmap, margin_px=args.m, tape_size_mm=args.t
+            detected_device,
+            label_bitmap,
+            margin_px=args.margin_px,
+            tape_size_mm=args.tape_size_mm,
         )
+
+
+def main():
+    with system_run():
+        configure_logging()
+        run()
