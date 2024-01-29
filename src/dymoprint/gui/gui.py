@@ -60,6 +60,7 @@ class DymoPrintWindow(QWidget):
         self.min_label_len_mm = QSpinBox()
         self.justify = QComboBox()
         self.info_label = QLabel()
+        self.last_error = None
 
         self.init_elements()
         self.init_timers()
@@ -224,8 +225,11 @@ class DymoPrintWindow(QWidget):
             self.detected_device = detect_device()
             is_enabled = True
         except (DymoUSBError, NoBackendError, USBError) as e:
-            LOG.error(e)
-            self.error_label.setText(f"Error: {e}")
+            error = str(e)
+            if self.last_error != error:
+                self.last_error = error
+                LOG.error(error)
+            self.error_label.setText(f"Error: {error}")
             self.detected_device = None
         self.print_button.setEnabled(is_enabled)
         self.print_button.setCursor(
