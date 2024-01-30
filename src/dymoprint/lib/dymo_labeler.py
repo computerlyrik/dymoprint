@@ -9,15 +9,19 @@ from __future__ import annotations
 
 import array
 import logging
+import math
 
 import usb
+from PIL import Image
 
-from .constants import DEFAULT_MARGIN_PX, ESC, SYN
+from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ESC, SYN
+from dymoprint.lib.detect import DetectedDevice, detect_device
 
 LOG = logging.getLogger(__name__)
+DEFAULT_TAPE_SIZE_MM = 12
 
 
-class DymoLabeler:
+class DymoLabelerFunctions:
     """Create and work with a Dymo LabelManager PnP object.
 
     This class contains both mid-level and high-level functions. In general,
@@ -31,8 +35,6 @@ class DymoLabeler:
     LabelWriter 450:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
-
-    DEFAULT_TAPE_SIZE_MM = 12
 
     tape_size_mm: int
 
@@ -55,8 +57,6 @@ class DymoLabeler:
         tape_size_mm: int | None = None,
     ):
         """Initialize the LabelManager object (HLF)."""
-        if not tape_size_mm:
-            tape_size_mm = self.DEFAULT_TAPE_SIZE_MM
         self._tape_size_mm = tape_size_mm
         self._cmd: list[int] = []
         self._response = False
@@ -70,7 +70,7 @@ class DymoLabeler:
     @classmethod
     def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
         if not tape_size_mm:
-            tape_size_mm = cls.DEFAULT_TAPE_SIZE_MM
+            tape_size_mm = DEFAULT_TAPE_SIZE_MM
         return int(8 * tape_size_mm / 12)
 
     @classmethod
@@ -226,3 +226,78 @@ class DymoLabeler:
         self._status_request()
         status = self._get_status()
         LOG.debug(f"Post-send response: {status}")
+
+
+class DymoLabeler:
+    device: DetectedDevice
+    margin_px: int
+    tape_size_mm: int
+
+    def __init__(
+        self,
+        margin_px: int = DEFAULT_MARGIN_PX,
+        tape_size_mm: int = DEFAULT_TAPE_SIZE_MM,
+    ):
+        self.margin_px = margin_px
+        self.tape_size_mm = tape_size_mm
+        self.device = None
+
+    @property
+    def height_px(self):
+        return DymoLabelerFunctions.height_px(self.tape_size_mm)
+
+    @property
+    def _functions(self):
+        if not self.device:
+            self.detect()
+        assert self.device is not None
+        return DymoLabelerFunctions(
+            devout=self.device.devout,
+            devin=self.device.devin,
+            synwait=64,
+            tape_size_mm=self.tape_size_mm,
+        )
+
+    def detect(self):
+        self.device = detect_device()
+
+    def print(
+        self,
+        bitmap: Image.Image,
+    ) -> None:
+        """Print a label bitmap to the detected printer.
+
+        The label bitmap is a PIL image in 1-bit format (mode=1), and pixels with value
+        equal to 1 are burned.
+        """
+        # Convert the image to the proper matrix for the dymo labeler object so that
+        # rows span the width of the label, and the first row corresponds to the left
+        # edge of the label.
+        rotated_bitmap = bitmap.transpose(Image.ROTATE_270)
+
+        # Convert the image to raw bytes. Pixels along rows are chunked into groups of
+        # 8 pixels, and subsequent rows are concatenated.
+        stream: bytes = rotated_bitmap.tobytes()
+
+        # Regather the bytes into rows
+        stream_row_length = int(math.ceil(bitmap.height / 8))
+        if len(stream) // stream_row_length != bitmap.width:
+            raise RuntimeError(
+                "An internal problem was encountered while processing the "
+                "label bitmap!"
+            )
+        label_rows: list[bytes] = [
+            stream[i : i + stream_row_length]
+            for i in range(0, len(stream), stream_row_length)
+        ]
+
+        # Convert bytes into ints
+        label_matrix: list[list[int]] = [
+            array.array("B", label_row).tolist() for label_row in label_rows
+        ]
+
+        LOG.debug("Printing label..")
+        self._functions.print_label(label_matrix, margin_px=self.margin_px)
+        LOG.debug("Done printing.")
+        usb.util.dispose_resources(self.device.dev)
+        LOG.debug("Cleaned up.")
