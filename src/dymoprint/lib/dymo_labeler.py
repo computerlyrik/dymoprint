@@ -36,16 +36,6 @@ class DymoLabeler:
 
     tape_size_mm: int
 
-    @classmethod
-    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
-        if not tape_size_mm:
-            tape_size_mm = cls.DEFAULT_TAP_SIZE_MM
-        return int(8 * tape_size_mm / 12)
-
-    @classmethod
-    def height_px(cls, tape_size_mm: int | None = None):
-        return cls._max_bytes_per_line(tape_size_mm) * 8
-
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
     # printer speeds. I added this because I kept getting "IOError: [Errno
@@ -76,6 +66,16 @@ class DymoLabeler:
         self._devout = devout
         self._devin = devin
         self._synwait = synwait
+
+    @classmethod
+    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
+        if not tape_size_mm:
+            tape_size_mm = cls.DEFAULT_TAP_SIZE_MM
+        return int(8 * tape_size_mm / 12)
+
+    @classmethod
+    def height_px(cls, tape_size_mm: int | None = None):
+        return cls._max_bytes_per_line(tape_size_mm) * 8
 
     def _send_command(self):
         """Send the already built command to the LabelManager (MLF)."""
