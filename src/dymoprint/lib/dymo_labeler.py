@@ -203,8 +203,7 @@ class DymoLabeler:
     def _get_status(self):
         """Ask for and return the device's status (HLF)."""
         self._status_request()
-        response = self._send_command()
-        LOG.debug(response)
+        return self._send_command()
 
     def print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines.
@@ -225,5 +224,5 @@ class DymoLabeler:
         if margin_px > 0:
             self._skip_lines(margin_px * 2)
         self._status_request()
-        response = self._send_command()
-        LOG.debug(f"Post-send response: {response}")
+        status = self._get_status()
+        LOG.debug(f"Post-send response: {status}")
