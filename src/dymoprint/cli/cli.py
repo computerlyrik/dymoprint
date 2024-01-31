@@ -286,10 +286,10 @@ def run():
         min_label_mm_len = args.min_length
         max_label_mm_len = args.max_length
 
-    margin = args.margin_px
-    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin)
+    margin_px = args.margin_px
+    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin_px)
     max_payload_len_px = (
-        mm_to_payload_px(max_label_mm_len, margin)
+        mm_to_payload_px(max_label_mm_len, margin_px)
         if max_label_mm_len is not None
         else None
     )
@@ -302,7 +302,7 @@ def run():
     )
 
     dymo_labeler = DymoLabeler(
-        margin_px=args.margin_px,
+        margin_px=margin_px,
         tape_size_mm=args.tape_size_mm,
     )
     render_context = RenderContext(height_px=dymo_labeler.height_px)
@@ -314,9 +314,12 @@ def run():
         # fix size, adding print borders
         expanded_bitmap = Image.new(
             "1",
-            (bitmap.width + margin * 2, bitmap.height + VERTICAL_PREVIEW_MARGIN_PX * 2),
+            (
+                bitmap.width + margin_px * 2,
+                bitmap.height + VERTICAL_PREVIEW_MARGIN_PX * 2,
+            ),
         )
-        expanded_bitmap.paste(bitmap, (margin, VERTICAL_PREVIEW_MARGIN_PX))
+        expanded_bitmap.paste(bitmap, (margin_px, VERTICAL_PREVIEW_MARGIN_PX))
         if args.preview or args.preview_inverted:
             label_rotated = expanded_bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
