@@ -18,13 +18,13 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from usb.core import NoBackendError, USBError
 
 from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
-from dymoprint.lib.detect import DymoUSBError
 from dymoprint.lib.dymo_labeler import (
     DymoLabeler,
+    DymoLabelerDetectError,
+    DymoLabelerPrintError,
 )
 from dymoprint.lib.logger import configure_logging, set_verbose
 from dymoprint.lib.render_engines import RenderContext
@@ -219,7 +219,7 @@ class DymoPrintWindow(QWidget):
             self.dymo_labeler.print(
                 self.label_bitmap,
             )
-        except (DymoUSBError, USBError) as err:
+        except DymoLabelerPrintError as err:
             crash_msg_box(self, "Printing Failed!", err)
 
     def check_status(self):
@@ -227,12 +227,12 @@ class DymoPrintWindow(QWidget):
         try:
             self.dymo_labeler.detect()
             is_enabled = True
-        except (DymoUSBError, NoBackendError, USBError) as e:
+        except DymoLabelerDetectError as e:
             error = str(e)
             if self.last_error != error:
                 self.last_error = error
                 LOG.error(error)
-            self.error_label.setText(f"Error: {error}")
+            self.error_label.setText(error)
             is_enabled = False
         self.print_button.setEnabled(is_enabled)
         self.print_button.setCursor(

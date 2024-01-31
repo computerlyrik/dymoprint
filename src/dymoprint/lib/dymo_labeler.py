@@ -13,12 +13,26 @@ import math
 
 import usb
 from PIL import Image
+from usb.core import NoBackendError, USBError
 
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ESC, SYN
-from dymoprint.lib.detect import DetectedDevice, detect_device
+from dymoprint.lib.detect import DetectedDevice, DymoUSBError, detect_device
 
 LOG = logging.getLogger(__name__)
 DEFAULT_TAPE_SIZE_MM = 12
+POSSIBLE_USB_ERRORS = (DymoUSBError, NoBackendError, USBError)
+
+
+class DymoLabelerDetectError(Exception):
+    def __init__(self, error: str):
+        msg = f"Detection error: {error}"
+        super().__init__(msg)
+
+
+class DymoLabelerPrintError(Exception):
+    def __init__(self, error: str):
+        msg = f"Print error: {error}"
+        super().__init__(msg)
 
 
 class DymoLabelerFunctions:
@@ -259,7 +273,10 @@ class DymoLabeler:
         )
 
     def detect(self):
-        self.device = detect_device()
+        try:
+            self.device = detect_device()
+        except POSSIBLE_USB_ERRORS as e:
+            raise DymoLabelerDetectError(str(e)) from e
 
     def print(
         self,
@@ -296,8 +313,11 @@ class DymoLabeler:
             array.array("B", label_row).tolist() for label_row in label_rows
         ]
 
-        LOG.debug("Printing label..")
-        self._functions.print_label(label_matrix, margin_px=self.margin_px)
-        LOG.debug("Done printing.")
-        usb.util.dispose_resources(self.device.dev)
-        LOG.debug("Cleaned up.")
+        try:
+            LOG.debug("Printing label..")
+            self._functions.print_label(label_matrix, margin_px=self.margin_px)
+            LOG.debug("Done printing.")
+            usb.util.dispose_resources(self.device.dev)
+            LOG.debug("Cleaned up.")
+        except POSSIBLE_USB_ERRORS as e:
+            raise DymoLabelerPrintError(str(e)) from e
