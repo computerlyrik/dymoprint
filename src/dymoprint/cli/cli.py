@@ -18,6 +18,7 @@ from dymoprint.lib.constants import (
     DEFAULT_MARGIN_PX,
     PIXELS_PER_MM,
     USE_QR,
+    VERTICAL_PREVIEW_MARGIN_PX,
     e_qrcode,
 )
 from dymoprint.lib.dymo_labeler import DymoLabeler
@@ -312,9 +313,10 @@ def run():
         LOG.debug("Demo mode: showing label..")
         # fix size, adding print borders
         expanded_bitmap = Image.new(
-            "1", (margin + bitmap.width + margin, bitmap.height)
+            "1",
+            (bitmap.width + margin * 2, bitmap.height + VERTICAL_PREVIEW_MARGIN_PX * 2),
         )
-        expanded_bitmap.paste(bitmap, (margin, 0))
+        expanded_bitmap.paste(bitmap, (margin, VERTICAL_PREVIEW_MARGIN_PX))
         if args.preview or args.preview_inverted:
             label_rotated = expanded_bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
