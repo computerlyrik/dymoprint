@@ -305,27 +305,27 @@ def run():
         tape_size_mm=args.tape_size_mm,
     )
     render_context = RenderContext(height_px=dymo_labeler.height_px)
-    label_bitmap = render.render(render_context)
+    bitmap = render.render(render_context)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
         LOG.debug("Demo mode: showing label..")
         # fix size, adding print borders
-        label_image = Image.new(
-            "1", (margin + label_bitmap.width + margin, label_bitmap.height)
+        expanded_bitmap = Image.new(
+            "1", (margin + bitmap.width + margin, bitmap.height)
         )
-        label_image.paste(label_bitmap, (margin, 0))
+        expanded_bitmap.paste(bitmap, (margin, 0))
         if args.preview or args.preview_inverted:
-            label_rotated = label_bitmap.transpose(Image.ROTATE_270)
+            label_rotated = expanded_bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
         if args.imagemagick:
-            ImageOps.invert(label_image).show()
+            ImageOps.invert(expanded_bitmap).show()
         if args.browser:
             with NamedTemporaryFile(suffix=".png", delete=False) as fp:
-                ImageOps.invert(label_image).save(fp)
+                ImageOps.invert(expanded_bitmap).save(fp)
                 webbrowser.open(f"file://{fp.name}")
     else:
-        dymo_labeler.print(label_bitmap)
+        dymo_labeler.print(bitmap)
 
 
 def main():
