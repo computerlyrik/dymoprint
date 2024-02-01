@@ -18,13 +18,14 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from usb.core import NoBackendError, USBError
 
 from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
-from dymoprint.lib.detect import DymoUSBError, detect_device
-from dymoprint.lib.dymo_labeler import DymoLabeler
-from dymoprint.lib.labeler_device import print_label
+from dymoprint.lib.dymo_labeler import (
+    DymoLabeler,
+    DymoLabelerDetectError,
+    DymoLabelerPrintError,
+)
 from dymoprint.lib.logger import configure_logging, set_verbose
 from dymoprint.lib.render_engines import RenderContext
 from dymoprint.lib.utils import px_to_mm, system_run
@@ -39,6 +40,7 @@ class DymoPrintWindow(QWidget):
     DEFAULT_TAPE_SIZE_MM_INDEX = 1
 
     label_bitmap: Optional[Image.Image]
+    dymo_labeler: DymoLabeler
 
     def __init__(self):
         super().__init__()
@@ -46,10 +48,9 @@ class DymoPrintWindow(QWidget):
         self.detected_device = None
 
         self.window_layout = QVBoxLayout()
-        tape_size_mm = self.SUPPORTED_TAPE_SIZE_MM[self.DEFAULT_TAPE_SIZE_MM_INDEX]
         self.render_context = RenderContext()
-        self.update_render_context(tape_size_mm)
-        self.label_list = QDymoLabelList(self.render_context)
+
+        self.label_list = QDymoLabelList()
         self.label_render = QLabel()
         self.error_label = QLabel()
         self.print_button = QPushButton()
@@ -61,6 +62,7 @@ class DymoPrintWindow(QWidget):
         self.justify = QComboBox()
         self.info_label = QLabel()
         self.last_error = None
+        self.dymo_labeler = None
 
         self.init_elements()
         self.init_timers()
@@ -99,8 +101,11 @@ class DymoPrintWindow(QWidget):
             ["white", "black", "yellow", "blue", "red", "green"]
         )
 
+        self.dymo_labeler = DymoLabeler()
+        self.update_params()
+        self.label_list.populate()
+
     def init_timers(self):
-        self.detected_device = None
         self.check_status()
         self.status_time = QTimer()
         self.status_time.timeout.connect(self.check_status)
@@ -109,6 +114,7 @@ class DymoPrintWindow(QWidget):
 
     def init_connections(self):
         self.margin_px.valueChanged.connect(self.label_list.render_label)
+        self.margin_px.valueChanged.connect(self.update_params)
         self.tape_size_mm.currentTextChanged.connect(self.update_params)
         self.min_label_len_mm.valueChanged.connect(self.update_params)
         self.justify.currentTextChanged.connect(self.update_params)
@@ -167,15 +173,16 @@ class DymoPrintWindow(QWidget):
         self.window_layout.addWidget(render_widget)
         self.setLayout(self.window_layout)
 
-    def update_render_context(self, tape_size_mm):
-        self.render_context.height_px = DymoLabeler.height_px(tape_size_mm)
-
     def update_params(self):
-        tape_size_mm = self.tape_size_mm.currentData()
-        self.update_render_context(tape_size_mm)
-        justify = self.justify.currentText()
+        justify: str = self.justify.currentText()
+        margin_px: int = self.margin_px.value()
         min_label_mm_len: int = self.min_label_len_mm.value()
-        min_payload_len_px = max(0, (min_label_mm_len * 7) - self.margin_px.value() * 2)
+        tape_size_mm: int = self.tape_size_mm.currentData()
+
+        self.dymo_labeler.margin_px = margin_px
+        self.dymo_labeler.tape_size_mm = tape_size_mm
+        self.render_context.height_px = self.dymo_labeler.height_px
+        min_payload_len_px = max(0, (min_label_mm_len * 7) - margin_px * 2)
         self.label_list.update_params(self.render_context, min_payload_len_px, justify)
 
     def update_label_render(self, label_bitmap):
@@ -209,28 +216,24 @@ class DymoPrintWindow(QWidget):
         try:
             if self.label_bitmap is None:
                 raise RuntimeError("No label to print! Call update_label_render first.")
-            print_label(
-                self.detected_device,
+            self.dymo_labeler.print(
                 self.label_bitmap,
-                self.margin_px.value(),
-                self.tape_size_mm.currentData(),
             )
-        except (DymoUSBError, USBError) as err:
+        except DymoLabelerPrintError as err:
             crash_msg_box(self, "Printing Failed!", err)
 
     def check_status(self):
-        is_enabled = False
         self.error_label.setText("")
         try:
-            self.detected_device = detect_device()
+            self.dymo_labeler.detect()
             is_enabled = True
-        except (DymoUSBError, NoBackendError, USBError) as e:
+        except DymoLabelerDetectError as e:
             error = str(e)
             if self.last_error != error:
                 self.last_error = error
                 LOG.error(error)
-            self.error_label.setText(f"Error: {error}")
-            self.detected_device = None
+            self.error_label.setText(error)
+            is_enabled = False
         self.print_button.setEnabled(is_enabled)
         self.print_button.setCursor(
             Qt.CursorShape.ArrowCursor if is_enabled else Qt.CursorShape.ForbiddenCursor

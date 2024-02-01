@@ -9,15 +9,33 @@ from __future__ import annotations
 
 import array
 import logging
+import math
 
 import usb
+from PIL import Image
+from usb.core import NoBackendError, USBError
 
-from .constants import DEFAULT_MARGIN_PX, ESC, SYN
+from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ESC, SYN
+from dymoprint.lib.detect import DetectedDevice, DymoUSBError, detect_device
 
 LOG = logging.getLogger(__name__)
+DEFAULT_TAPE_SIZE_MM = 12
+POSSIBLE_USB_ERRORS = (DymoUSBError, NoBackendError, USBError)
 
 
-class DymoLabeler:
+class DymoLabelerDetectError(Exception):
+    def __init__(self, error: str):
+        msg = f"Detection error: {error}"
+        super().__init__(msg)
+
+
+class DymoLabelerPrintError(Exception):
+    def __init__(self, error: str):
+        msg = f"Print error: {error}"
+        super().__init__(msg)
+
+
+class DymoLabelerFunctions:
     """Create and work with a Dymo LabelManager PnP object.
 
     This class contains both mid-level and high-level functions. In general,
@@ -32,19 +50,7 @@ class DymoLabeler:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
-    DEFAULT_TAP_SIZE_MM = 12
-
     tape_size_mm: int
-
-    @classmethod
-    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
-        if not tape_size_mm:
-            tape_size_mm = cls.DEFAULT_TAP_SIZE_MM
-        return int(8 * tape_size_mm / 12)
-
-    @classmethod
-    def height_px(cls, tape_size_mm: int | None = None):
-        return cls._max_bytes_per_line(tape_size_mm) * 8
 
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
@@ -65,8 +71,6 @@ class DymoLabeler:
         tape_size_mm: int | None = None,
     ):
         """Initialize the LabelManager object (HLF)."""
-        if not tape_size_mm:
-            tape_size_mm = self.DEFAULT_TAP_SIZE_MM
         self._tape_size_mm = tape_size_mm
         self._cmd: list[int] = []
         self._response = False
@@ -76,6 +80,16 @@ class DymoLabeler:
         self._devout = devout
         self._devin = devin
         self._synwait = synwait
+
+    @classmethod
+    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
+        if not tape_size_mm:
+            tape_size_mm = DEFAULT_TAPE_SIZE_MM
+        return int(8 * tape_size_mm / 12)
+
+    @classmethod
+    def height_px(cls, tape_size_mm: int | None = None):
+        return cls._max_bytes_per_line(tape_size_mm) * 8
 
     def _send_command(self):
         """Send the already built command to the LabelManager (MLF)."""
@@ -203,8 +217,7 @@ class DymoLabeler:
     def _get_status(self):
         """Ask for and return the device's status (HLF)."""
         self._status_request()
-        response = self._send_command()
-        LOG.debug(response)
+        return self._send_command()
 
     def print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
         """Print the label described by lines.
@@ -225,5 +238,86 @@ class DymoLabeler:
         if margin_px > 0:
             self._skip_lines(margin_px * 2)
         self._status_request()
-        response = self._send_command()
-        LOG.debug(f"Post-send response: {response}")
+        status = self._get_status()
+        LOG.debug(f"Post-send response: {status}")
+
+
+class DymoLabeler:
+    device: DetectedDevice
+    margin_px: int
+    tape_size_mm: int
+
+    def __init__(
+        self,
+        margin_px: int = DEFAULT_MARGIN_PX,
+        tape_size_mm: int = DEFAULT_TAPE_SIZE_MM,
+    ):
+        self.margin_px = margin_px
+        self.tape_size_mm = tape_size_mm
+        self.device = None
+
+    @property
+    def height_px(self):
+        return DymoLabelerFunctions.height_px(self.tape_size_mm)
+
+    @property
+    def _functions(self):
+        if not self.device:
+            self.detect()
+        assert self.device is not None
+        return DymoLabelerFunctions(
+            devout=self.device.devout,
+            devin=self.device.devin,
+            synwait=64,
+            tape_size_mm=self.tape_size_mm,
+        )
+
+    def detect(self):
+        try:
+            self.device = detect_device()
+        except POSSIBLE_USB_ERRORS as e:
+            raise DymoLabelerDetectError(str(e)) from e
+
+    def print(
+        self,
+        bitmap: Image.Image,
+    ) -> None:
+        """Print a label bitmap to the detected printer.
+
+        The label bitmap is a PIL image in 1-bit format (mode=1), and pixels with value
+        equal to 1 are burned.
+        """
+        # Convert the image to the proper matrix for the dymo labeler object so that
+        # rows span the width of the label, and the first row corresponds to the left
+        # edge of the label.
+        rotated_bitmap = bitmap.transpose(Image.ROTATE_270)
+
+        # Convert the image to raw bytes. Pixels along rows are chunked into groups of
+        # 8 pixels, and subsequent rows are concatenated.
+        stream: bytes = rotated_bitmap.tobytes()
+
+        # Regather the bytes into rows
+        stream_row_length = int(math.ceil(bitmap.height / 8))
+        if len(stream) // stream_row_length != bitmap.width:
+            raise RuntimeError(
+                "An internal problem was encountered while processing the "
+                "label bitmap!"
+            )
+        label_rows: list[bytes] = [
+            stream[i : i + stream_row_length]
+            for i in range(0, len(stream), stream_row_length)
+        ]
+
+        # Convert bytes into ints
+        label_matrix: list[list[int]] = [
+            array.array("B", label_row).tolist() for label_row in label_rows
+        ]
+
+        try:
+            LOG.debug("Printing label..")
+            self._functions.print_label(label_matrix, margin_px=self.margin_px)
+            LOG.debug("Done printing.")
+            usb.util.dispose_resources(self.device.dev)
+            LOG.debug("Cleaned up.")
+        except POSSIBLE_USB_ERRORS as e:
+            raise DymoLabelerPrintError(str(e)) from e

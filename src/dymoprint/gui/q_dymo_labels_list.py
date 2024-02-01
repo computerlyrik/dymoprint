@@ -48,25 +48,24 @@ class QDymoLabelList(QListWidget):
     """
 
     renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
-    render_context: RenderContext
+    render_context: Optional[RenderContext]
     itemWidget: TextDymoLabelWidget
 
-    def __init__(
-        self, render_context, min_payload_len_px=0, justify="center", parent=None
-    ):
+    def __init__(self, min_payload_len_px=0, justify="center", parent=None):
         super().__init__(parent)
         self.min_payload_len_px = min_payload_len_px
         self.justify = justify
-        self.render_context = render_context
+        self.render_context = None
         self.setAlternatingRowColors(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+    def populate(self):
         for item_widget in [TextDymoLabelWidget(self.render_context)]:
             item = QListWidgetItem(self)
             item.setSizeHint(item_widget.sizeHint())
             self.addItem(item)
             self.setItemWidget(item, item_widget)
             item_widget.itemRenderSignal.connect(self.render_label)
-        self.render_label()
 
     def dropEvent(self, e) -> None:
         """Override the default drop event to update the label rendering.

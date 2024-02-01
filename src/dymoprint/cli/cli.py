@@ -20,10 +20,8 @@ from dymoprint.lib.constants import (
     USE_QR,
     e_qrcode,
 )
-from dymoprint.lib.detect import detect_device
 from dymoprint.lib.dymo_labeler import DymoLabeler
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
-from dymoprint.lib.labeler_device import print_label
 from dymoprint.lib.logger import configure_logging, set_verbose
 from dymoprint.lib.render_engines import (
     BarcodeRenderEngine,
@@ -302,8 +300,11 @@ def run():
         justify=args.justify,
     )
 
-    height_px = DymoLabeler.height_px(args.tape_size_mm)
-    render_context = RenderContext(height_px=height_px)
+    dymo_labeler = DymoLabeler(
+        margin_px=args.margin_px,
+        tape_size_mm=args.tape_size_mm,
+    )
+    render_context = RenderContext(height_px=dymo_labeler.height_px)
     label_bitmap = render.render(render_context)
 
     # print or show the label
@@ -323,15 +324,8 @@ def run():
             with NamedTemporaryFile(suffix=".png", delete=False) as fp:
                 ImageOps.invert(label_image).save(fp)
                 webbrowser.open(f"file://{fp.name}")
-
     else:
-        detected_device = detect_device()
-        print_label(
-            detected_device,
-            label_bitmap,
-            margin_px=args.margin_px,
-            tape_size_mm=args.tape_size_mm,
-        )
+        dymo_labeler.print(label_bitmap)
 
 
 def main():
