@@ -20,7 +20,7 @@ jobs:
 
       # Cache
     - name: Load pre-commit hooks cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-checks-hooks-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
