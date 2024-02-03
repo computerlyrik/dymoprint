@@ -2,6 +2,6 @@
 
 while true; do
     VERBOSE=$VERBOSE \
-        dymoprint_gui;
+        dymoprint_gui -v;
     sleep 1
  done
