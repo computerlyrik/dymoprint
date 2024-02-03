@@ -18,7 +18,6 @@ from dymoprint.lib.constants import (
     DEFAULT_MARGIN_PX,
     PIXELS_PER_MM,
     USE_QR,
-    VERTICAL_PREVIEW_MARGIN_PX,
     e_qrcode,
 )
 from dymoprint.lib.dymo_labeler import DymoLabeler
@@ -29,6 +28,8 @@ from dymoprint.lib.render_engines import (
     BarcodeWithTextRenderEngine,
     HorizontallyCombinedRenderEngine,
     PictureRenderEngine,
+    PrintPayloadRenderEngine,
+    PrintPreviewRenderEngine,
     QrRenderEngine,
     RenderContext,
     TestPatternRenderEngine,
@@ -294,42 +295,37 @@ def run():
         else None
     )
 
-    render = HorizontallyCombinedRenderEngine(
-        render_engines,
-        min_payload_len_px=min_payload_len_px,
-        max_payload_len_px=max_payload_len_px,
+    render_engine = HorizontallyCombinedRenderEngine(render_engines)
+    render_kwargs = dict(
+        render_engine=render_engine,
         justify=args.justify,
+        visible_horizontal_margin_px=margin_px,
+        labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+        max_width_px=max_payload_len_px,
+        min_width_px=min_payload_len_px,
     )
 
-    dymo_labeler = DymoLabeler(
-        margin_px=margin_px,
-        tape_size_mm=args.tape_size_mm,
-    )
+    dymo_labeler = DymoLabeler(tape_size_mm=args.tape_size_mm)
     render_context = RenderContext(height_px=dymo_labeler.height_px)
-    bitmap = render.render(render_context)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
+        render = PrintPreviewRenderEngine(**render_kwargs)
+        bitmap = render.render(render_context)
         LOG.debug("Demo mode: showing label..")
-        # fix size, adding print borders
-        expanded_bitmap = Image.new(
-            "1",
-            (
-                bitmap.width + margin_px * 2,
-                bitmap.height + VERTICAL_PREVIEW_MARGIN_PX * 2,
-            ),
-        )
-        expanded_bitmap.paste(bitmap, (margin_px, VERTICAL_PREVIEW_MARGIN_PX))
         if args.preview or args.preview_inverted:
-            label_rotated = expanded_bitmap.transpose(Image.ROTATE_270)
+            label_rotated = bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
         if args.imagemagick:
-            ImageOps.invert(expanded_bitmap).show()
+            ImageOps.invert(bitmap).show()
         if args.browser:
             with NamedTemporaryFile(suffix=".png", delete=False) as fp:
-                ImageOps.invert(expanded_bitmap).save(fp)
+                inverted = ImageOps.invert(bitmap.convert("RGB"))
+                ImageOps.invert(inverted).save(fp)
                 webbrowser.open(f"file://{fp.name}")
     else:
+        render = PrintPayloadRenderEngine(**render_kwargs)
+        bitmap = render.render(render_context)
         dymo_labeler.print(bitmap)
 
 

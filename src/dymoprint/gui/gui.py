@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import Optional
 
-from PIL import Image, ImageOps, ImageQt
+from PIL import Image, ImageQt
 from PyQt6 import QtCore
 from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QSize, Qt, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
 )
 
 from dymoprint.gui.common import crash_msg_box
-from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ICON_DIR
+from dymoprint.lib.constants import ICON_DIR
 from dymoprint.lib.dymo_labeler import (
     DymoLabeler,
     DymoLabelerDetectError,
@@ -39,12 +39,12 @@ class DymoPrintWindow(QWidget):
     SUPPORTED_TAPE_SIZE_MM = (19, 12, 9, 6)
     DEFAULT_TAPE_SIZE_MM_INDEX = 1
 
-    label_bitmap: Optional[Image.Image]
+    label_bitmap_to_print: Optional[Image.Image]
     dymo_labeler: DymoLabeler
 
     def __init__(self):
         super().__init__()
-        self.label_bitmap = None
+        self.label_bitmap_to_print = None
         self.detected_device = None
 
         self.window_layout = QVBoxLayout()
@@ -54,11 +54,11 @@ class DymoPrintWindow(QWidget):
         self.label_render = QLabel()
         self.error_label = QLabel()
         self.print_button = QPushButton()
-        self.margin_px = QSpinBox()
+        self.horizontal_margin_mm = QSpinBox()
         self.tape_size_mm = QComboBox()
         self.foreground_color = QComboBox()
         self.background_color = QComboBox()
-        self.min_label_len_mm = QSpinBox()
+        self.min_label_width_mm = QSpinBox()
         self.justify = QComboBox()
         self.info_label = QLabel()
         self.last_error = None
@@ -84,14 +84,15 @@ class DymoPrintWindow(QWidget):
         shadow.setBlurRadius(15)
         self.label_render.setGraphicsEffect(shadow)
 
-        self.margin_px.setMinimum(20)
-        self.margin_px.setMaximum(1000)
-        self.margin_px.setValue(DEFAULT_MARGIN_PX)
+        h_margins_mm = round(DymoLabeler.LABELER_HORIZONTAL_MARGIN_MM)
+        self.horizontal_margin_mm.setMinimum(h_margins_mm)
+        self.horizontal_margin_mm.setMaximum(100)
+        self.horizontal_margin_mm.setValue(h_margins_mm)
         for tape_size_mm in self.SUPPORTED_TAPE_SIZE_MM:
             self.tape_size_mm.addItem(str(tape_size_mm), tape_size_mm)
         self.tape_size_mm.setCurrentIndex(self.DEFAULT_TAPE_SIZE_MM_INDEX)
-        self.min_label_len_mm.setMinimum(0)
-        self.min_label_len_mm.setMaximum(1000)
+        self.min_label_width_mm.setMinimum(h_margins_mm * 2)
+        self.min_label_width_mm.setMaximum(300)
         self.justify.addItems(["center", "left", "right"])
 
         self.foreground_color.addItems(
@@ -113,26 +114,27 @@ class DymoPrintWindow(QWidget):
         self.status_time.start(2000)
 
     def init_connections(self):
-        self.margin_px.valueChanged.connect(self.label_list.render_label)
-        self.margin_px.valueChanged.connect(self.update_params)
+        self.horizontal_margin_mm.valueChanged.connect(self.label_list.render_label)
+        self.horizontal_margin_mm.valueChanged.connect(self.update_params)
         self.tape_size_mm.currentTextChanged.connect(self.update_params)
-        self.min_label_len_mm.valueChanged.connect(self.update_params)
+        self.min_label_width_mm.valueChanged.connect(self.update_params)
         self.justify.currentTextChanged.connect(self.update_params)
         self.foreground_color.currentTextChanged.connect(self.label_list.render_label)
         self.background_color.currentTextChanged.connect(self.label_list.render_label)
-        self.label_list.renderSignal.connect(self.update_label_render)
+        self.label_list.renderPrintPreviewSignal.connect(self.update_preview_render)
+        self.label_list.renderPrintPayloadSignal.connect(self.update_print_render)
         self.print_button.clicked.connect(self.print_label)
 
     def init_layout(self):
         settings_widget = QToolBar(self)
-        settings_widget.addWidget(QLabel("Margin:"))
-        settings_widget.addWidget(self.margin_px)
+        settings_widget.addWidget(QLabel("Margin [mm]:"))
+        settings_widget.addWidget(self.horizontal_margin_mm)
         settings_widget.addSeparator()
-        settings_widget.addWidget(QLabel("Tape Size:"))
+        settings_widget.addWidget(QLabel("Tape Size [mm]:"))
         settings_widget.addWidget(self.tape_size_mm)
         settings_widget.addSeparator()
-        settings_widget.addWidget(QLabel("Min Label Len [mm]:"))
-        settings_widget.addWidget(self.min_label_len_mm)
+        settings_widget.addWidget(QLabel("Min Label Length [mm]:"))
+        settings_widget.addWidget(self.min_label_width_mm)
         settings_widget.addSeparator()
         settings_widget.addWidget(QLabel("Justify:"))
         settings_widget.addWidget(self.justify)
@@ -175,28 +177,22 @@ class DymoPrintWindow(QWidget):
 
     def update_params(self):
         justify: str = self.justify.currentText()
-        margin_px: int = self.margin_px.value()
-        min_label_mm_len: int = self.min_label_len_mm.value()
-        tape_size_mm: int = self.tape_size_mm.currentData()
+        horizontal_margin_mm: float = self.horizontal_margin_mm.value()
+        min_label_width_mm: float = self.min_label_width_mm.value()
+        tape_size_mm: float = self.tape_size_mm.currentData()
 
-        self.dymo_labeler.margin_px = margin_px
         self.dymo_labeler.tape_size_mm = tape_size_mm
         self.render_context.height_px = self.dymo_labeler.height_px
-        min_payload_len_px = max(0, (min_label_mm_len * 7) - margin_px * 2)
-        self.label_list.update_params(self.render_context, min_payload_len_px, justify)
 
-    def update_label_render(self, label_bitmap):
-        self.label_bitmap = label_bitmap
-        label_image = Image.new(
-            "L",
-            (
-                self.margin_px.value() + label_bitmap.width + self.margin_px.value(),
-                label_bitmap.height,
-            ),
+        self.label_list.update_params(
+            h_margin_mm=horizontal_margin_mm,
+            min_label_width_mm=min_label_width_mm,
+            render_context=self.render_context,
+            justify=justify,
         )
-        label_image.paste(label_bitmap, (self.margin_px.value(), 0))
-        label_image_inv = ImageOps.invert(label_image).copy()
-        qim = ImageQt.ImageQt(label_image_inv)
+
+    def update_preview_render(self, preview_bitmap):
+        qim = ImageQt.ImageQt(preview_bitmap)
         q_image = QPixmap.fromImage(qim)
 
         mask = q_image.createMaskFromColor(
@@ -210,15 +206,16 @@ class DymoPrintWindow(QWidget):
 
         self.label_render.setPixmap(q_image)
         self.label_render.adjustSize()
-        self.info_label.setText(f"← {px_to_mm(label_image.size[0])} mm →")
+        self.info_label.setText(f"← {px_to_mm(preview_bitmap.size[0])} mm →")
+
+    def update_print_render(self, label_bitmap_to_print):
+        self.label_bitmap_to_print = label_bitmap_to_print
 
     def print_label(self):
         try:
-            if self.label_bitmap is None:
+            if self.label_bitmap_to_print is None:
                 raise RuntimeError("No label to print! Call update_label_render first.")
-            self.dymo_labeler.print(
-                self.label_bitmap,
-            )
+            self.dymo_labeler.print(self.label_bitmap_to_print)
         except DymoLabelerPrintError as err:
             crash_msg_box(self, "Printing Failed!", err)
 

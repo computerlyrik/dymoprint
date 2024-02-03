@@ -14,7 +14,17 @@ from dymoprint.gui.q_dymo_label_widgets import (
     QrDymoLabelWidget,
     TextDymoLabelWidget,
 )
-from dymoprint.lib.render_engines import HorizontallyCombinedRenderEngine, RenderContext
+from dymoprint.lib.dymo_labeler import DymoLabeler
+from dymoprint.lib.render_engines import (
+    HorizontallyCombinedRenderEngine,
+    PrintPayloadRenderEngine,
+    PrintPreviewRenderEngine,
+    RenderContext,
+)
+from dymoprint.lib.render_engines.render_engine import (
+    RenderEngineException,
+)
+from dymoprint.lib.utils import mm_to_px
 
 LOG = logging.getLogger(__name__)
 
@@ -30,7 +40,10 @@ class QDymoLabelList(QListWidget):
 
     Attributes:
     ----------
-        renderSignal (QtCore.pyqtSignal): A signal emitted when the label is rendered.
+        renderPrintPreviewSignal (QtCore.pyqtSignal): A signal emitted when the preview
+            is rendered.
+        renderPrintPayloadSignal (QtCore.pyqtSignal): A signal emitted when the print
+            payload is rendered.
         render_context (RenderContext): The render context used for rendering the label.
 
     Methods:
@@ -41,20 +54,34 @@ class QDymoLabelList(QListWidget):
             the label rendering.
         update_render_engine(self, render_engine): Updates the render context used
             for rendering the label.
-        render_label(self): Renders the label using the current render context and
-            emits the renderSignal.
+        render_preview(self): Renders the payload using the current render context and
+            emits the renderPrintPreviewSignal.
+        render_print(self): Renders the print payload using the current render context
+            and emits the renderPrintPayloadSignal.
+        render_label(self): Renders the both preview and print payloads using the
+            current render context and emits the corresponding signals.
         contextMenuEvent(self, event): Overrides the default context menu event to
             add or delete label widgets.
+
     """
 
-    renderSignal = QtCore.pyqtSignal(Image.Image, name="renderSignal")
+    renderPrintPreviewSignal = QtCore.pyqtSignal(
+        Image.Image, name="renderPrintPreviewSignal"
+    )
+    renderPrintPayloadSignal = QtCore.pyqtSignal(
+        Image.Image, name="renderPrintPayloadSignal"
+    )
     render_context: Optional[RenderContext]
     itemWidget: TextDymoLabelWidget
+    h_margin_mm: float
+    min_label_width_mm: Optional[float]
+    justify: str
 
-    def __init__(self, min_payload_len_px=0, justify="center", parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.min_payload_len_px = min_payload_len_px
-        self.justify = justify
+        self.margin_px = None
+        self.min_label_width_mm = None
+        self.justify = "center"
         self.render_context = None
         self.setAlternatingRowColors(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
@@ -73,25 +100,30 @@ class QDymoLabelList(QListWidget):
         Args:
         ----
             e (QDropEvent): The drop event.
+
         """
         super().dropEvent(e)
         self.render_label()
 
     def update_params(
         self,
+        h_margin_mm: float,
+        min_label_width_mm: float,
         render_context: RenderContext,
-        min_payload_len_px: int,
-        justify="center",
+        justify: str = "center",
     ):
         """Update the render context used for rendering the label.
 
         Args:
         ----
-            justify: justification [center,left,right]
-            min_payload_len_px: minimum payload size in pixels
+            h_margin_mm: horizontal margin [mm]
+            min_label_width_mm: minimum label width [mm]
             render_context (RenderContext): The new render context to use.
+            justify: justification [center,left,right]
+
         """
-        self.min_payload_len_px = min_payload_len_px
+        self.h_margin_mm = h_margin_mm
+        self.min_label_width_mm = min_label_width_mm
         self.justify = justify
         self.render_context = render_context
         for i in range(self.count()):
@@ -100,31 +132,53 @@ class QDymoLabelList(QListWidget):
         self.render_label()
 
     @property
-    def render_engines(self):
-        engines = []
+    def _payload_render_engine(self):
+        render_engines = []
         for i in range(self.count()):
             item = self.item(i)
             item_widget = self.itemWidget(self.item(i))
             if item_widget and item:
                 item.setSizeHint(item_widget.sizeHint())
-                engines.append(item_widget.render_engine)
-        return engines
+                render_engines.append(item_widget.render_engine)
+        return HorizontallyCombinedRenderEngine(render_engines=render_engines)
 
-    def render_label(self):
-        """Render the label using the current render context and emit renderSignal."""
-        render_engine = HorizontallyCombinedRenderEngine(
-            render_engines=self.render_engines,
-            min_payload_len_px=self.min_payload_len_px,
-            max_payload_len_px=None,
+    def render_preview(self):
+        render_engine = PrintPreviewRenderEngine(
+            render_engine=self._payload_render_engine,
             justify=self.justify,
+            visible_horizontal_margin_px=mm_to_px(self.h_margin_mm),
+            labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+            max_width_px=None,
+            min_width_px=mm_to_px(self.min_label_width_mm),
         )
         try:
-            label_bitmap = render_engine.render(self.render_context)
-        except BaseException as err:  # noqa: BLE001
+            bitmap = render_engine.render(self.render_context)
+        except RenderEngineException as err:
             crash_msg_box(self, "Render Engine Failed!", err)
-            label_bitmap = EmptyRenderEngine().render(self.render_context)
+            bitmap = EmptyRenderEngine().render(self.render_context)
 
-        self.renderSignal.emit(label_bitmap)
+        self.renderPrintPreviewSignal.emit(bitmap)
+
+    def render_print(self):
+        render_engine = PrintPayloadRenderEngine(
+            render_engine=self._payload_render_engine,
+            justify=self.justify,
+            visible_horizontal_margin_px=mm_to_px(self.h_margin_mm),
+            labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+            max_width_px=None,
+            min_width_px=mm_to_px(self.min_label_width_mm),
+        )
+        try:
+            bitmap = render_engine.render(self.render_context)
+        except RenderEngineException as err:
+            crash_msg_box(self, "Render Engine Failed!", err)
+            bitmap = EmptyRenderEngine().render(self.render_context)
+
+        self.renderPrintPayloadSignal.emit(bitmap)
+
+    def render_label(self):
+        self.render_preview()
+        self.render_print()
 
     def contextMenuEvent(self, event):
         """Override the default context menu event to add or delete label widgets.
@@ -132,6 +186,7 @@ class QDymoLabelList(QListWidget):
         Args:
         ----
             event (QContextMenuEvent): The context menu event.
+
         """
         contextMenu = QMenu(self)
         add_text: Optional[QAction] = contextMenu.addAction("Add Text")

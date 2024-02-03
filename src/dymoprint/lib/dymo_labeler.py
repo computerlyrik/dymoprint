@@ -15,8 +15,9 @@ import usb
 from PIL import Image
 from usb.core import NoBackendError, USBError
 
-from dymoprint.lib.constants import DEFAULT_MARGIN_PX, ESC, SYN
+from dymoprint.lib.constants import ESC, SYN
 from dymoprint.lib.detect import DetectedDevice, DymoUSBError, detect_device
+from dymoprint.lib.utils import mm_to_px
 
 LOG = logging.getLogger(__name__)
 DEFAULT_TAPE_SIZE_MM = 12
@@ -219,24 +220,22 @@ class DymoLabelerFunctions:
         self._status_request()
         return self._send_command()
 
-    def print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
+    def print_label(self, lines: list[list[int]]):
         """Print the label described by lines.
 
         Automatically split the label if it's larger than maxLines.
         """
         while len(lines) > self._maxLines + 1:
-            self._raw_print_label(lines[0 : self._maxLines], margin_px=0)
+            self._raw_print_label(lines[0 : self._maxLines])
             del lines[0 : self._maxLines]
-        self._raw_print_label(lines, margin_px=margin_px)
+        self._raw_print_label(lines)
 
-    def _raw_print_label(self, lines: list[list[int]], margin_px=DEFAULT_MARGIN_PX):
+    def _raw_print_label(self, lines: list[list[int]]):
         """Print the label described by lines (HLF)."""
         # Here used to be a matrix optimization code that caused problems in issue #87
         self._tape_color(0)
         for line in lines:
             self._line(line)
-        if margin_px > 0:
-            self._skip_lines(margin_px * 2)
         self._status_request()
         status = self._get_status()
         LOG.debug(f"Post-send response: {status}")
@@ -244,15 +243,15 @@ class DymoLabelerFunctions:
 
 class DymoLabeler:
     device: DetectedDevice
-    margin_px: int
     tape_size_mm: int
+
+    LABELER_HORIZONTAL_MARGIN_MM = 8.1
+    LABELER_VERTICAL_MARGIN_MM = 1.9
 
     def __init__(
         self,
-        margin_px: int = DEFAULT_MARGIN_PX,
         tape_size_mm: int = DEFAULT_TAPE_SIZE_MM,
     ):
-        self.margin_px = margin_px
         self.tape_size_mm = tape_size_mm
         self.device = None
 
@@ -270,6 +269,13 @@ class DymoLabeler:
             devin=self.device.devin,
             synwait=64,
             tape_size_mm=self.tape_size_mm,
+        )
+
+    @classmethod
+    def get_labeler_margin_px(cls) -> tuple[float, float]:
+        return (
+            mm_to_px(cls.LABELER_HORIZONTAL_MARGIN_MM),
+            mm_to_px(cls.LABELER_VERTICAL_MARGIN_MM),
         )
 
     def detect(self):
@@ -315,7 +321,7 @@ class DymoLabeler:
 
         try:
             LOG.debug("Printing label..")
-            self._functions.print_label(label_matrix, margin_px=self.margin_px)
+            self._functions.print_label(label_matrix)
             LOG.debug("Done printing.")
             usb.util.dispose_resources(self.device.dev)
             LOG.debug("Cleaned up.")
