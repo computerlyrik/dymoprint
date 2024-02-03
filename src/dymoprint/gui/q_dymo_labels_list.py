@@ -99,17 +99,21 @@ class QDymoLabelList(QListWidget):
             item_widget.render_context = render_context
         self.render_label()
 
-    def render_label(self):
-        """Render the label using the current render context and emit renderSignal."""
-        render_engines = []
+    @property
+    def render_engines(self):
+        engines = []
         for i in range(self.count()):
             item = self.item(i)
             item_widget = self.itemWidget(self.item(i))
             if item_widget and item:
                 item.setSizeHint(item_widget.sizeHint())
-                render_engines.append(item_widget.render_engine)
+                engines.append(item_widget.render_engine)
+        return engines
+
+    def render_label(self):
+        """Render the label using the current render context and emit renderSignal."""
         render_engine = HorizontallyCombinedRenderEngine(
-            render_engines=render_engines,
+            render_engines=self.render_engines,
             min_payload_len_px=self.min_payload_len_px,
             max_payload_len_px=None,
             justify=self.justify,
