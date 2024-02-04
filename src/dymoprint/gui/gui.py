@@ -36,9 +36,6 @@ LOG = logging.getLogger(__name__)
 
 
 class DymoPrintWindow(QWidget):
-    SUPPORTED_TAPE_SIZE_MM = (19, 12, 9, 6)
-    DEFAULT_TAPE_SIZE_MM_INDEX = 1
-
     label_bitmap_to_print: Optional[Image.Image]
     dymo_labeler: DymoLabeler
 
@@ -84,13 +81,19 @@ class DymoPrintWindow(QWidget):
         shadow.setBlurRadius(15)
         self.label_render.setGraphicsEffect(shadow)
 
-        h_margins_mm = round(DymoLabeler.LABELER_HORIZONTAL_MARGIN_MM)
+        self.dymo_labeler = DymoLabeler()
+        for tape_size_mm in self.dymo_labeler.SUPPORTED_TAPE_SIZES_MM:
+            self.tape_size_mm.addItem(str(tape_size_mm), tape_size_mm)
+        tape_size_index = self.dymo_labeler.SUPPORTED_TAPE_SIZES_MM.index(
+            self.dymo_labeler.tape_size_mm
+        )
+        self.tape_size_mm.setCurrentIndex(tape_size_index)
+
+        h_margins_mm = round(self.dymo_labeler.minimum_horizontal_margin_mm)
         self.horizontal_margin_mm.setMinimum(h_margins_mm)
         self.horizontal_margin_mm.setMaximum(100)
         self.horizontal_margin_mm.setValue(h_margins_mm)
-        for tape_size_mm in self.SUPPORTED_TAPE_SIZE_MM:
-            self.tape_size_mm.addItem(str(tape_size_mm), tape_size_mm)
-        self.tape_size_mm.setCurrentIndex(self.DEFAULT_TAPE_SIZE_MM_INDEX)
+
         self.min_label_width_mm.setMinimum(h_margins_mm * 2)
         self.min_label_width_mm.setMaximum(300)
         self.justify.addItems(["center", "left", "right"])
@@ -102,7 +105,6 @@ class DymoPrintWindow(QWidget):
             ["white", "black", "yellow", "blue", "red", "green"]
         )
 
-        self.dymo_labeler = DymoLabeler()
         self.update_params()
         self.label_list.populate()
 
@@ -185,6 +187,7 @@ class DymoPrintWindow(QWidget):
         self.render_context.height_px = self.dymo_labeler.height_px
 
         self.label_list.update_params(
+            dymo_labeler=self.dymo_labeler,
             h_margin_mm=horizontal_margin_mm,
             min_label_width_mm=min_label_width_mm,
             render_context=self.render_context,

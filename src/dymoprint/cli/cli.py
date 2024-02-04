@@ -295,17 +295,16 @@ def run():
         else None
     )
 
+    dymo_labeler = DymoLabeler(tape_size_mm=args.tape_size_mm)
     render_engine = HorizontallyCombinedRenderEngine(render_engines)
     render_kwargs = dict(
         render_engine=render_engine,
         justify=args.justify,
         visible_horizontal_margin_px=margin_px,
-        labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+        labeler_margin_px=dymo_labeler.labeler_margin_px,
         max_width_px=max_payload_len_px,
         min_width_px=min_payload_len_px,
     )
-
-    dymo_labeler = DymoLabeler(tape_size_mm=args.tape_size_mm)
     render_context = RenderContext(height_px=dymo_labeler.height_px)
 
     # print or show the label

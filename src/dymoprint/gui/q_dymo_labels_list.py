@@ -73,12 +73,14 @@ class QDymoLabelList(QListWidget):
     )
     render_context: Optional[RenderContext]
     itemWidget: TextDymoLabelWidget
+    dymo_labeler: DymoLabeler
     h_margin_mm: float
     min_label_width_mm: Optional[float]
     justify: str
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.dymo_labeler = None
         self.margin_px = None
         self.min_label_width_mm = None
         self.justify = "center"
@@ -107,6 +109,7 @@ class QDymoLabelList(QListWidget):
 
     def update_params(
         self,
+        dymo_labeler: DymoLabeler,
         h_margin_mm: float,
         min_label_width_mm: float,
         render_context: RenderContext,
@@ -116,12 +119,14 @@ class QDymoLabelList(QListWidget):
 
         Args:
         ----
+            dymo_labeler: an instance of DymoLabeler object
             h_margin_mm: horizontal margin [mm]
             min_label_width_mm: minimum label width [mm]
             render_context (RenderContext): The new render context to use.
             justify: justification [center,left,right]
 
         """
+        self.dymo_labeler = dymo_labeler
         self.h_margin_mm = h_margin_mm
         self.min_label_width_mm = min_label_width_mm
         self.justify = justify
@@ -147,7 +152,7 @@ class QDymoLabelList(QListWidget):
             render_engine=self._payload_render_engine,
             justify=self.justify,
             visible_horizontal_margin_px=mm_to_px(self.h_margin_mm),
-            labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+            labeler_margin_px=self.dymo_labeler.labeler_margin_px,
             max_width_px=None,
             min_width_px=mm_to_px(self.min_label_width_mm),
         )
@@ -164,7 +169,7 @@ class QDymoLabelList(QListWidget):
             render_engine=self._payload_render_engine,
             justify=self.justify,
             visible_horizontal_margin_px=mm_to_px(self.h_margin_mm),
-            labeler_margin_px=DymoLabeler.get_labeler_margin_px(),
+            labeler_margin_px=self.dymo_labeler.labeler_margin_px,
             max_width_px=None,
             min_width_px=mm_to_px(self.min_label_width_mm),
         )

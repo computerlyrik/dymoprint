@@ -20,7 +20,6 @@ from dymoprint.lib.detect import DetectedDevice, DymoUSBError, detect_device
 from dymoprint.lib.utils import mm_to_px
 
 LOG = logging.getLogger(__name__)
-DEFAULT_TAPE_SIZE_MM = 12
 POSSIBLE_USB_ERRORS = (DymoUSBError, NoBackendError, USBError)
 
 
@@ -51,8 +50,6 @@ class DymoLabelerFunctions:
     <https://download.dymo.com/dymo/technical-data-sheets/LW%20450%20Series%20Technical%20Reference.pdf>
     """
 
-    tape_size_mm: int
-
     # Max number of print lines to send before waiting for a response. This helps
     # to avoid timeouts due to differences between data transfer and
     # printer speeds. I added this because I kept getting "IOError: [Errno
@@ -69,10 +66,8 @@ class DymoLabelerFunctions:
         devout: usb.core.Endpoint,
         devin: usb.core.Endpoint,
         synwait: int | None = None,
-        tape_size_mm: int | None = None,
     ):
         """Initialize the LabelManager object (HLF)."""
-        self._tape_size_mm = tape_size_mm
         self._cmd: list[int] = []
         self._response = False
         self._bytesPerLine = None
@@ -83,13 +78,11 @@ class DymoLabelerFunctions:
         self._synwait = synwait
 
     @classmethod
-    def _max_bytes_per_line(cls, tape_size_mm: int | None = None) -> int:
-        if not tape_size_mm:
-            tape_size_mm = DEFAULT_TAPE_SIZE_MM
+    def _max_bytes_per_line(cls, tape_size_mm: int) -> int:
         return int(8 * tape_size_mm / 12)
 
     @classmethod
-    def height_px(cls, tape_size_mm: int | None = None):
+    def height_px(cls, tape_size_mm: int):
         return cls._max_bytes_per_line(tape_size_mm) * 8
 
     def _send_command(self):
@@ -155,9 +148,9 @@ class DymoLabelerFunctions:
         self._build_command(cmd)
         self._response = True
 
-    def _dot_tab(self, value):
+    def _dot_tab(self, value, tape_size_mm: int):
         """Set the bias text height, in bytes (MLF)."""
-        if value < 0 or value > self._max_bytes_per_line(self._tape_size_mm):
+        if value < 0 or value > self._max_bytes_per_line(tape_size_mm):
             raise ValueError
         cmd = [ESC, ord("B"), value]
         self._build_command(cmd)
@@ -190,11 +183,11 @@ class DymoLabelerFunctions:
         cmd = [SYN, *value]
         self._build_command(cmd)
 
-    def _chain_mark(self):
+    def _chain_mark(self, tape_size_mm: int):
         """Set Chain Mark (MLF)."""
-        self._dot_tab(0)
-        self._bytes_per_line(self._max_bytes_per_line(self._tape_size_mm))
-        self._line([0x99] * self._max_bytes_per_line(self._tape_size_mm))
+        self._dot_tab(0, tape_size_mm)
+        self._bytes_per_line(self._max_bytes_per_line(tape_size_mm))
+        self._line([0x99] * self._max_bytes_per_line(tape_size_mm))
 
     def _skip_lines(self, value):
         """Set number of lines of white to print (MLF)."""
@@ -245,13 +238,20 @@ class DymoLabeler:
     device: DetectedDevice
     tape_size_mm: int
 
-    LABELER_HORIZONTAL_MARGIN_MM = 8.1
-    LABELER_VERTICAL_MARGIN_MM = 1.9
+    LABELER_DISTANCE_BETWEEN_PRINT_HEAD_AND_CUTTER_MM = 8.1
+    LABELER_PRINT_HEAD_HEIGHT_MM = 8.2
+    SUPPORTED_TAPE_SIZES_MM = (19, 12, 9, 6)
+    DEFAULT_TAPE_SIZE_MM = 12
 
     def __init__(
         self,
         tape_size_mm: int = DEFAULT_TAPE_SIZE_MM,
     ):
+        if tape_size_mm not in self.SUPPORTED_TAPE_SIZES_MM:
+            raise ValueError(
+                f"Unsupported tape size {tape_size_mm}mm. "
+                f"Supported sizes: {self.SUPPORTED_TAPE_SIZES_MM}"
+            )
         self.tape_size_mm = tape_size_mm
         self.device = None
 
@@ -268,14 +268,18 @@ class DymoLabeler:
             devout=self.device.devout,
             devin=self.device.devin,
             synwait=64,
-            tape_size_mm=self.tape_size_mm,
         )
 
-    @classmethod
-    def get_labeler_margin_px(cls) -> tuple[float, float]:
+    @property
+    def minimum_horizontal_margin_mm(self):
+        return self.LABELER_DISTANCE_BETWEEN_PRINT_HEAD_AND_CUTTER_MM
+
+    @property
+    def labeler_margin_px(self) -> tuple[float, float]:
+        vertical_margin_mm = (self.tape_size_mm - self.LABELER_PRINT_HEAD_HEIGHT_MM) / 2
         return (
-            mm_to_px(cls.LABELER_HORIZONTAL_MARGIN_MM),
-            mm_to_px(cls.LABELER_VERTICAL_MARGIN_MM),
+            mm_to_px(self.minimum_horizontal_margin_mm),
+            mm_to_px(vertical_margin_mm),
         )
 
     def detect(self):
