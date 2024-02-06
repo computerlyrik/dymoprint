@@ -305,7 +305,11 @@ def run():
         max_width_px=max_payload_len_px,
         min_width_px=min_payload_len_px,
     )
-    render_context = RenderContext(height_px=dymo_labeler.height_px)
+    render_context = RenderContext(
+        background_color="white",
+        foreground_color="black",
+        height_px=dymo_labeler.height_px,
+    )
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:

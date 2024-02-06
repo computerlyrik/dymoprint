@@ -2,7 +2,9 @@ from enum import Enum
 
 
 class _RenderContextFieldName(Enum):
-    HEIGHT_PX = 1
+    BACKGROUND_COLOR = 1
+    FOREGROUND_COLOR = 2
+    HEIGHT_PX = 3
 
 
 class RenderContext:

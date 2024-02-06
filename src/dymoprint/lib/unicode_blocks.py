@@ -11,19 +11,28 @@ assert LH == "\N{LOWER HALF BLOCK}"
 assert FB == "\N{FULL BLOCK}"
 assert NB == "\N{NO-BREAK SPACE}"
 
+BLACK_PIXEL = (255, 255, 255, 255)
+WHITE_PIXEL = (0, 0, 0, 255)
+# when the image height is odd, the preview image height is extended by 1 pixel
+# this padding result in the added line being composed of transparent pixels.
+TRANSPARENT_PIXEL = (0, 0, 0, 0)
 
 dict_unicode = {
-    (255, 255): FB,
-    (0, 255): LH,
-    (255, 0): UH,
-    (0, 0): NB,
+    (BLACK_PIXEL, BLACK_PIXEL): FB,
+    (WHITE_PIXEL, BLACK_PIXEL): LH,
+    (BLACK_PIXEL, WHITE_PIXEL): UH,
+    (WHITE_PIXEL, WHITE_PIXEL): NB,
+    (BLACK_PIXEL, TRANSPARENT_PIXEL): UH,
+    (WHITE_PIXEL, TRANSPARENT_PIXEL): NB,
 }
 
 dict_unicode_inverted = {
-    (255, 255): NB,
-    (0, 255): UH,
-    (255, 0): LH,
-    (0, 0): FB,
+    (BLACK_PIXEL, BLACK_PIXEL): NB,
+    (WHITE_PIXEL, BLACK_PIXEL): UH,
+    (BLACK_PIXEL, WHITE_PIXEL): LH,
+    (WHITE_PIXEL, WHITE_PIXEL): FB,
+    (BLACK_PIXEL, TRANSPARENT_PIXEL): NB,
+    (WHITE_PIXEL, TRANSPARENT_PIXEL): UH,
 }
 
 

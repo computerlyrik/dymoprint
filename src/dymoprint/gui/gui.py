@@ -5,7 +5,7 @@ from typing import Optional
 from PIL import Image, ImageQt
 from PyQt6 import QtCore
 from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QSize, Qt, QTimer
-from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -121,8 +121,8 @@ class DymoPrintWindow(QWidget):
         self.tape_size_mm.currentTextChanged.connect(self.update_params)
         self.min_label_width_mm.valueChanged.connect(self.update_params)
         self.justify.currentTextChanged.connect(self.update_params)
-        self.foreground_color.currentTextChanged.connect(self.label_list.render_label)
-        self.background_color.currentTextChanged.connect(self.label_list.render_label)
+        self.foreground_color.currentTextChanged.connect(self.update_params)
+        self.background_color.currentTextChanged.connect(self.update_params)
         self.label_list.renderPrintPreviewSignal.connect(self.update_preview_render)
         self.label_list.renderPrintPayloadSignal.connect(self.update_print_render)
         self.print_button.clicked.connect(self.print_label)
@@ -184,6 +184,10 @@ class DymoPrintWindow(QWidget):
         tape_size_mm: float = self.tape_size_mm.currentData()
 
         self.dymo_labeler.tape_size_mm = tape_size_mm
+
+        # Update render context
+        self.render_context.foreground_color = self.foreground_color.currentText()
+        self.render_context.background_color = self.background_color.currentText()
         self.render_context.height_px = self.dymo_labeler.height_px
 
         self.label_list.update_params(
@@ -197,16 +201,6 @@ class DymoPrintWindow(QWidget):
     def update_preview_render(self, preview_bitmap):
         qim = ImageQt.ImageQt(preview_bitmap)
         q_image = QPixmap.fromImage(qim)
-
-        mask = q_image.createMaskFromColor(
-            QColor("255, 255, 255"), Qt.MaskMode.MaskOutColor
-        )
-        q_image.fill(QColor(self.background_color.currentText()))
-        p = QPainter(q_image)
-        p.setPen(QColor(self.foreground_color.currentText()))
-        p.drawPixmap(q_image.rect(), mask, mask.rect())
-        p.end()
-
         self.label_render.setPixmap(q_image)
         self.label_render.adjustSize()
         self.info_label.setText(f"← {px_to_mm(preview_bitmap.size[0])} mm →")

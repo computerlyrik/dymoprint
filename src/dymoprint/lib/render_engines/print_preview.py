@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageColor, ImageOps
 
 from dymoprint.lib.render_engines.margins import MarginsMode, MarginsRenderEngine
 from dymoprint.lib.render_engines.render_context import RenderContext
@@ -30,6 +30,23 @@ class PrintPreviewRenderEngine(RenderEngine):
             min_width_px=min_width_px,
         )
 
-    def render(self, context: RenderContext) -> Image.Image:
+    def _get_preview_bitmap(self, context: RenderContext):
         label_bitmap = self.render_engine.render(context)
-        return ImageOps.invert(label_bitmap.convert("L"))
+        bitmap = ImageOps.invert(label_bitmap.convert("L")).convert("RGBA")
+        pixel_map = {
+            "black": context.foreground_color,
+            "white": context.background_color,
+        }
+        pixel_color_map = {
+            ImageColor.getcolor(k, "RGBA"): ImageColor.getcolor(v, "RGBA")
+            for k, v in pixel_map.items()
+        }
+        pixdata = bitmap.load()
+        width, height = bitmap.size
+        for x in range(0, width):
+            for y in range(0, height):
+                pixdata[x, y] = pixel_color_map[pixdata[x, y]]
+        return bitmap
+
+    def render(self, context: RenderContext) -> Image.Image:
+        return self._get_preview_bitmap(context)

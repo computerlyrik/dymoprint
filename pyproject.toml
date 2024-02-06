@@ -80,6 +80,7 @@ commands =
   dymoprint --version
   dymoprint --help
   dymoprint --preview "single line"
+  dymoprint --preview-inverted "single line"
   dymoprint --preview multiple lines
   dymoprint --preview -qr "qr text"
   dymoprint --preview -c code128 "bc txt"
