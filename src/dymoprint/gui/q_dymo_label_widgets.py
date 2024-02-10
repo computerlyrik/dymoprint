@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 
 from dymoprint.gui.common import crash_msg_box
 from dymoprint.lib.constants import AVAILABLE_BARCODES, ICON_DIR
-from dymoprint.lib.font_config import FontConfig
+from dymoprint.lib.font_config import get_available_fonts
 from dymoprint.lib.render_engines import (
     BarcodeRenderEngine,
     BarcodeWithTextRenderEngine,
@@ -36,7 +36,7 @@ class FontStyle(QComboBox):
     def __init__(self):
         super().__init__()
         # Populate font_style
-        for font_path in FontConfig.available_fonts():
+        for font_path in get_available_fonts():
             name = font_path.stem
             absolute_path = font_path.absolute()
             self.addItem(name, absolute_path)

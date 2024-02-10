@@ -21,7 +21,7 @@ from dymoprint.lib.constants import (
     e_qrcode,
 )
 from dymoprint.lib.dymo_labeler import DymoLabeler
-from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
+from dymoprint.lib.font_config import NoFontFound, get_available_fonts, get_font_path
 from dymoprint.lib.logger import configure_logging, is_verbose_env_vars, set_not_verbose
 from dymoprint.lib.render_engines import (
     BarcodeRenderEngine,
@@ -42,10 +42,10 @@ from dymoprint.metadata import our_metadata
 LOG = logging.getLogger(__name__)
 
 FLAG_TO_STYLE = {
-    "r": FontStyle.REGULAR,
-    "b": FontStyle.BOLD,
-    "i": FontStyle.ITALIC,
-    "n": FontStyle.NARROW,
+    "r": "regular",
+    "b": "bold",
+    "i": "italic",
+    "n": "narrow",
 }
 
 
@@ -218,13 +218,11 @@ def run():
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
     try:
-        font_config = FontConfig(font=args.font, style=style)
+        font_path = get_font_path(font=args.font, style=style)
     except NoFontFound as e:
-        valid_font_names = [f.stem for f in FontConfig.available_fonts()]
+        valid_font_names = [f.stem for f in get_available_fonts()]
         msg = f"{e}. Valid fonts are: {', '.join(valid_font_names)}"
         raise CommandLineUsageError(msg) from None
-
-    font_filename = font_config.path
 
     labeltext = args.text
 
@@ -263,7 +261,7 @@ def run():
     elif args.barcode_text:
         render_engines.append(
             BarcodeWithTextRenderEngine(
-                labeltext.pop(0), args.barcode_text, font_filename, args.frame_width_px
+                labeltext.pop(0), args.barcode_text, font_path, args.frame_width_px
             )
         )
 
@@ -271,7 +269,7 @@ def run():
         render_engines.append(
             TextRenderEngine(
                 text_lines=labeltext,
-                font_file_name=font_filename,
+                font_file_name=font_path,
                 frame_width_px=args.frame_width_px,
                 font_size_ratio=int(args.scale) / 100.0,
                 align=args.align,
