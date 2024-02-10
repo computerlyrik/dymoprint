@@ -276,7 +276,10 @@ class DymoLabeler:
 
     @property
     def labeler_margin_px(self) -> tuple[float, float]:
-        vertical_margin_mm = (self.tape_size_mm - self.LABELER_PRINT_HEAD_HEIGHT_MM) / 2
+        vertical_margin_mm = max(
+            0, (self.tape_size_mm - self.LABELER_PRINT_HEAD_HEIGHT_MM) / 2
+        )
+
         return (
             mm_to_px(self.minimum_horizontal_margin_mm),
             mm_to_px(vertical_margin_mm),
