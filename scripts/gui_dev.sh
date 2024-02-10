@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 while true; do
-    VERBOSE=$VERBOSE \
+    DYMOPRINT_VERBOSE=$DYMOPRINT_VERBOSE \
         dymoprint_gui -v;
     sleep 1
  done
