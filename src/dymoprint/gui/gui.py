@@ -27,7 +27,7 @@ from dymoprint.lib.dymo_labeler import (
     DymoLabelerDetectError,
     DymoLabelerPrintError,
 )
-from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.logger import configure_logging, is_verbose_env_vars, set_not_verbose
 from dymoprint.lib.render_engines import RenderContext
 from dymoprint.lib.utils import system_run
 
@@ -246,13 +246,14 @@ def parse(app):
     parser.process(app)
 
     is_verbose = parser.isSet(verbose_option)
-    if is_verbose:
-        set_verbose()
+    if (not is_verbose) and (not is_verbose_env_vars()):
+        # Neither the --verbose flag nor the environment variable is set.
+        set_not_verbose()
 
 
 def main():
+    configure_logging()
     with system_run():
-        configure_logging()
         app = QApplication(sys.argv)
         parse(app)
         window = DymoPrintWindow()

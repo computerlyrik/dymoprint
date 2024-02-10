@@ -22,7 +22,7 @@ from dymoprint.lib.constants import (
 )
 from dymoprint.lib.dymo_labeler import DymoLabeler
 from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
-from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.logger import configure_logging, is_verbose_env_vars, set_not_verbose
 from dymoprint.lib.render_engines import (
     BarcodeRenderEngine,
     BarcodeWithTextRenderEngine,
@@ -211,6 +211,10 @@ def mm_to_payload_px(mm, margin):
 def run():
     args = parse_args()
 
+    if (not args.verbose) and (not is_verbose_env_vars()):
+        # Neither --verbose flag nor the environment variable is set.
+        set_not_verbose()
+
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
     try:
@@ -223,9 +227,6 @@ def run():
     font_filename = font_config.path
 
     labeltext = args.text
-
-    if args.verbose:
-        set_verbose()
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
