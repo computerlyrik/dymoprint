@@ -39,9 +39,9 @@ def configure_logging():
     LOG.addHandler(handler)
 
 
-def print_exception(e):
+def print_exception(e: Exception) -> None:
     if _IS_VERBOSE:
         LOG.exception(e)
     else:
-        LOG.error(e)
+        LOG.error(f"{e!r}")
         LOG.error(VERBOSE_NOTICE)
