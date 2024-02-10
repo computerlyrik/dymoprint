@@ -334,6 +334,6 @@ def run():
 
 
 def main():
+    configure_logging()
     with system_run():
-        configure_logging()
         run()
