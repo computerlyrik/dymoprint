@@ -7,13 +7,17 @@ from PIL import Image, ImageColor, ImageDraw, ImageOps
 from dymoprint.lib.render_engines.margins import MarginsMode, MarginsRenderEngine
 from dymoprint.lib.render_engines.render_context import RenderContext
 from dymoprint.lib.render_engines.render_engine import RenderEngine
+from dymoprint.lib.utils import px_to_mm
 
 
 class PrintPreviewRenderEngine(RenderEngine):
-    X_MARGIN_PX = 30
+    X_MARGIN_PX = 80
     Y_MARGIN_PX = 30
     DX = X_MARGIN_PX * 0.3
     DY = Y_MARGIN_PX * 0.3
+    MARGIN_COLOR = "red"
+    MARK_COLOR = "yellow"
+    TEXT_COLOR = "blue"
 
     def __init__(
         self,
@@ -59,7 +63,11 @@ class PrintPreviewRenderEngine(RenderEngine):
         y_margin = meta["vertical_offset_px"]
         preview_width, preview_height = preview_bitmap.size
         label_width, label_height = label_bitmap.size
-        margin_color = context.foreground_color
+
+        preview_width_mark_y = preview_height - self.Y_MARGIN_PX + self.DY
+        label_width_mark_y = preview_height - self.DY
+        preview_width_mark_x = self.X_MARGIN_PX - self.DX
+        label_width_mark_x = self.DX
 
         # left vertical margin
         draw.line(
@@ -67,9 +75,9 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + x_margin,
                 0,
                 self.X_MARGIN_PX + x_margin,
-                preview_height,
+                preview_width_mark_y,
             ),
-            fill=margin_color,
+            fill=self.MARGIN_COLOR,
         )
         # right vertical margin
         draw.line(
@@ -77,45 +85,118 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + label_width - x_margin,
                 0,
                 self.X_MARGIN_PX + label_width - x_margin,
-                preview_height,
+                preview_width_mark_y,
             ),
-            fill=margin_color,
+            fill=self.MARGIN_COLOR,
         )
         # top horizontal margin
-        (
-            draw.line(
-                xy=(
-                    0,
-                    self.Y_MARGIN_PX + y_margin,
-                    preview_width,
-                    self.Y_MARGIN_PX + y_margin,
-                ),
-                fill=margin_color,
+        draw.line(
+            xy=(
+                preview_width_mark_x,
+                self.DY + y_margin,
+                preview_width,
+                self.DY + y_margin,
             ),
+            fill=self.MARGIN_COLOR,
         )
         # bottom horizontal margin
-        (
-            draw.line(
-                xy=(
-                    0,
-                    self.Y_MARGIN_PX + label_height - y_margin,
-                    preview_width,
-                    self.Y_MARGIN_PX + label_height - y_margin,
-                ),
-                fill=margin_color,
+        draw.line(
+            xy=(
+                preview_width_mark_x,
+                self.DY + label_height - y_margin,
+                preview_width,
+                self.DY + label_height - y_margin,
             ),
+            fill=self.MARGIN_COLOR,
         )
+        # horizontal line for payload width
+        draw.line(
+            xy=(
+                self.X_MARGIN_PX + x_margin,
+                preview_width_mark_y,
+                self.X_MARGIN_PX + label_width - x_margin,
+                preview_width_mark_y,
+            ),
+            fill=self.MARK_COLOR,
+        )
+        # horizontal line for label width
+        draw.line(
+            xy=(
+                self.X_MARGIN_PX,
+                label_width_mark_y,
+                self.X_MARGIN_PX + label_width,
+                label_width_mark_y,
+            ),
+            fill=self.MARK_COLOR,
+        )
+        # vertical line for payload height
+        draw.line(
+            xy=(
+                preview_width_mark_x,
+                self.DY + y_margin,
+                preview_width_mark_x,
+                self.DY + label_height - y_margin,
+            ),
+            fill=self.MARK_COLOR,
+        )
+        # vertical line for label height
+        draw.line(
+            xy=(
+                label_width_mark_x,
+                self.DY,
+                label_width_mark_x,
+                self.DY + label_height,
+            ),
+            fill=self.MARK_COLOR,
+        )
+
+        labels = [
+            # payload width
+            {
+                "xy": (self.X_MARGIN_PX + label_width / 2, preview_width_mark_y),
+                "text": f"{px_to_mm(label_width - x_margin * 2)} mm",
+                "anchor": "mm",
+                "align": "center",
+            },
+            # label width
+            {
+                "xy": (self.X_MARGIN_PX + label_width / 2, label_width_mark_y),
+                "text": f"{px_to_mm(label_width)} mm",
+                "anchor": "mm",
+                "align": "center",
+            },
+            # payload height
+            {
+                "xy": (preview_width_mark_x, self.DY + label_height / 2 - self.DY),
+                "text": f"{px_to_mm(label_height - y_margin * 2)} mm",
+                "anchor": "mm",
+                "align": "center",
+            },
+            # label height
+            {
+                "xy": (label_width_mark_x, self.DY + label_height / 2 + self.DY),
+                "text": f"{px_to_mm(label_height)} mm",
+                "anchor": "mm",
+                "align": "center",
+            },
+        ]
+        for label in labels:
+            bbox = draw.textbbox(**label)  # type: ignore[arg-type]
+            draw.rectangle(bbox, fill=(0, 0, 0, 0))
+            draw.text(**label, fill=self.TEXT_COLOR)  # type: ignore[arg-type]
 
     def render(self, context: RenderContext) -> Image.Image:
         label_bitmap, meta = self._get_label_bitmap(context)
         if context.preview_show_margins:
             label_width, label_height = label_bitmap.size
-            preview_width = label_width + self.X_MARGIN_PX * 2
-            preview_height = label_height + self.Y_MARGIN_PX * 2
+            preview_width = label_width + self.X_MARGIN_PX + self.DX
+            preview_height = label_height + self.Y_MARGIN_PX + self.DY
             preview_bitmap = Image.new(
-                "RGBA", (preview_width, preview_height), color=(255, 0, 0, 0)
+                "RGBA",
+                (round(preview_width), round(preview_height)),
+                color=(0, 0, 0, 0),
             )
-            preview_bitmap.paste(label_bitmap, box=(self.X_MARGIN_PX, self.Y_MARGIN_PX))
+            preview_bitmap.paste(label_bitmap, box=(self.X_MARGIN_PX, round(self.DY)))
             self._show_margins(label_bitmap, preview_bitmap, meta, context)
             return preview_bitmap
         else:

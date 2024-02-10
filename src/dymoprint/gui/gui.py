@@ -29,7 +29,7 @@ from dymoprint.lib.dymo_labeler import (
 )
 from dymoprint.lib.logger import configure_logging, set_verbose
 from dymoprint.lib.render_engines import RenderContext
-from dymoprint.lib.utils import px_to_mm, system_run
+from dymoprint.lib.utils import system_run
 
 from .q_dymo_labels_list import QDymoLabelList
 
@@ -58,7 +58,6 @@ class DymoPrintWindow(QWidget):
         self.background_color = QComboBox()
         self.min_label_width_mm = QSpinBox()
         self.justify = QComboBox()
-        self.info_label = QLabel()
         self.preview_show_margins = QCheckBox()
         self.last_error = None
         self.dymo_labeler = None
@@ -162,9 +161,6 @@ class DymoPrintWindow(QWidget):
         label_render_layout.addWidget(
             self.label_render, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
         )
-        label_render_layout.addWidget(
-            self.info_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
-        )
         print_render_layout.addWidget(
             self.print_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight
         )
@@ -210,7 +206,6 @@ class DymoPrintWindow(QWidget):
         q_image = QPixmap.fromImage(qim)
         self.label_render.setPixmap(q_image)
         self.label_render.adjustSize()
-        self.info_label.setText(f"← {px_to_mm(preview_bitmap.size[0])} mm →")
 
     def update_print_render(self, label_bitmap_to_print):
         self.label_bitmap_to_print = label_bitmap_to_print
