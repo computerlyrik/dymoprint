@@ -8,6 +8,7 @@ from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QSize, Qt, QTim
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QGraphicsDropShadowEffect,
     QHBoxLayout,
@@ -58,6 +59,7 @@ class DymoPrintWindow(QWidget):
         self.min_label_width_mm = QSpinBox()
         self.justify = QComboBox()
         self.info_label = QLabel()
+        self.preview_show_margins = QCheckBox()
         self.last_error = None
         self.dymo_labeler = None
 
@@ -104,6 +106,7 @@ class DymoPrintWindow(QWidget):
         self.background_color.addItems(
             ["white", "black", "yellow", "blue", "red", "green"]
         )
+        self.preview_show_margins.setChecked(False)
 
         self.update_params()
         self.label_list.populate()
@@ -126,6 +129,7 @@ class DymoPrintWindow(QWidget):
         self.label_list.renderPrintPreviewSignal.connect(self.update_preview_render)
         self.label_list.renderPrintPayloadSignal.connect(self.update_print_render)
         self.print_button.clicked.connect(self.print_label)
+        self.preview_show_margins.stateChanged.connect(self.update_params)
 
     def init_layout(self):
         settings_widget = QToolBar(self)
@@ -145,6 +149,8 @@ class DymoPrintWindow(QWidget):
         settings_widget.addWidget(self.foreground_color)
         settings_widget.addWidget(QLabel(" on "))
         settings_widget.addWidget(self.background_color)
+        settings_widget.addWidget(QLabel("Show margins:"))
+        settings_widget.addWidget(self.preview_show_margins)
 
         render_widget = QWidget(self)
         label_render_widget = QWidget(render_widget)
@@ -189,6 +195,7 @@ class DymoPrintWindow(QWidget):
         self.render_context.foreground_color = self.foreground_color.currentText()
         self.render_context.background_color = self.background_color.currentText()
         self.render_context.height_px = self.dymo_labeler.height_px
+        self.render_context.preview_show_margins = self.preview_show_margins.isChecked()
 
         self.label_list.update_params(
             dymo_labeler=self.dymo_labeler,

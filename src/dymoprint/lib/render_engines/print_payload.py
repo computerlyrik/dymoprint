@@ -30,5 +30,5 @@ class PrintPayloadRenderEngine(RenderEngine):
             min_width_px=min_width_px,
         )
 
-    def render(self, context: RenderContext) -> Image.Image:
+    def render(self, context: RenderContext) -> tuple[Image.Image, dict[str, float]]:
         return self.render_engine.render(context)

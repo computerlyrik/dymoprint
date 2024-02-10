@@ -5,6 +5,7 @@ class _RenderContextFieldName(Enum):
     BACKGROUND_COLOR = 1
     FOREGROUND_COLOR = 2
     HEIGHT_PX = 3
+    PREVIEW_SHOW_MARGINS = 4
 
 
 class RenderContext:

@@ -309,6 +309,7 @@ def run():
         background_color="white",
         foreground_color="black",
         height_px=dymo_labeler.height_px,
+        preview_show_margins=False,
     )
 
     # print or show the label
@@ -328,7 +329,7 @@ def run():
                 webbrowser.open(f"file://{fp.name}")
     else:
         render = PrintPayloadRenderEngine(**render_kwargs)
-        bitmap = render.render(render_context)
+        bitmap, _ = render.render(render_context)
         dymo_labeler.print(bitmap)
 
 

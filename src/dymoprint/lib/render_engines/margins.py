@@ -64,7 +64,7 @@ class MarginsRenderEngine(RenderEngine):
             label_width_px = minimal_label_width_px
         return label_width_px
 
-    def render(self, context: RenderContext) -> Image.Image:
+    def render(self, context: RenderContext) -> tuple[Image.Image, dict[str, float]]:
         payload_bitmap = self.render_engine.render(context)
         payload_width_px = payload_bitmap.width
         label_width_px = self.calculate_visible_width(payload_width_px)
@@ -109,4 +109,8 @@ class MarginsRenderEngine(RenderEngine):
         bitmap.paste(
             payload_bitmap, box=(round(horizontal_offset_px), round(vertical_offset_px))
         )
-        return bitmap
+        meta = {
+            "horizontal_offset_px": horizontal_offset_px,
+            "vertical_offset_px": vertical_offset_px,
+        }
+        return bitmap, meta
