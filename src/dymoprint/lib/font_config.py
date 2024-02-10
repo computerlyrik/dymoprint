@@ -4,7 +4,7 @@ from typing import Optional
 
 import dymoprint.resources.fonts
 from dymoprint._vendor.matplotlib import font_manager
-from dymoprint.lib.config_file import ConfigFile
+from dymoprint.lib.config_file import get_config_section
 
 
 class NoFontFound(ValueError):
@@ -45,9 +45,10 @@ class FontConfig:
 
     def __init__(self, font: Optional[str] = None, style: FontStyle = _DEFAULT_STYLE):
         if font is None:
-            if fonts_section := ConfigFile().fonts_section:
+            fonts_config = get_config_section("FONTS")
+            if fonts_config is not None:
                 style_to_font_path = {
-                    FontStyle.from_name(k): v for k, v in fonts_section.items()
+                    FontStyle.from_name(k): v for k, v in fonts_config.items()
                 }
             else:
                 style_to_font_path = _DEFAULT_FONT_FILENAME
