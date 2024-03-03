@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
 from typing import Literal
 
@@ -33,9 +32,10 @@ class BarcodeWithTextRenderEngine(RenderEngine):
 
     def render(self, render_context: RenderContext) -> Image.Image:
         bitmap = self._barcode.render(render_context)
-        text_render_context = deepcopy(render_context)
-        text_render_context.height_px = int(
-            text_render_context.height_px * self.TEXT_HEIGHT_SCALE_FACTOR
+        text_render_context = RenderContext(
+            height_px=int(render_context.height_px * self.TEXT_HEIGHT_SCALE_FACTOR),
+            foreground_color=render_context.foreground_color,
+            background_color=render_context.background_color,
         )
         text_bitmap = self._text.render(text_render_context)
 
