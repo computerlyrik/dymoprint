@@ -296,14 +296,6 @@ def run():
 
     dymo_labeler = DymoLabeler(tape_size_mm=args.tape_size_mm)
     render_engine = HorizontallyCombinedRenderEngine(render_engines)
-    render_kwargs = dict(
-        render_engine=render_engine,
-        justify=args.justify,
-        visible_horizontal_margin_px=margin_px,
-        labeler_margin_px=dymo_labeler.labeler_margin_px,
-        max_width_px=max_payload_len_px,
-        min_width_px=min_payload_len_px,
-    )
     render_context = RenderContext(
         background_color="white",
         foreground_color="black",
@@ -313,7 +305,14 @@ def run():
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
-        render = PrintPreviewRenderEngine(**render_kwargs)
+        render = PrintPreviewRenderEngine(
+            render_engine=render_engine,
+            justify=args.justify,
+            visible_horizontal_margin_px=margin_px,
+            labeler_margin_px=dymo_labeler.labeler_margin_px,
+            max_width_px=max_payload_len_px,
+            min_width_px=min_payload_len_px,
+        )
         bitmap = render.render(render_context)
         LOG.debug("Demo mode: showing label..")
         if args.preview or args.preview_inverted:
@@ -327,7 +326,14 @@ def run():
                 ImageOps.invert(inverted).save(fp)
                 webbrowser.open(f"file://{fp.name}")
     else:
-        render = PrintPayloadRenderEngine(**render_kwargs)
+        render = PrintPayloadRenderEngine(
+            render_engine=render_engine,
+            justify=args.justify,
+            visible_horizontal_margin_px=margin_px,
+            labeler_margin_px=dymo_labeler.labeler_margin_px,
+            max_width_px=max_payload_len_px,
+            min_width_px=min_payload_len_px,
+        )
         bitmap, _ = render.render(render_context)
         dymo_labeler.print(bitmap)
 
