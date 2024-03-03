@@ -85,11 +85,11 @@ class MarginsRenderEngine(RenderEngine):
         # We assume the printing starts when the print head is in offset DX from the
         # label's edge (just under the cutter).
         # After we print the payload, we need to offset the label DX pixels, in order
-        # to move the edge of the printed payload past the cutter, othewise the cutter
+        # to move the edge of the printed payload past the cutter, otherwise the cutter
         # will cut inside the printed payload.
         # Afterwards, we need to offset another DX pixels, so that the cut will have
         # some margin from the payload edge. The reason we move DX pixels this time, is
-        # in order to have simmetry with the initial margin between label edge and start
+        # in order to have symmetry with the initial margin between label edge and start
         # of printed payload.
         #
         # There's also some vertical margin between printed area and the label edge
