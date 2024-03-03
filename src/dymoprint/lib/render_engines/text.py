@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 from PIL import Image, ImageFont
 
@@ -16,9 +17,8 @@ class TextRenderEngine(RenderEngine):
         font_file_name: Path | str,
         frame_width_px: int,
         font_size_ratio: float = 0.9,
-        align: str = "left",
+        align: Literal["left", "center", "right"] = "left",
     ):
-        assert align in ("left", "center", "right")
         if isinstance(text_lines, str):
             text_lines = [text_lines]
 

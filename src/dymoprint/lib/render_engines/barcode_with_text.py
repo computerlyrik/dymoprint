@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+from typing import Literal
 
 from PIL import Image
 
@@ -21,7 +22,7 @@ class BarcodeWithTextRenderEngine(RenderEngine):
         font_file_name: Path | str,
         frame_width_px: int,
         font_size_ratio: float = 0.9,
-        align: str = "center",
+        align: Literal["left", "center", "right"] = "center",
     ):
         super().__init__()
         self._barcode = BarcodeRenderEngine(content, barcode_type)
