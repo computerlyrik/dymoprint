@@ -57,6 +57,7 @@ class BaseDymoLabelWidget(QWidget):
         Emits the itemRenderSignal when the content of the label is changed.
     render_label()
         Abstract method to be implemented by subclasses for rendering the label.
+
     """
 
     render_context: RenderContext
@@ -98,6 +99,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         frame_width_px (QSpinBox): The frame width selection spinner.
     Signals:
         itemRenderSignal: A signal emitted when the content of the label changes.
+
     """
 
     align: QComboBox
@@ -162,6 +164,7 @@ class TextDymoLabelWidget(BaseDymoLabelWidget):
         Returns
         -------
             TextRenderEngine: The rendered engine.
+
         """
         selected_alignment = self.align.currentText()
         assert selected_alignment in ("left", "center", "right")
@@ -182,6 +185,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         render_context (RenderContext): The render context to use for rendering
             the QR code.
         parent (QWidget, optional): The parent widget. Defaults to None.
+
     """
 
     def __init__(self, render_context, parent=None):
@@ -192,6 +196,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
             render_context (RenderContext): The render context to use for rendering
                 the QR code.
             parent (QWidget, optional): The parent widget. Defaults to None.
+
         """
         super().__init__(parent)
         self.render_context = render_context
@@ -213,6 +218,7 @@ class QrDymoLabelWidget(BaseDymoLabelWidget):
         Returns
         -------
             QrRenderEngine: The render engine.
+
         """
         try:
             return QrRenderEngine(content=self.label.text())
@@ -247,6 +253,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         __init__(self, render_context, parent=None): Initializes the widget.
         render_label_impl(self): Renders the barcode label using the current content
             and barcode type.
+
     """
 
     label: QLineEdit
@@ -360,6 +367,7 @@ class BarcodeDymoLabelWidget(BaseDymoLabelWidget):
         -------
             RenderEngine: The rendered engine (either BarcodeRenderEngine or
             BarcodeWithTextRenderEngine).
+
         """
         if self.show_text_checkbox.isChecked():
             render_engine = BarcodeWithTextRenderEngine(
@@ -385,6 +393,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
     ----
         context (RenderContext): The render context to use for rendering the label.
         parent (QWidget, optional): The parent widget. Defaults to None.
+
     """
 
     def __init__(self, render_context, parent=None):
@@ -395,6 +404,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
             render_context (RenderContext): The render context to use for rendering
                 the label.
             parent (QWidget, optional): The parent widget. Defaults to None.
+
         """
         super().__init__(parent)
         self.render_context = render_context
@@ -427,6 +437,7 @@ class ImageDymoLabelWidget(BaseDymoLabelWidget):
         Returns
         -------
             PictureRenderEngine: The rendered engine.
+
         """
         try:
             return PictureRenderEngine(picture_path=self.label.text())
