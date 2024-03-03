@@ -39,6 +39,8 @@ LOG = logging.getLogger(__name__)
 class DymoPrintWindow(QWidget):
     label_bitmap_to_print: Optional[Image.Image]
     dymo_labeler: DymoLabeler
+    render_context: RenderContext
+    tape_size_mm: QComboBox
 
     def __init__(self):
         super().__init__()
@@ -46,7 +48,6 @@ class DymoPrintWindow(QWidget):
         self.detected_device = None
 
         self.window_layout = QVBoxLayout()
-        self.render_context = RenderContext()
 
         self.label_list = QDymoLabelList()
         self.label_render = QLabel()
@@ -60,7 +61,6 @@ class DymoPrintWindow(QWidget):
         self.justify = QComboBox()
         self.preview_show_margins = QCheckBox()
         self.last_error = None
-        self.dymo_labeler = None
 
         self.init_elements()
         self.init_timers()
@@ -183,15 +183,17 @@ class DymoPrintWindow(QWidget):
         justify: str = self.justify.currentText()
         horizontal_margin_mm: float = self.horizontal_margin_mm.value()
         min_label_width_mm: float = self.min_label_width_mm.value()
-        tape_size_mm: float = self.tape_size_mm.currentData()
+        tape_size_mm: int = self.tape_size_mm.currentData()
 
         self.dymo_labeler.tape_size_mm = tape_size_mm
 
         # Update render context
-        self.render_context.foreground_color = self.foreground_color.currentText()
-        self.render_context.background_color = self.background_color.currentText()
-        self.render_context.height_px = self.dymo_labeler.height_px
-        self.render_context.preview_show_margins = self.preview_show_margins.isChecked()
+        self.render_context = RenderContext(
+            foreground_color=self.foreground_color.currentText(),
+            background_color=self.background_color.currentText(),
+            height_px=self.dymo_labeler.height_px,
+            preview_show_margins=self.preview_show_margins.isChecked(),
+        )
 
         self.label_list.update_params(
             dymo_labeler=self.dymo_labeler,
