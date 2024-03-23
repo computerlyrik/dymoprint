@@ -21,7 +21,7 @@ class PictureRenderEngine(RenderEngine):
             raise NoPictureFilePath()
         self.picture_path = Path(picture_path)
         if not self.picture_path.is_file():
-            raise FileNotFoundError(f"Picture path does not exist: {picture_path}")
+            raise RenderEngineException(f"Picture path does not exist: {picture_path}")
 
     def render(self, context: RenderContext) -> Image.Image:
         height_px = context.height_px

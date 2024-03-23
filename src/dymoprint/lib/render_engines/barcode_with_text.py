@@ -7,7 +7,10 @@ from PIL import Image
 
 from dymoprint.lib.render_engines.barcode import BarcodeRenderEngine
 from dymoprint.lib.render_engines.render_context import RenderContext
-from dymoprint.lib.render_engines.render_engine import RenderEngine
+from dymoprint.lib.render_engines.render_engine import (
+    RenderEngine,
+    RenderEngineException,
+)
 from dymoprint.lib.render_engines.text import TextRenderEngine
 
 
@@ -49,7 +52,7 @@ class BarcodeWithTextRenderEngine(RenderEngine):
         elif self.align == "right":
             text_offset_y = bitmap.width - text_bitmap.width
         else:
-            raise ValueError(f"Invalid align value: {self.align}")
+            raise RenderEngineException(f"Invalid align value: {self.align}")
 
         bitmap.paste(text_bitmap, (text_offset_y, text_offset_x))
         return bitmap
