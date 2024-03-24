@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Optional
+from typing import Literal, Optional
 
 from PIL import Image, ImageQt
 from PyQt6 import QtCore
@@ -180,7 +180,7 @@ class DymoPrintWindow(QWidget):
         self.setLayout(self.window_layout)
 
     def update_params(self):
-        justify: str = self.justify.currentText()
+        justify: Literal["left", "center", "right"] = self.justify.currentText()
         horizontal_margin_mm: float = self.horizontal_margin_mm.value()
         min_label_width_mm: float = self.min_label_width_mm.value()
         tape_size_mm: int = self.tape_size_mm.currentData()
