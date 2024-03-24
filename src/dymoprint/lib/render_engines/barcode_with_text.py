@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
+from typing import Literal
 
 from PIL import Image
 
 from dymoprint.lib.render_engines.barcode import BarcodeRenderEngine
 from dymoprint.lib.render_engines.render_context import RenderContext
-from dymoprint.lib.render_engines.render_engine import RenderEngine
+from dymoprint.lib.render_engines.render_engine import (
+    RenderEngine,
+    RenderEngineException,
+)
 from dymoprint.lib.render_engines.text import TextRenderEngine
 
 
@@ -21,7 +24,7 @@ class BarcodeWithTextRenderEngine(RenderEngine):
         font_file_name: Path | str,
         frame_width_px: int,
         font_size_ratio: float = 0.9,
-        align: str = "center",
+        align: Literal["left", "center", "right"] = "center",
     ):
         super().__init__()
         self._barcode = BarcodeRenderEngine(content, barcode_type)
@@ -32,9 +35,10 @@ class BarcodeWithTextRenderEngine(RenderEngine):
 
     def render(self, render_context: RenderContext) -> Image.Image:
         bitmap = self._barcode.render(render_context)
-        text_render_context = deepcopy(render_context)
-        text_render_context.height_px = int(
-            text_render_context.height_px * self.TEXT_HEIGHT_SCALE_FACTOR
+        text_render_context = RenderContext(
+            height_px=int(render_context.height_px * self.TEXT_HEIGHT_SCALE_FACTOR),
+            foreground_color=render_context.foreground_color,
+            background_color=render_context.background_color,
         )
         text_bitmap = self._text.render(text_render_context)
 
@@ -48,7 +52,7 @@ class BarcodeWithTextRenderEngine(RenderEngine):
         elif self.align == "right":
             text_offset_y = bitmap.width - text_bitmap.width
         else:
-            raise ValueError(f"Invalid align value: {self.align}")
+            raise RenderEngineException(f"Invalid align value: {self.align}")
 
         bitmap.paste(text_bitmap, (text_offset_y, text_offset_x))
         return bitmap

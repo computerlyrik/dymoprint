@@ -31,7 +31,9 @@ For more information about experimental device support, see [#44](https://github
 
 ## Installation
 
-It is recommended to install dymoprint with [pipx](https://pypa.github.io/pipx/) so that it runs in an isolated virtual environment:
+It is recommended to install dymoprint with
+[pipx](https://pypa.github.io/pipx/) so that it runs in an isolated virtual
+environment:
 
 ```bash
 pipx install dymoprint
@@ -53,6 +55,8 @@ By default, users don't have permission to access generic USB devices, so you wi
 need to add a rule. The first time you run `dymoprint`, it will give instructions
 about how to do this:
 
+{{< mdl-disable "<!-- markdownlint-disable MD013 -->" >}}
+
 ```bash
 $ dymoprint "Hello world"
 ...
@@ -61,6 +65,8 @@ You do not have sufficient access to the device. You probably want to add the a 
   echo 'ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1001", MODE="0666"' | sudo tee /etc/udev/rules.d/91-dymo-1001.rules
 ...
 ```
+
+{{< mdl-enable "<!-- markdownlint-enable MD013 -->" >}}
 
 ## Testing experimental features
 
@@ -76,17 +82,20 @@ To revert back to the release version, run
 pipx install --force dymoprint
 ```
 
-To install a particular release version, specify `dymoprint==x.y.z` instead of `dymoprint` in the above command.
+To install a particular release version, specify `dymoprint==x.y.z` instead of
+`dymoprint` in the above command.
 
 ## Development and code style
 
-To install for development, fork and clone this repository, and run (ideally within a venv):
+To install for development, fork and clone this repository, and run (ideally
+within a venv):
 
 ```bash
 pip install --editable .
 ```
 
-This project uses [pre-commit](https://pre-commit.com/) to run some checks before committing.
+This project uses [pre-commit](https://pre-commit.com/) to run some checks
+before committing.
 After installing the `pre-commit` executable, please run
 
 ```bash
@@ -146,7 +155,8 @@ Any picture with JPEG standard may be printed. Beware it will be downsized to ta
 
 ```dymoprint -p mypic.jpg ""```
 
-Take care of the trailing "" - you may enter text here which gets printed in front of the image
+Take care of the trailing "" - you may enter text here which gets printed in
+front of the image
 
 ## GUI
 
@@ -154,8 +164,8 @@ Take care of the trailing "" - you may enter text here which gets printed in fro
 
 ```dymoprint_gui```
 
+### GUI App Features
 
-### Features
 * Live preview
 * margin settings
 * type size selector
@@ -175,8 +185,8 @@ Take care of the trailing "" - you may enter text here which gets printed in fro
     * path to file
 
 Nodes can be freely arranged, simply drag&drop rows on the list.
-To add or delete the node from the label - right-click on the list and select the action from the context menu.
-To print - click the print button.
+To add or delete the node from the label - right-click on the list and select
+the action from the context menu. To print - click the print button.
 
 ### Example
 
@@ -192,11 +202,10 @@ Example 3: barcode, text, image
 
 ![alt](doc/DymoPrint_example_3.png)
 
-
-
 ## Development
 
-Besides the travis-ci one should run the following command on a feature implemention or change to ensure the same outcome on a real device:
+Besides the travis-ci one should run the following command on a feature
+implemention or change to ensure the same outcome on a real device:
 
 ```bash
 dymoprint Tst && \

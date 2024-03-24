@@ -1,33 +1,31 @@
+import logging
 from configparser import ConfigParser
+from functools import lru_cache
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 from platformdirs import user_config_dir
 
-
-class SectionNotFound(Exception):
-    def __init__(self, config_file_path, section_name):
-        msg = f"Section {section_name} not fount in {config_file_path}"
-        super().__init__(msg)
+logger = logging.getLogger(__name__)
 
 
-class ConfigFile:
-    _CONFIG_FILE_PATH = Path(user_config_dir()) / "dymoprint.ini"
-    _config_parser = None
+def get_config_file() -> Path:
+    return Path(user_config_dir()) / "dymoprint.ini"
 
-    def __init__(self):
-        config_parser = ConfigParser()
-        if config_parser.read(self._CONFIG_FILE_PATH):
-            self._config_parser = config_parser
 
-    def section(self, section_name):
-        """Return the given config file section as dict."""
-        if self._config_parser:
-            try:
-                return dict(self._config_parser[section_name])
-            except KeyError:
-                raise SectionNotFound(self._CONFIG_FILE_PATH, section_name) from None
+@lru_cache
+def get_config() -> ConfigParser:
+    config_parser = ConfigParser()
+    file_to_read = get_config_file()
+    if config_parser.read(file_to_read):
+        logger.debug(f"Read config file: {file_to_read}")
+    else:
+        logger.debug(f"Config file not found: {file_to_read}")
+    return config_parser
+
+
+def get_config_section(section_name) -> Optional[Dict[str, Any]]:
+    config = get_config()
+    if section_name not in config:
         return None
-
-    @property
-    def fonts_section(self):
-        return self.section("FONTS")
+    return dict(config[section_name])

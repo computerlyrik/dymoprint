@@ -21,6 +21,7 @@ dependencies = [
     "python-barcode>=0.13.1,<1",
     "pyusb",
     "PyQt6",
+    "darkdetect",
 ]
 classifiers = [
     "Operating System :: POSIX :: Linux",
@@ -80,6 +81,7 @@ commands =
   dymoprint --version
   dymoprint --help
   dymoprint --preview "single line"
+  dymoprint --preview-inverted "single line"
   dymoprint --preview multiple lines
   dymoprint --preview -qr "qr text"
   dymoprint --preview -c code128 "bc txt"
@@ -138,6 +140,9 @@ drop = [
 line-length = 88
 extend-exclude = ["_vendor"]
 src = ["src"]
+target-version = "py38"
+
+[tool.ruff.lint]
 select = [
     "D",   # pydocstyle
     "E",   # pycodestyle errors
@@ -182,10 +187,8 @@ ignore = [
     "ISC001", # single-line-implicit-string-concatenation
     "ISC002", # multi-line-implicit-string-concatenation
 ]
-target-version = "py38"
 
 [tool.mypy]
 exclude = ["_vendor"]
-ignore_missing_imports = true
 check_untyped_defs = true
 install_types = true

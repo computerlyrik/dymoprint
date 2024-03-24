@@ -21,13 +21,15 @@ from dymoprint.lib.constants import (
     e_qrcode,
 )
 from dymoprint.lib.dymo_labeler import DymoLabeler
-from dymoprint.lib.font_config import FontConfig, FontStyle, NoFontFound
-from dymoprint.lib.logger import configure_logging, set_verbose
+from dymoprint.lib.font_config import NoFontFound, get_available_fonts, get_font_path
+from dymoprint.lib.logger import configure_logging, is_verbose_env_vars, set_not_verbose
 from dymoprint.lib.render_engines import (
     BarcodeRenderEngine,
     BarcodeWithTextRenderEngine,
     HorizontallyCombinedRenderEngine,
     PictureRenderEngine,
+    PrintPayloadRenderEngine,
+    PrintPreviewRenderEngine,
     QrRenderEngine,
     RenderContext,
     TestPatternRenderEngine,
@@ -40,10 +42,10 @@ from dymoprint.metadata import our_metadata
 LOG = logging.getLogger(__name__)
 
 FLAG_TO_STYLE = {
-    "r": FontStyle.REGULAR,
-    "b": FontStyle.BOLD,
-    "i": FontStyle.ITALIC,
-    "n": FontStyle.NARROW,
+    "r": "regular",
+    "b": "bold",
+    "i": "italic",
+    "n": "narrow",
 }
 
 
@@ -209,21 +211,20 @@ def mm_to_payload_px(mm, margin):
 def run():
     args = parse_args()
 
+    if (not args.verbose) and (not is_verbose_env_vars()):
+        # Neither --verbose flag nor the environment variable is set.
+        set_not_verbose()
+
     # read config file
     style = FLAG_TO_STYLE.get(args.style)
     try:
-        font_config = FontConfig(font=args.font, style=style)
+        font_path = get_font_path(font=args.font, style=style)
     except NoFontFound as e:
-        valid_font_names = [f.stem for f in FontConfig.available_fonts()]
+        valid_font_names = [f.stem for f in get_available_fonts()]
         msg = f"{e}. Valid fonts are: {', '.join(valid_font_names)}"
         raise CommandLineUsageError(msg) from None
 
-    font_filename = font_config.path
-
     labeltext = args.text
-
-    if args.verbose:
-        set_verbose()
 
     # check if barcode, qrcode or text should be printed, use frames only on text
     if args.qr and not USE_QR:
@@ -260,7 +261,7 @@ def run():
     elif args.barcode_text:
         render_engines.append(
             BarcodeWithTextRenderEngine(
-                labeltext.pop(0), args.barcode_text, font_filename, args.frame_width_px
+                labeltext.pop(0), args.barcode_text, font_path, args.frame_width_px
             )
         )
 
@@ -268,7 +269,7 @@ def run():
         render_engines.append(
             TextRenderEngine(
                 text_lines=labeltext,
-                font_file_name=font_filename,
+                font_file_name=font_path,
                 frame_width_px=args.frame_width_px,
                 font_size_ratio=int(args.scale) / 100.0,
                 align=args.align,
@@ -285,50 +286,59 @@ def run():
         min_label_mm_len = args.min_length
         max_label_mm_len = args.max_length
 
-    margin = args.margin_px
-    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin)
+    margin_px = args.margin_px
+    min_payload_len_px = mm_to_payload_px(min_label_mm_len, margin_px)
     max_payload_len_px = (
-        mm_to_payload_px(max_label_mm_len, margin)
+        mm_to_payload_px(max_label_mm_len, margin_px)
         if max_label_mm_len is not None
         else None
     )
 
-    render = HorizontallyCombinedRenderEngine(
-        render_engines,
-        min_payload_len_px=min_payload_len_px,
-        max_payload_len_px=max_payload_len_px,
-        justify=args.justify,
+    dymo_labeler = DymoLabeler(tape_size_mm=args.tape_size_mm)
+    render_engine = HorizontallyCombinedRenderEngine(render_engines)
+    render_context = RenderContext(
+        background_color="white",
+        foreground_color="black",
+        height_px=dymo_labeler.height_px,
+        preview_show_margins=False,
     )
-
-    dymo_labeler = DymoLabeler(
-        margin_px=args.margin_px,
-        tape_size_mm=args.tape_size_mm,
-    )
-    render_context = RenderContext(height_px=dymo_labeler.height_px)
-    label_bitmap = render.render(render_context)
 
     # print or show the label
     if args.preview or args.preview_inverted or args.imagemagick or args.browser:
-        LOG.debug("Demo mode: showing label..")
-        # fix size, adding print borders
-        label_image = Image.new(
-            "1", (margin + label_bitmap.width + margin, label_bitmap.height)
+        render = PrintPreviewRenderEngine(
+            render_engine=render_engine,
+            justify=args.justify,
+            visible_horizontal_margin_px=margin_px,
+            labeler_margin_px=dymo_labeler.labeler_margin_px,
+            max_width_px=max_payload_len_px,
+            min_width_px=min_payload_len_px,
         )
-        label_image.paste(label_bitmap, (margin, 0))
+        bitmap = render.render(render_context)
+        LOG.debug("Demo mode: showing label..")
         if args.preview or args.preview_inverted:
-            label_rotated = label_bitmap.transpose(Image.ROTATE_270)
+            label_rotated = bitmap.transpose(Image.ROTATE_270)
             print(image_to_unicode(label_rotated, invert=args.preview_inverted))
         if args.imagemagick:
-            ImageOps.invert(label_image).show()
+            ImageOps.invert(bitmap).show()
         if args.browser:
             with NamedTemporaryFile(suffix=".png", delete=False) as fp:
-                ImageOps.invert(label_image).save(fp)
+                inverted = ImageOps.invert(bitmap.convert("RGB"))
+                ImageOps.invert(inverted).save(fp)
                 webbrowser.open(f"file://{fp.name}")
     else:
-        dymo_labeler.print(label_bitmap)
+        render = PrintPayloadRenderEngine(
+            render_engine=render_engine,
+            justify=args.justify,
+            visible_horizontal_margin_px=margin_px,
+            labeler_margin_px=dymo_labeler.labeler_margin_px,
+            max_width_px=max_payload_len_px,
+            min_width_px=min_payload_len_px,
+        )
+        bitmap, _ = render.render(render_context)
+        dymo_labeler.print(bitmap)
 
 
 def main():
+    configure_logging()
     with system_run():
-        configure_logging()
         run()

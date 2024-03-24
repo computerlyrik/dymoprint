@@ -15,4 +15,5 @@ vendoring update
 
 ### [`matplotlib`](https://github.com/matplotlib/matplotlib/)
 
-We take just a subset of `font_manager.py` used for selecting fonts. See [LICENSE](../src/dymoprint/_vendor/matplotlib/LICENSE) for the license.
+We take just a subset of `font_manager.py` used for selecting fonts. See
+[LICENSE](../src/dymoprint/_vendor/matplotlib/LICENSE) for the license.

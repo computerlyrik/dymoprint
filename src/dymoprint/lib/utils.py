@@ -33,10 +33,14 @@ def draw_image(bitmap):
         del drawobj
 
 
-def px_to_mm(px):
+def px_to_mm(px) -> float:
     mm = px / PIXELS_PER_MM
     # Round up to nearest 0.1mm
     return math.ceil(mm * 10) / 10
+
+
+def mm_to_px(mm) -> float:
+    return mm * PIXELS_PER_MM
 
 
 @contextlib.contextmanager
