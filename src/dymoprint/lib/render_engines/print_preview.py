@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+from darkdetect import isDark
 from PIL import Image, ImageColor, ImageDraw, ImageOps
 
 from dymoprint.lib.render_engines.margins import MarginsMode, MarginsRenderEngine
@@ -15,9 +16,6 @@ class PrintPreviewRenderEngine(RenderEngine):
     Y_MARGIN_PX = 30
     DX = X_MARGIN_PX * 0.3
     DY = Y_MARGIN_PX * 0.3
-    MARGIN_COLOR = "red"
-    MARK_COLOR = "yellow"
-    TEXT_COLOR = "blue"
 
     def __init__(
         self,
@@ -38,6 +36,18 @@ class PrintPreviewRenderEngine(RenderEngine):
             max_width_px=max_width_px,
             min_width_px=min_width_px,
         )
+
+    @staticmethod
+    def _get_margin_color():
+        return "red" if isDark() else "gray"
+
+    @staticmethod
+    def _get_mark_color():
+        return "yellow" if isDark() else "red"
+
+    @staticmethod
+    def _get_text_color():
+        return "white" if isDark() else "blue"
 
     def _get_label_bitmap(self, context: RenderContext):
         render_bitmap, meta = self.render_engine.render(context)
@@ -68,6 +78,9 @@ class PrintPreviewRenderEngine(RenderEngine):
         label_width_mark_y = preview_height - self.DY
         preview_width_mark_x = self.X_MARGIN_PX - self.DX
         label_width_mark_x = self.DX
+        margin_color = self._get_margin_color()
+        mark_color = self._get_mark_color()
+        text_color = self._get_text_color()
 
         # left vertical margin
         draw.line(
@@ -77,7 +90,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + x_margin,
                 preview_width_mark_y,
             ),
-            fill=self.MARGIN_COLOR,
+            fill=margin_color,
         )
         # right vertical margin
         draw.line(
@@ -87,7 +100,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + label_width - x_margin,
                 preview_width_mark_y,
             ),
-            fill=self.MARGIN_COLOR,
+            fill=margin_color,
         )
         # top horizontal margin
         draw.line(
@@ -97,7 +110,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 preview_width,
                 self.DY + y_margin,
             ),
-            fill=self.MARGIN_COLOR,
+            fill=margin_color,
         )
         # bottom horizontal margin
         draw.line(
@@ -107,7 +120,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 preview_width,
                 self.DY + label_height - y_margin,
             ),
-            fill=self.MARGIN_COLOR,
+            fill=margin_color,
         )
         # horizontal line for payload width
         draw.line(
@@ -117,7 +130,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + label_width - x_margin,
                 preview_width_mark_y,
             ),
-            fill=self.MARK_COLOR,
+            fill=mark_color,
         )
         # horizontal line for label width
         draw.line(
@@ -127,7 +140,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 self.X_MARGIN_PX + label_width,
                 label_width_mark_y,
             ),
-            fill=self.MARK_COLOR,
+            fill=mark_color,
         )
         # vertical line for payload height
         draw.line(
@@ -137,7 +150,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 preview_width_mark_x,
                 self.DY + label_height - y_margin,
             ),
-            fill=self.MARK_COLOR,
+            fill=mark_color,
         )
         # vertical line for label height
         draw.line(
@@ -147,7 +160,7 @@ class PrintPreviewRenderEngine(RenderEngine):
                 label_width_mark_x,
                 self.DY + label_height,
             ),
-            fill=self.MARK_COLOR,
+            fill=mark_color,
         )
 
         labels = [
@@ -183,7 +196,7 @@ class PrintPreviewRenderEngine(RenderEngine):
         for label in labels:
             bbox = draw.textbbox(**label)  # type: ignore[arg-type]
             draw.rectangle(bbox, fill=(0, 0, 0, 0))
-            draw.text(**label, fill=self.TEXT_COLOR)  # type: ignore[arg-type]
+            draw.text(**label, fill=text_color)  # type: ignore[arg-type]
 
     def render(self, context: RenderContext) -> Image.Image:
         label_bitmap, meta = self._get_label_bitmap(context)
