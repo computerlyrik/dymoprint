@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from enum import Enum
 from typing import Literal
 
 from PIL import Image
@@ -19,16 +18,11 @@ class BitmapTooBigError(RenderEngineException):
         super().__init__(msg)
 
 
-class MarginsMode(Enum):
-    PRINT = 1
-    PREVIEW = 2
-
-
 class MarginsRenderEngine(RenderEngine):
     def __init__(
         self,
         render_engine: RenderEngine,
-        mode: MarginsMode,
+        mode: Literal["print", "preview"],
         justify: Literal["left", "center", "right"] = "center",
         visible_horizontal_margin_px: float = 0,
         labeler_margin_px: tuple[float, float] = (0, 0),
@@ -98,12 +92,12 @@ class MarginsRenderEngine(RenderEngine):
         # edge
 
         vertical_offset_px: float = 0
-        if self.mode == MarginsMode.PRINT:
+        if self.mode == "print":
             # print head is already in offset from label's edge under the cutter
             horizontal_offset_px -= self.labeler_horizontal_margin_px
             # no need to add vertical margins to bitmap
             bitmap_height = payload_bitmap.height
-        elif self.mode == MarginsMode.PREVIEW:
+        elif self.mode == "preview":
             # add vertical margins to bitmap
             bitmap_height = payload_bitmap.height + self.labeler_vertical_margin_px * 2
             vertical_offset_px = self.labeler_vertical_margin_px

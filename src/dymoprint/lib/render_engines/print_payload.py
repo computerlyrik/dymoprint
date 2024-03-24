@@ -4,7 +4,7 @@ from typing import Literal
 
 from PIL import Image
 
-from dymoprint.lib.render_engines.margins import MarginsMode, MarginsRenderEngine
+from dymoprint.lib.render_engines.margins import MarginsRenderEngine
 from dymoprint.lib.render_engines.render_context import RenderContext
 from dymoprint.lib.render_engines.render_engine import RenderEngine
 
@@ -22,7 +22,7 @@ class PrintPayloadRenderEngine(RenderEngine):
         super().__init__()
         self.render_engine = MarginsRenderEngine(
             render_engine=render_engine,
-            mode=MarginsMode.PRINT,
+            mode="print",
             justify=justify,
             visible_horizontal_margin_px=visible_horizontal_margin_px,
             labeler_margin_px=labeler_margin_px,
