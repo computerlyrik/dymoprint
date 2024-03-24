@@ -19,12 +19,13 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"eamodio.gitlens",
-				"ms-azuretools.vscode-docker",
-				"tamasfe.even-better-toml",
-				"zhoufeng.pyqt-integration",
 				"charliermarsh.ruff",
-				"ms-python.mypy-type-checker"
+				"eamodio.gitlens",
+				"github.vscode-github-actions",
+				"ms-azuretools.vscode-docker",
+				"ms-python.mypy-type-checker",
+				"tamasfe.even-better-toml",
+				"zhoufeng.pyqt-integration"
 			]
 		}
 	},
