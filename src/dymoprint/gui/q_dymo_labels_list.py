@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Literal, Optional
 
 from PIL import Image
 from PyQt6 import QtCore
@@ -113,7 +113,7 @@ class QDymoLabelList(QListWidget):
         h_margin_mm: float,
         min_label_width_mm: float,
         render_context: RenderContext,
-        justify: str = "center",
+        justify: Literal["left", "center", "right"] = "center",
     ):
         """Update the render context used for rendering the label.
 
@@ -123,7 +123,7 @@ class QDymoLabelList(QListWidget):
             h_margin_mm: horizontal margin [mm]
             min_label_width_mm: minimum label width [mm]
             render_context (RenderContext): The new render context to use.
-            justify: justification [center,left,right]
+            justify: justification [left,center, right]
 
         """
         self.dymo_labeler = dymo_labeler
