@@ -30,6 +30,7 @@ from dymoprint.lib.render_engines import (
     RenderContext,
     TextRenderEngine,
 )
+from dymoprint.lib.render_engines.render_engine import RenderEngineException
 
 
 class FontStyle(QComboBox):
@@ -77,7 +78,7 @@ class BaseDymoLabelWidget(QWidget):
     def render_engine(self):
         try:
             return self.render_engine_impl
-        except BaseException as err:  # noqa: BLE001
+        except RenderEngineException as err:
             crash_msg_box(self, "Render Engine Failed!", err)
             return EmptyRenderEngine()
 
