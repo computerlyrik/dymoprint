@@ -83,16 +83,19 @@ class MarginsRenderEngine(RenderEngine):
         # There is a gap between the printer head and the cutter (for the sake of this
         # example, let us say it is DX pixels wide).
         # We assume the printing starts when the print head is in offset DX from the
-        # label's edge (just under the cutter).
+        # label's edge (the label's edge begins just under the cutter).
         # After we print the payload, we need to offset the label DX pixels, in order
         # to move the edge of the printed payload past the cutter, otherwise the cutter
         # will cut inside the printed payload.
-        # Afterwards, we need to offset another DX pixels, so that the cut will have
-        # some margin from the payload edge. The reason we move DX pixels this time, is
-        # in order to have symmetry with the initial margin between label edge and start
-        # of printed payload.
+        # Subsequently, in order to achieve symmetry so that the final margin matches
+        # the initial margin, we add another offset of DX pixels, so that the cut will
+        # have that same margin from both sides of the payload edge. In summary, due to
+        # the gap between the printer head and the cutter of DX pixels, printing an
+        # initial margin of 0 pixels and a final margin of 2 * DX pixels leaves an
+        # effective margin of DX pixels on both sides.
         #
-        # There's also some vertical margin between printed area and the label edge
+        # There's also some vertical margin between printed area and the label
+        # edge
 
         vertical_offset_px: float = 0
         if self.mode == MarginsMode.PRINT:
