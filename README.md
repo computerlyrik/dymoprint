@@ -3,11 +3,15 @@
 [![GitHub Actions (Tests)](https://github.com/labelle-org/labelle/workflows/Tests/badge.svg)](https://github.com/labelle-org/labelle)
 [![PyPI version](https://img.shields.io/pypi/v/labelle.svg)](https://pypi.org/project/labelle/)
 
-Open-source label printing software
+<p align="center">
+  <img src="labelle.png" alt="logo" width="400"></img><br>
+</p>
+
+## Open-source label printing software
 
 * First version from Sebastian Bronner: <https://sbronner.com/dymoprint.html>
 * Cloned to Github and formerly maintained by @computerlyrik and @maresb: <https://github.com/computerlyrik/dymoprint>
-* Migrated to `labelle-org` and maintained by @tomers, @maresb, and @tomek-szczesny
+* Migrated to <https://github.com/labelle-org/labelle> and maintained by @tomers, @maresb, and @tomek-szczesny
 
 ## Features
 
