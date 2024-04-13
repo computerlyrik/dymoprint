@@ -17,8 +17,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from dymoprint.constants import ICON_DIR
-from dymoprint.dymo_print_engines import DymoRenderEngine
+from labelle.constants import ICON_DIR
+from labelle.dymo_print_engines import DymoRenderEngine
 
 from .constants import AVAILABLE_BARCODES
 from .font_config import parse_fonts

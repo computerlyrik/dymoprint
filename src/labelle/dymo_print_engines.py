@@ -8,7 +8,7 @@ import barcode as barcode_module
 import usb
 from PIL import Image, ImageFont, ImageOps
 
-from dymoprint.detect import detect_device
+from labelle.detect import detect_device
 
 from . import DymoLabeler
 from .barcode_writer import BarcodeImageWriter
