@@ -59,6 +59,7 @@ version-file = "src/labelle/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/labelle"]
+exclude = ["labelle.png"]
 
 [tool.isort]
 src_paths = ["src"]
