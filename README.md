@@ -189,7 +189,7 @@ Example 3: barcode with text, text, image
 
 ![alt](doc/Labelle_example_3.png)
 
-### Disclaimers
+## Disclaimers
 
 * This software is provided as-is, without any warranty. Please see [LICENSE](LICENSE) for details.
 * Labelle is not affiliated, associated, authorized, endorsed by, or in any way
