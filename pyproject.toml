@@ -6,12 +6,16 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "dymoprint"
-description = "Linux Software to print with LabelManager PnP from Dymo"
+name = "labelle"
+description = "Open-source label printing software"
 readme = "README.md"
-url = "https://github.com/computerlyrik/dymoprint"
+url = "https://github.com/labelle-org/labelle"
 authors = [{name = "Sebastian J. Bronner", email = "waschtl@sbronner.com"}]
-maintainers = [{name = "Ben Mares", email = "services-dymoprint@tensorial.com"}]
+maintainers = [
+    {name = "Tomer Shalev", email = "tshalev@proofpoint.com"},
+    {name = "Ben Mares", email = "services-labelle@tensorial.com"},
+    {name = "Tomek Szczęsny", email = "mctom@tlen.pl"},
+]
 license = "Apache-2.0"
 license-file = "LICENSE"
 dependencies = [
@@ -37,9 +41,9 @@ dynamic = ["version"]
 requires-python = ">=3.8,<4"
 
 [project.urls]
-Homepage = "https://github.com/computerlyrik/dymoprint"
-source = "https://github.com/computerlyrik/dymoprint"
-tracker = "https://github.com/computerlyrik/dymoprint/issues"
+Homepage = "https://github.com/labelle-org/labelle"
+source = "https://github.com/labelle-org/labelle"
+tracker = "https://github.com/labelle-org/labelle/issues"
 
 [project.scripts]
 dymoprint = "dymoprint.command_line:main"
