@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from configparser import ConfigParser
 
 from appdirs import user_config_dir
@@ -18,11 +19,18 @@ def font_filename(flag):
     }
 
     conf = ConfigParser(style_to_file)
-    CONFIG_FILE = os.path.join(user_config_dir(), "dymoprint.ini")
-    if conf.read(CONFIG_FILE):
+    old_config_file = os.path.join(user_config_dir(), "dymoprint.ini")
+    config_file = os.path.join(user_config_dir(), "labelle.ini")
+    if os.path.exists(old_config_file) and not os.path.exists(config_file):
+        warnings.warn(
+            f"Old config file found at {old_config_file}. "
+            f"Please rename it to {config_file}"
+        )
+        config_file = old_config_file
+    if conf.read(config_file):
         # reading FONTS section
         if "FONTS" not in conf.sections():
-            die('! config file "%s" not valid. Please change or remove.' % CONFIG_FILE)
+            die('! config file "%s" not valid. Please change or remove.' % config_file)
         for style in style_to_file.keys():
             style_to_file[style] = conf.get("FONTS", style)
 
