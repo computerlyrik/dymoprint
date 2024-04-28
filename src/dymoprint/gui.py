@@ -21,9 +21,17 @@ from PyQt6.QtWidgets import (
 )
 from usb.core import USBError
 
-from .constants import DEFAULT_MARGIN_PX, ICON_DIR
+from .constants import DEFAULT_MARGIN_PX, DEPRECATION_MESSAGE_POPUP, ICON_DIR
 from .dymo_print_engines import DymoRenderEngine, print_label
 from .q_dymo_labels_list import QDymoLabelList
+
+
+class DeprecationPopup(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Deprecation Warning")
+        self.setText(DEPRECATION_MESSAGE_POPUP)
+        self.setIcon(QMessageBox.Icon.Warning)
 
 
 class DymoPrintWindow(QWidget):
@@ -31,6 +39,9 @@ class DymoPrintWindow(QWidget):
 
     def __init__(self):
         super().__init__()
+        popup = DeprecationPopup()
+        popup.exec()
+
         self.render_engine = DymoRenderEngine(12)
         self.label_bitmap = None
 
