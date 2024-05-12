@@ -15,6 +15,7 @@ from . import __version__
 from .constants import (
     AVAILABLE_BARCODES,
     DEFAULT_MARGIN_PX,
+    DEPRECATION_MESSAGE_ANSI,
     PIXELS_PER_MM,
     USE_QR,
     e_qrcode,
@@ -163,103 +164,106 @@ def mm_to_payload_px(mm, margin):
 
 
 def main():
-    args = parse_args()
-    render_engine = DymoRenderEngine(args.t)
+    try:
+        args = parse_args()
+        render_engine = DymoRenderEngine(args.t)
 
-    # read config file
-    FONT_FILENAME = font_filename(args.s)
+        # read config file
+        FONT_FILENAME = font_filename(args.s)
 
-    labeltext = args.text
+        labeltext = args.text
 
-    if args.u is not None:
-        if os.path.isfile(args.u):
-            FONT_FILENAME = args.u
+        if args.u is not None:
+            if os.path.isfile(args.u):
+                FONT_FILENAME = args.u
+            else:
+                die("Error: file '%s' not found." % args.u)
+
+        # check if barcode, qrcode or text should be printed, use frames only on text
+        if args.qr and not USE_QR:
+            die("Error: %s" % e_qrcode)
+
+        if args.barcode and args.qr:
+            die("Error: can not print both QR and Barcode on the same label (yet)")
+
+        if args.fixed_length is not None and (
+            args.min_length != 0 or args.max_length is not None
+        ):
+            die("Error: can't specify min/max and fixed length at the same time")
+
+        if args.max_length is not None and args.max_length < args.min_length:
+            die("Error: maximum length is less than minimum length")
+
+        bitmaps = []
+
+        if args.test_pattern:
+            bitmaps.append(render_engine.render_test(args.test_pattern))
+
+        if args.qr:
+            bitmaps.append(render_engine.render_qr(labeltext.pop(0)))
+
+        elif args.barcode:
+            bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.barcode))
+
+        elif args.barcode_text:
+            bitmaps.append(
+                render_engine.render_barcode_with_text(
+                    labeltext.pop(0), args.barcode_text, FONT_FILENAME, args.f
+                )
+            )
+
+        if labeltext:
+            bitmaps.append(
+                render_engine.render_text(
+                    text_lines=labeltext,
+                    font_file_name=FONT_FILENAME,
+                    frame_width_px=args.f,
+                    font_size_ratio=int(args.scale) / 100.0,
+                    align=args.a,
+                )
+            )
+
+        if args.picture:
+            bitmaps.append(render_engine.render_picture(args.picture))
+
+        margin = args.m
+        justify = args.j
+
+        if args.fixed_length is not None:
+            min_label_mm_len = args.fixed_length
+            max_label_mm_len = args.fixed_length
         else:
-            die("Error: file '%s' not found." % args.u)
+            min_label_mm_len = args.min_length
+            max_label_mm_len = args.max_length
 
-    # check if barcode, qrcode or text should be printed, use frames only on text
-    if args.qr and not USE_QR:
-        die("Error: %s" % e_qrcode)
+        min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
+        max_payload_len_px = (
+            mm_to_payload_px(max_label_mm_len, margin)
+            if max_label_mm_len is not None
+            else None
+        )
 
-    if args.barcode and args.qr:
-        die("Error: can not print both QR and Barcode on the same label (yet)")
+        label_bitmap = render_engine.merge_render(
+            bitmaps=bitmaps,
+            min_payload_len_px=min_payload_len_px,
+            max_payload_len_px=max_payload_len_px,
+            justify=justify,
+        )
 
-    if args.fixed_length is not None and (
-        args.min_length != 0 or args.max_length is not None
-    ):
-        die("Error: can't specify min/max and fixed length at the same time")
-
-    if args.max_length is not None and args.max_length < args.min_length:
-        die("Error: maximum length is less than minimum length")
-
-    bitmaps = []
-
-    if args.test_pattern:
-        bitmaps.append(render_engine.render_test(args.test_pattern))
-
-    if args.qr:
-        bitmaps.append(render_engine.render_qr(labeltext.pop(0)))
-
-    elif args.barcode:
-        bitmaps.append(render_engine.render_barcode(labeltext.pop(0), args.barcode))
-
-    elif args.barcode_text:
-        bitmaps.append(
-            render_engine.render_barcode_with_text(
-                labeltext.pop(0), args.barcode_text, FONT_FILENAME, args.f
+        # print or show the label
+        if args.preview or args.preview_inverted or args.imagemagick:
+            print("Demo mode: showing label..")
+            # fix size, adding print borders
+            label_image = Image.new(
+                "L", (margin + label_bitmap.width + margin, label_bitmap.height)
             )
-        )
-
-    if labeltext:
-        bitmaps.append(
-            render_engine.render_text(
-                text_lines=labeltext,
-                font_file_name=FONT_FILENAME,
-                frame_width_px=args.f,
-                font_size_ratio=int(args.scale) / 100.0,
-                align=args.a,
-            )
-        )
-
-    if args.picture:
-        bitmaps.append(render_engine.render_picture(args.picture))
-
-    margin = args.m
-    justify = args.j
-
-    if args.fixed_length is not None:
-        min_label_mm_len = args.fixed_length
-        max_label_mm_len = args.fixed_length
-    else:
-        min_label_mm_len = args.min_length
-        max_label_mm_len = args.max_length
-
-    min_payload_len_px = max(0, mm_to_payload_px(min_label_mm_len, margin))
-    max_payload_len_px = (
-        mm_to_payload_px(max_label_mm_len, margin)
-        if max_label_mm_len is not None
-        else None
-    )
-
-    label_bitmap = render_engine.merge_render(
-        bitmaps=bitmaps,
-        min_payload_len_px=min_payload_len_px,
-        max_payload_len_px=max_payload_len_px,
-        justify=justify,
-    )
-
-    # print or show the label
-    if args.preview or args.preview_inverted or args.imagemagick:
-        print("Demo mode: showing label..")
-        # fix size, adding print borders
-        label_image = Image.new(
-            "L", (margin + label_bitmap.width + margin, label_bitmap.height)
-        )
-        label_image.paste(label_bitmap, (margin, 0))
-        if args.preview or args.preview_inverted:
-            label_rotated = label_bitmap.transpose(Image.ROTATE_270)
-            print(image_to_unicode(label_rotated, invert=args.preview_inverted))
-        if args.imagemagick:
-            ImageOps.invert(label_image).show()
-    else:
-        print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+            label_image.paste(label_bitmap, (margin, 0))
+            if args.preview or args.preview_inverted:
+                label_rotated = label_bitmap.transpose(Image.ROTATE_270)
+                print(image_to_unicode(label_rotated, invert=args.preview_inverted))
+            if args.imagemagick:
+                ImageOps.invert(label_image).show()
+        else:
+            print_label(label_bitmap, margin_px=args.m, tape_size_mm=args.t)
+    finally:
+        print(DEPRECATION_MESSAGE_ANSI)
